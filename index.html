@@ -545,11 +545,11 @@ async function submitForm() {
   const filial = document.getElementById('filial-select').value;
   const text = document.getElementById('msg-text').value.trim();
   const user = tg.initDataUnsafe?.user;
-  const senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Noma'lum';
+  const senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Noma\'lum';
   const username = user?.username || '';
 
   try {
-    const res = await fetch(SERVER_URL + '/send', {
+    const res = await fetch('https://web-production-dd6e7.up.railway.app/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -570,14 +570,9 @@ async function submitForm() {
       throw new Error(data.error || 'Xatolik');
     }
   } catch (err) {
-    console.error('Xatolik:', err);
+    alert('Xatolik: ' + err.message);
     btn.disabled = false;
-    btn.innerHTML = '<span>❌</span> <span>Xatolik — qayta urining</span>';
-    tg.HapticFeedback?.notificationOccurred('error');
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.innerHTML = '<span>📤</span> <span>Yuborish</span>';
-    }, 3000);
+    btn.innerHTML = '<span>📤</span> <span>Yuborish</span>';
   }
 }
 
