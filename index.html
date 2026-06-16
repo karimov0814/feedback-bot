@@ -179,17 +179,15 @@
 
   /* SUBMIT BTN */
   .btn-submit {
-    width: 100%; padding: 15px;
+    width: calc(100% - 32px); padding: 15px;
     background: var(--orange);
     color: white; font-family: inherit;
     font-size: 16px; font-weight: 600;
     border: none; border-radius: var(--radius-sm);
-    cursor: pointer; margin-top: 24px;
+    cursor: pointer; margin: 24px 16px 0;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    margin: 24px 16px 0;
-    width: calc(100% - 32px);
   }
   .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -272,6 +270,7 @@
     background: white;
     border-bottom: 1px solid var(--gray-200);
     display: flex; gap: 8px; overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .filter-btn {
     padding: 7px 14px;
@@ -280,6 +279,7 @@
     border: 1.5px solid var(--gray-200);
     background: white; color: var(--gray-600);
     cursor: pointer; white-space: nowrap;
+    flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
@@ -301,6 +301,8 @@
   }
 
   .messages-list { padding: 12px 16px; }
+
+  /* MESSAGE CARD */
   .message-card {
     background: white;
     border-radius: var(--radius);
@@ -308,6 +310,11 @@
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
   }
+  .message-card.status-new { border-left: 3px solid var(--red); }
+  .message-card.status-progress { border-left: 3px solid var(--amber); }
+  .message-card.status-in_progress { border-left: 3px solid var(--amber); }
+  .message-card.status-done { border-left: 3px solid var(--green); }
+
   .msg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
   .msg-type-badge {
     display: inline-flex; align-items: center; gap: 5px;
@@ -318,22 +325,29 @@
   .msg-type-badge.shikoyat { background: var(--red-light); color: var(--red); }
   .msg-time { font-size: 11px; color: var(--gray-400); }
   .msg-filial { font-size: 12px; color: var(--orange); font-weight: 500; margin-bottom: 8px; }
-  .msg-text { font-size: 14px; line-height: 1.6; color: var(--gray-800); }
-  .msg-footer { margin-top: 10px; }
+  .msg-text { font-size: 14px; line-height: 1.6; color: var(--gray-800); margin-bottom: 10px; }
+  .msg-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
   .msg-sender { font-size: 12px; color: var(--gray-400); }
   .msg-anon { font-size: 12px; color: var(--amber); font-weight: 500; }
 
-  .status-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  /* STATUS BUTTONS */
+  .status-row {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
   .status-btn {
     padding: 5px 12px; border-radius: 20px;
     font-family: inherit; font-size: 12px; font-weight: 600;
-    border: 1.5px solid var(--gray-200); background: white;
-    cursor: pointer; color: var(--gray-600);
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    border: 1.5px solid var(--gray-200);
+    background: white; color: var(--gray-600);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
   }
-  .status-btn.active-new { background: #FEF2F2; border-color: #DC2626; color: #DC2626; }
-  .status-btn.active-progress { background: #FFFBEB; border-color: #D97706; color: #D97706; }
-  .status-btn.active-done { background: #F0FDF4; border-color: #16A34A; color: #16A34A; }
+  .status-btn:hover { opacity: 0.85; }
+  .status-btn.active-new { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .status-btn.active-progress { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .status-btn.active-done { background: var(--green-light); border-color: var(--green); color: var(--green); }
 
   .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
   .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
@@ -457,13 +471,13 @@
     </div>
   </div>
   <div class="admin-filters">
-    <button class="filter-btn active" data-filter="all">Hammasi <span class="filter-count" id="count-all"></span></button>
-    <button class="filter-btn" data-filter="new">🔴 Yangi <span class="filter-count" id="count-new"></span></button>
-    <button class="filter-btn" data-filter="progress">🟡 Jarayonda <span class="filter-count" id="count-progress"></span></button>
-    <button class="filter-btn" data-filter="done">🟢 Ko'rilgan <span class="filter-count" id="count-done"></span></button>
-    <button class="filter-btn" data-filter="taklif">💡 Takliflar <span class="filter-count" id="count-taklif"></span></button>
-    <button class="filter-btn" data-filter="shikoyat">⚠️ Shikoyatlar <span class="filter-count" id="count-shikoyat"></span></button>
-    <button class="filter-btn" data-filter="anon">🕵️ Anonimlar <span class="filter-count" id="count-anon"></span></button>
+    <button class="filter-btn active" data-filter="all">Hammasi <span class="filter-count" id="count-all">0</span></button>
+    <button class="filter-btn" data-filter="new">🔴 Yangi <span class="filter-count" id="count-new">0</span></button>
+    <button class="filter-btn" data-filter="progress">🟡 Jarayonda <span class="filter-count" id="count-progress">0</span></button>
+    <button class="filter-btn" data-filter="done">🟢 Ko'rilgan <span class="filter-count" id="count-done">0</span></button>
+    <button class="filter-btn" data-filter="taklif">💡 Takliflar <span class="filter-count" id="count-taklif">0</span></button>
+    <button class="filter-btn" data-filter="shikoyat">⚠️ Shikoyatlar <span class="filter-count" id="count-shikoyat">0</span></button>
+    <button class="filter-btn" data-filter="anon">🕵️ Anonimlar <span class="filter-count" id="count-anon">0</span></button>
   </div>
   <div class="messages-list" id="messages-list">
     <div class="spinner"></div>
@@ -477,18 +491,19 @@ const ADMIN_CHAT_ID = 7780854728;
 let selectedType = '';
 let isAnon = false;
 let allMessages = [];
+let currentFilter = 'all';
 
 const tg = window.Telegram?.WebApp || {};
 if (tg.ready) tg.ready();
 if (tg.expand) tg.expand();
 
-// Admin tekshirish
 const urlParams = new URLSearchParams(window.location.search);
 const adminByUrl = urlParams.get('admin') === '1';
 const tgUser = tg.initDataUnsafe?.user;
 const userId = tgUser?.id || 0;
 const isAdmin = adminByUrl || (userId === ADMIN_CHAT_ID);
 
+// ==================== SCREENS ====================
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(function(s) {
     s.classList.remove('active');
@@ -499,6 +514,7 @@ function showScreen(name) {
 function showError(id) { document.getElementById(id).classList.add('show'); }
 function hideError(id) { document.getElementById(id).classList.remove('show'); }
 
+// ==================== EMPLOYEE FORM ====================
 function selectType(type) {
   selectedType = type;
   document.getElementById('card-taklif').className = 'type-card' + (type === 'taklif' ? ' selected-taklif' : '');
@@ -509,11 +525,7 @@ function selectType(type) {
 function toggleAnon() {
   isAnon = !isAnon;
   var toggle = document.getElementById('anon-toggle');
-  if (isAnon) {
-    toggle.classList.add('on');
-  } else {
-    toggle.classList.remove('on');
-  }
+  toggle.classList.toggle('on', isAnon);
 }
 
 function validate() {
@@ -562,7 +574,7 @@ async function submitForm() {
   var filial = document.getElementById('filial-select').value;
   var text = document.getElementById('msg-text').value.trim();
   var user = tg.initDataUnsafe?.user;
-  var senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Noma\'lum';
+  var senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : "Noma'lum";
   var username = user?.username || '';
 
   try {
@@ -593,7 +605,7 @@ async function submitForm() {
   }
 }
 
-// Admin messages
+// ==================== ADMIN ====================
 function escapeHtml(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -601,21 +613,16 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
-function parseMessage(msg) {
-  var text = msg.text || '';
-  var filialMatch = text.match(/Filial:\s*(.+)/);
-  var contentMatch = text.match(/Matn:\n([\s\S]+)$/);
-  var senderMatch = text.match(/👤\s*(.+)/);
-  var timeMatch = text.match(/Vaqt:\s*(.+)/);
-  return {
-    id: msg.message_id,
-    type: text.includes('SHIKOYAT') ? 'shikoyat' : 'taklif',
-    filial: filialMatch ? filialMatch[1].trim() : '',
-    content: contentMatch ? contentMatch[1].trim() : '',
-    sender: senderMatch ? senderMatch[1].trim() : '',
-    time: timeMatch ? timeMatch[1].trim() : '',
-    isAnon: text.includes('Anonim')
-  };
+function getStatusClass(status) {
+  if (status === 'done') return 'active-done';
+  if (status === 'progress' || status === 'in_progress') return 'active-progress';
+  return 'active-new';
+}
+
+function getStatusLabel(status) {
+  if (status === 'done') return '🟢 Ko\'rilgan';
+  if (status === 'progress' || status === 'in_progress') return '🟡 Jarayonda';
+  return '🔴 Yangi';
 }
 
 function updateStats() {
@@ -623,8 +630,8 @@ function updateStats() {
   var taklifCount = allMessages.filter(function(m) { return m.type === 'taklif'; }).length;
   var shikoyatCount = allMessages.filter(function(m) { return m.type === 'shikoyat'; }).length;
   var anonCount = allMessages.filter(function(m) { return m.anon || m.isAnon; }).length;
-  var newCount = allMessages.filter(function(m) { return (m.status || 'new') === 'new'; }).length;
-  var progressCount = allMessages.filter(function(m) { return m.status === 'progress'; }).length;
+  var newCount = allMessages.filter(function(m) { return !m.status || m.status === 'new'; }).length;
+  var progressCount = allMessages.filter(function(m) { return m.status === 'progress' || m.status === 'in_progress'; }).length;
   var doneCount = allMessages.filter(function(m) { return m.status === 'done'; }).length;
 
   document.getElementById('stat-total').textContent = total;
@@ -640,72 +647,133 @@ function updateStats() {
   document.getElementById('count-anon').textContent = anonCount;
 }
 
+function getFilteredMessages(filter) {
+  return allMessages.filter(function(m) {
+    var status = m.status || 'new';
+    if (filter === 'all') return true;
+    if (filter === 'new') return status === 'new';
+    if (filter === 'progress') return status === 'progress' || status === 'in_progress';
+    if (filter === 'done') return status === 'done';
+    if (filter === 'taklif') return m.type === 'taklif';
+    if (filter === 'shikoyat') return m.type === 'shikoyat';
+    if (filter === 'anon') return m.anon || m.isAnon;
+    return true;
+  });
+}
+
 function renderMessages(msgs) {
   var list = document.getElementById('messages-list');
   if (!msgs.length) {
     list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>';
     return;
   }
+
   list.innerHTML = msgs.map(function(m) {
-    return '<div class="message-card">' +
+    var status = m.status || 'new';
+    var statusClass = getStatusClass(status);
+    var cardClass = 'message-card status-' + status;
+
+    return '<div class="' + cardClass + '" data-id="' + escapeHtml(m.id) + '">' +
       '<div class="msg-header">' +
-        '<span class="msg-type-badge ' + m.type + '">' + (m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT') + '</span>' +
+        '<span class="msg-type-badge ' + m.type + '">' +
+          (m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT') +
+        '</span>' +
         '<span class="msg-time">' + escapeHtml(m.time) + '</span>' +
       '</div>' +
       (m.filial ? '<div class="msg-filial">🏢 ' + escapeHtml(m.filial) + '</div>' : '') +
       '<div class="msg-text">' + escapeHtml(m.text || m.content || '') + '</div>' +
       '<div class="msg-footer">' +
-        ((m.anon || m.isAnon)
-          ? '<span class="msg-anon">🕵️ Anonim</span>'
-          : '<span class="msg-sender">👤 ' + escapeHtml(m.sender || '') + '</span>') +
+        '<div>' +
+          ((m.anon || m.isAnon)
+            ? '<span class="msg-anon">🕵️ Anonim</span>'
+            : '<span class="msg-sender">👤 ' + escapeHtml(m.sender || '') + '</span>') +
+        '</div>' +
+        '<div class="status-row">' +
+          '<button class="status-btn ' + (status === 'new' ? statusClass : '') + '" ' +
+            'onclick="changeStatus(\'' + escapeHtml(m.id) + '\', \'new\', this)">🔴 Yangi</button>' +
+          '<button class="status-btn ' + ((status === 'progress' || status === 'in_progress') ? statusClass : '') + '" ' +
+            'onclick="changeStatus(\'' + escapeHtml(m.id) + '\', \'progress\', this)">🟡 Jarayonda</button>' +
+          '<button class="status-btn ' + (status === 'done' ? statusClass : '') + '" ' +
+            'onclick="changeStatus(\'' + escapeHtml(m.id) + '\', \'done\', this)">🟢 Ko\'rilgan</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 }
 
+async function changeStatus(msgId, newStatus, clickedBtn) {
+  // Tugmani disabled qilish
+  var card = clickedBtn.closest('.message-card');
+  var btns = card.querySelectorAll('.status-btn');
+  btns.forEach(function(b) { b.disabled = true; b.style.opacity = '0.5'; });
+
+  try {
+    var res = await fetch(SERVER_URL + '/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: msgId, status: newStatus })
+    });
+    var data = await res.json();
+
+    if (data.ok) {
+      // allMessages ichida yangilash
+      var msg = allMessages.find(function(m) { return m.id === msgId; });
+      if (msg) { msg.status = newStatus; }
+
+      // Kartochka rangini yangilash
+      card.className = 'message-card status-' + newStatus;
+
+      // Tugma ranglarini yangilash
+      btns.forEach(function(b) {
+        b.disabled = false;
+        b.style.opacity = '1';
+        b.classList.remove('active-new', 'active-progress', 'active-done');
+      });
+      var activeClass = getStatusClass(newStatus);
+      clickedBtn.classList.add(activeClass);
+
+      // Statistika yangilash
+      updateStats();
+
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      throw new Error(data.error || 'Xatolik');
+    }
+  } catch (err) {
+    alert('Status o\'zgartirishda xatolik: ' + err.message);
+    btns.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
+  }
+}
+
+function applyFilter(filter) {
+  currentFilter = filter;
+  var filtered = getFilteredMessages(filter);
+  renderMessages(filtered);
+}
+
 async function loadAdminMessages() {
+  document.getElementById('messages-list').innerHTML = '<div class="spinner"></div>';
   try {
     var res = await fetch(SERVER_URL + '/messages');
     var data = await res.json();
-    allMessages = [];
-    if (data.ok && data.messages) {
-      allMessages = data.messages;
-    }
+    allMessages = (data.ok && data.messages) ? data.messages : [];
     updateStats();
-    renderMessages(allMessages);
+    renderMessages(getFilteredMessages(currentFilter));
   } catch (err) {
     document.getElementById('messages-list').innerHTML =
-      '<div class="empty-state"><div class="emoji">⚠️</div><p>Xatolik yuz berdi</p></div>';
+      '<div class="empty-state"><div class="emoji">⚠️</div><p>Serverga ulanib bo\'lmadi</p></div>';
   }
 }
 
 // ==================== EVENT LISTENERS ====================
 document.addEventListener('DOMContentLoaded', function() {
 
-  // Type cards
-  document.getElementById('card-taklif').addEventListener('click', function() {
-    selectType('taklif');
-  });
-  document.getElementById('card-shikoyat').addEventListener('click', function() {
-    selectType('shikoyat');
-  });
+  document.getElementById('card-taklif').addEventListener('click', function() { selectType('taklif'); });
+  document.getElementById('card-shikoyat').addEventListener('click', function() { selectType('shikoyat'); });
+  document.getElementById('anon-toggle').addEventListener('click', function() { toggleAnon(); });
+  document.getElementById('submit-btn').addEventListener('click', function() { submitForm(); });
+  document.getElementById('btn-new').addEventListener('click', function() { resetForm(); });
 
-  // Anon toggle
-  document.getElementById('anon-toggle').addEventListener('click', function() {
-    toggleAnon();
-  });
-
-  // Submit
-  document.getElementById('submit-btn').addEventListener('click', function() {
-    submitForm();
-  });
-
-  // New message
-  document.getElementById('btn-new').addEventListener('click', function() {
-    resetForm();
-  });
-
-  // Char count
   document.getElementById('msg-text').addEventListener('input', function() {
     var len = this.value.length;
     var counter = document.getElementById('char-count');
@@ -714,15 +782,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (len >= 10) hideError('err-text');
   });
 
-  // Filial change
   document.getElementById('filial-select').addEventListener('change', function() {
-    if (this.value) {
-      hideError('err-filial');
-      this.classList.remove('error');
-    }
+    if (this.value) { hideError('err-filial'); this.classList.remove('error'); }
   });
 
-  // Admin filter buttons
   document.querySelectorAll('.filter-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -731,7 +794,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Init screen
   if (isAdmin) {
     showScreen('admin');
     loadAdminMessages();
