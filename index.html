@@ -416,7 +416,6 @@
 
   <!-- MAIN TABS -->
   <div class="main-tabs">
-    <button class="sub-tab active-all" data-sub="all">Barchasi <span class="sc" id="sc-all">0</span></button>
     <button class="main-tab active" data-tab="all">Hammasi <span class="tab-count" id="tc-all">0</span></button>
     <button class="main-tab" data-tab="shikoyat">⚠️ Shikoyat <span class="tab-count" id="tc-shikoyat">0</span></button>
     <button class="main-tab" data-tab="taklif">💡 Taklif <span class="tab-count" id="tc-taklif">0</span></button>
@@ -425,8 +424,8 @@
   <!-- SUB TABS + FILTER BTN -->
   <div class="sub-tabs-wrapper">
     <div class="sub-tabs" id="sub-tabs-container">
-      <button class="sub-tab" data-sub="new">🔴 Yangi <span class="sc" id="sc-new">0</span></button>
-      <button class="sub-tab" data-sub="progress">🟡 Ko'rib chiqilmoqda <span class="sc" id="sc-progress">0</span></button>
+      <button class="sub-tab active-new" data-sub="new">🔴 Yangi <span class="sc" id="sc-new">0</span></button>
+      <button class="sub-tab" data-sub="progress">🟡 Jarayonda <span class="sc" id="sc-progress">0</span></button>
       <button class="sub-tab" data-sub="done">🟢 Yakunlandi <span class="sc" id="sc-done">0</span></button>
     </div>
     <!-- Filter button (only visible on "all" tab) -->
@@ -465,7 +464,7 @@ let selectedType = '';
 let isAnon = false;
 let allMessages = [];
 let currentMainTab = 'all';
-let currentSubTab = 'all';
+let currentSubTab = 'new';
 let currentAnonFilter = 'all'; // 'all' | 'anon' | 'open'
 
 const tg = window.Telegram?.WebApp || {};
@@ -600,7 +599,6 @@ function updateSubCounts(base) {
   var newC = base.filter(m => getStatus(m) === 'new').length;
   var progC = base.filter(m => getStatus(m) === 'progress' || getStatus(m) === 'in_progress').length;
   var doneC = base.filter(m => getStatus(m) === 'done').length;
-  document.getElementById('sc-all').textContent = base.length;
   document.getElementById('sc-new').textContent = newC;
   document.getElementById('sc-progress').textContent = progC;
   document.getElementById('sc-done').textContent = doneC;
@@ -611,10 +609,9 @@ function getFinalMessages() {
   // anon filter only on "all" main tab
   if (currentMainTab === 'all') base = applyAnonFilter(base);
   updateSubCounts(base);
-  if (currentSubTab === 'new') return base.filter(m => getStatus(m) === 'new');
   if (currentSubTab === 'progress') return base.filter(m => getStatus(m) === 'progress' || getStatus(m) === 'in_progress');
   if (currentSubTab === 'done') return base.filter(m => getStatus(m) === 'done');
-  return base;
+  return base.filter(m => getStatus(m) === 'new');
 }
 
 function renderMessages(msgs) {
@@ -743,10 +740,10 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
       currentMainTab = this.getAttribute('data-tab');
-      currentSubTab = 'all';
+      currentSubTab = 'new';
       // highlight sub tab
       document.querySelectorAll('.sub-tab').forEach(b => b.className = 'sub-tab');
-      document.querySelector('[data-sub="all"]').classList.add('active-all');
+      document.querySelector('[data-sub="new"]').classList.add('active-new');
       // show/hide filter btn
       document.getElementById('filter-icon-btn').style.display = currentMainTab === 'all' ? 'flex' : 'none';
       refreshView();
@@ -758,7 +755,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', function() {
       document.querySelectorAll('.sub-tab').forEach(b => b.className = 'sub-tab');
       currentSubTab = this.getAttribute('data-sub');
-      var cls = currentSubTab === 'all' ? 'active-all' : currentSubTab === 'new' ? 'active-new' : currentSubTab === 'progress' ? 'active-progress' : 'active-done';
+      var cls = currentSubTab === 'new' ? 'active-new' : currentSubTab === 'progress' ? 'active-progress' : 'active-done';
       this.classList.add(cls);
       refreshView();
     });
