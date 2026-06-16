@@ -532,8 +532,10 @@ function validate() {
   return ok;
 }
 
-// ==================== SUBMIT (tg.sendData() orqali) ====================
-function submitForm() {
+// ==================== SUBMIT (Railway server orqali) ====================
+const SERVER_URL = 'https://feedback-bot-production-45da.up.railway.app';
+
+async function submitForm() {
   if (!validate()) return;
 
   const btn = document.getElementById('submit-btn');
@@ -542,22 +544,33 @@ function submitForm() {
 
   const filial = document.getElementById('filial-select').value;
   const text = document.getElementById('msg-text').value.trim();
-
-  const payload = JSON.stringify({
-    type: selectedType,
-    filial: filial,
-    text: text,
-    anon: isAnon,
-    time: new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })
-  });
+  const user = tg.initDataUnsafe?.user;
+  const senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Noma'lum';
+  const username = user?.username || '';
 
   try {
-    tg.sendData(payload);
-    // sendData muvaffaqiyatli — Mini App yopilishi mumkin, lekin success ekran ko'rsatamiz
-    tg.HapticFeedback?.notificationOccurred('success');
-    showScreen('success');
+    const res = await fetch(SERVER_URL + '/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: selectedType,
+        filial: filial,
+        text: text,
+        anon: isAnon,
+        time: new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }),
+        sender_name: senderName,
+        username: username
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      tg.HapticFeedback?.notificationOccurred('success');
+      showScreen('success');
+    } else {
+      throw new Error(data.error || 'Xatolik');
+    }
   } catch (err) {
-    console.error('sendData xatolik:', err);
+    console.error('Xatolik:', err);
     btn.disabled = false;
     btn.innerHTML = '<span>❌</span> <span>Xatolik — qayta urining</span>';
     tg.HapticFeedback?.notificationOccurred('error');
