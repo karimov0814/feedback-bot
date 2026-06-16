@@ -621,25 +621,32 @@ function updateStats() {
 
 function renderMessages(msgs) {
   var list = document.getElementById('messages-list');
-  if (!msgs.length) {
+  if (!msgs || !msgs.length) {
     list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>';
     return;
   }
-  list.innerHTML = msgs.map(function(m) {
-    return '<div class="message-card">' +
-      '<div class="msg-header">' +
-        '<span class="msg-type-badge ' + m.type + '">' + (m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT') + '</span>' +
-        '<span class="msg-time">' + escapeHtml(m.time) + '</span>' +
-      '</div>' +
-      (m.filial ? '<div class="msg-filial">🏢 ' + escapeHtml(m.filial) + '</div>' : '') +
-      '<div class="msg-text">' + escapeHtml(m.text || m.content || '') + '</div>' +
-      '<div class="msg-footer">' +
-        ((m.anon || m.isAnon)
-          ? '<span class="msg-anon">🕵️ Anonim</span>'
-          : '<span class="msg-sender">👤 ' + escapeHtml(m.sender || '') + '</span>') +
-      '</div>' +
-    '</div>';
-  }).join('');
+  var html = '';
+  for (var i = 0; i < msgs.length; i++) {
+    var m = msgs[i];
+    var isAnon = m.anon === true || m.isAnon === true;
+    var textContent = escapeHtml(m.text || m.content || '');
+    var filialHtml = m.filial ? '<div class="msg-filial">🏢 ' + escapeHtml(m.filial) + '</div>' : '';
+    var senderHtml = isAnon
+      ? '<span class="msg-anon">🕵️ Anonim</span>'
+      : '<span class="msg-sender">👤 ' + escapeHtml(m.sender || 'Noma\'lum') + '</span>';
+    var badge = m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT';
+
+    html += '<div class="message-card">';
+    html += '<div class="msg-header">';
+    html += '<span class="msg-type-badge ' + m.type + '">' + badge + '</span>';
+    html += '<span class="msg-time">' + escapeHtml(m.time || '') + '</span>';
+    html += '</div>';
+    html += filialHtml;
+    html += '<div class="msg-text">' + textContent + '</div>';
+    html += '<div class="msg-footer">' + senderHtml + '</div>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
 }
 
 async function loadAdminMessages() {
