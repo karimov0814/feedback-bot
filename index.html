@@ -7,405 +7,210 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
   :root {
-    --orange: #EA580C;
-    --orange-light: #FFF7ED;
-    --green: #16A34A;
-    --green-light: #F0FDF4;
-    --red: #DC2626;
-    --red-light: #FEF2F2;
-    --amber: #D97706;
-    --amber-light: #FFFBEB;
-    --blue: #2563EB;
-    --blue-light: #EFF6FF;
-    --gray-200: #E5E7EB;
-    --gray-400: #9CA3AF;
-    --gray-600: #4B5563;
-    --gray-800: #1F2937;
-    --gray-900: #111827;
+    --orange: #EA580C; --orange-light: #FFF7ED;
+    --green: #16A34A; --green-light: #F0FDF4;
+    --red: #DC2626; --red-light: #FEF2F2;
+    --amber: #D97706; --amber-light: #FFFBEB;
+    --blue: #2563EB; --blue-light: #EFF6FF;
+    --gray-200: #E5E7EB; --gray-400: #9CA3AF;
+    --gray-600: #4B5563; --gray-800: #1F2937; --gray-900: #111827;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
     --shadow: 0 2px 8px rgba(0,0,0,0.10);
-    --radius: 12px;
-    --radius-sm: 8px;
+    --radius: 12px; --radius-sm: 8px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: #F3F4F6;
-    color: var(--gray-900);
-    min-height: 100vh;
-    padding-bottom: env(safe-area-inset-bottom, 20px);
+    background: #F3F4F6; color: var(--gray-900);
+    min-height: 100vh; padding-bottom: env(safe-area-inset-bottom, 20px);
     overscroll-behavior: none;
   }
-
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* ===== EMPLOYEE FORM ===== */
+  /* EMPLOYEE */
   #screen-employee { padding: 0 0 32px; }
-
   .header {
-    background: var(--orange);
-    padding: 20px 16px 16px;
-    padding-top: calc(20px + env(safe-area-inset-top, 0px));
-    color: white;
-  }
-  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-  .header-icon {
-    width: 40px; height: 40px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-  .header h1 { font-size: 20px; font-weight: 700; }
-  .header p { font-size: 13px; opacity: 0.8; margin-left: 52px; }
-
-  .section-title {
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--gray-400);
-    margin: 20px 0 8px;
-    padding: 0 16px;
-  }
-
-  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
-  .type-card {
-    border: 2px solid var(--gray-200); border-radius: var(--radius);
-    padding: 16px 12px; text-align: center; cursor: pointer; background: white;
-    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-    transition: all 0.15s;
-  }
-  .type-card .icon { font-size: 28px; margin-bottom: 8px; }
-  .type-card .label { font-size: 13px; font-weight: 600; color: var(--gray-800); }
-  .type-card .desc { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
-  .type-card.selected-taklif { border-color: var(--green); background: var(--green-light); }
-  .type-card.selected-taklif .label { color: var(--green); }
-  .type-card.selected-shikoyat { border-color: var(--red); background: var(--red-light); }
-  .type-card.selected-shikoyat .label { color: var(--red); }
-
-  .select-wrapper { position: relative; padding: 0 16px; }
-  .select-wrapper::after {
-    content: '▾'; position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
-    color: var(--gray-400); pointer-events: none; font-size: 14px;
-  }
-  select {
-    width: 100%; padding: 13px 40px 13px 14px;
-    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
-    background: white; font-family: inherit; font-size: 15px; color: var(--gray-800);
-    appearance: none; -webkit-appearance: none; outline: none;
-  }
-  select:focus { border-color: var(--orange); }
-  select.error { border-color: var(--red); }
-
-  .textarea-wrap { padding: 0 16px; }
-  textarea {
-    width: 100%; padding: 13px 14px;
-    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
-    background: white; font-family: inherit; font-size: 15px; color: var(--gray-800);
-    resize: none; outline: none; line-height: 1.55;
-  }
-  textarea:focus { border-color: var(--orange); }
-  textarea.error { border-color: var(--red); }
-  .char-count { text-align: right; font-size: 11px; color: var(--gray-400); margin-top: 5px; padding: 0 16px; }
-  .char-count.warn { color: var(--amber); }
-
-  .anonymous-row {
-    display: flex; align-items: center; justify-content: space-between;
-    background: white; border: 1.5px solid var(--gray-200);
-    border-radius: var(--radius-sm); padding: 14px; margin: 0 16px;
-  }
-  .anonymous-info { display: flex; align-items: center; gap: 10px; }
-  .anon-text .title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
-  .anon-text .sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
-
-  .toggle {
-    width: 44px; height: 24px; background: var(--gray-200);
-    border-radius: 12px; position: relative; cursor: pointer; flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .toggle.on { background: var(--orange); }
-  .toggle::after {
-    content: ''; position: absolute; width: 20px; height: 20px; background: white;
-    border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: var(--shadow-sm);
-  }
-  .toggle.on::after { transform: translateX(20px); }
-
-  .field-error { font-size: 12px; color: var(--red); margin-top: 5px; display: none; padding: 0 16px; }
-  .field-error.show { display: block; }
-
-  .btn-submit {
-    width: calc(100% - 32px); padding: 15px; background: var(--orange);
-    color: white; font-family: inherit; font-size: 16px; font-weight: 600;
-    border: none; border-radius: var(--radius-sm); cursor: pointer; margin: 24px 16px 0;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn-submit:disabled { opacity: 0.5; }
-
-  /* SUCCESS */
-  #screen-success {
-    display: none; flex-direction: column; align-items: center;
-    justify-content: center; min-height: 80vh; padding: 32px 24px; text-align: center;
-  }
-  #screen-success.active { display: flex; }
-  .success-circle {
-    width: 90px; height: 90px; background: var(--green-light); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 44px; margin-bottom: 24px;
-  }
-  .success-title { font-size: 24px; font-weight: 700; color: var(--gray-900); margin-bottom: 10px; }
-  .success-desc { font-size: 15px; color: var(--gray-600); line-height: 1.6; max-width: 280px; }
-  .success-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--green-light); color: var(--green);
-    font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; margin-top: 20px;
-  }
-  .btn-new {
-    margin-top: 32px; padding: 13px 32px; background: var(--orange-light); color: var(--orange);
-    font-family: inherit; font-size: 15px; font-weight: 600; border: none;
-    border-radius: var(--radius-sm); cursor: pointer;
-  }
-
-  /* ===== ADMIN ===== */
-  #screen-admin { display: none; padding: 0; }
-  #screen-admin.active { display: block; }
-
-  .admin-header {
-    background: var(--gray-900); padding: 20px 16px;
+    background: var(--orange); padding: 20px 16px 16px;
     padding-top: calc(20px + env(safe-area-inset-top, 0px)); color: white;
   }
-  .admin-header-top { display: flex; align-items: center; justify-content: space-between; }
-  .admin-header h1 { font-size: 20px; font-weight: 700; }
-  .admin-badge { background: var(--orange); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .header-icon { width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px; }
+  .header h1 { font-size:20px;font-weight:700; }
+  .header p { font-size:13px;opacity:0.8;margin-left:52px; }
+  .section-title { font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-400);margin:20px 0 8px;padding:0 16px; }
+  .type-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px; }
+  .type-card { border:2px solid var(--gray-200);border-radius:var(--radius);padding:16px 12px;text-align:center;cursor:pointer;background:white;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+  .type-card .icon { font-size:28px;margin-bottom:8px; }
+  .type-card .label { font-size:13px;font-weight:600;color:var(--gray-800); }
+  .type-card .desc { font-size:11px;color:var(--gray-400);margin-top:3px; }
+  .type-card.selected-taklif { border-color:var(--green);background:var(--green-light); }
+  .type-card.selected-taklif .label { color:var(--green); }
+  .type-card.selected-shikoyat { border-color:var(--red);background:var(--red-light); }
+  .type-card.selected-shikoyat .label { color:var(--red); }
+  .select-wrapper { position:relative;padding:0 16px; }
+  .select-wrapper::after { content:'▾';position:absolute;right:30px;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none;font-size:14px; }
+  select { width:100%;padding:13px 40px 13px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);background:white;font-family:inherit;font-size:15px;color:var(--gray-800);appearance:none;-webkit-appearance:none;outline:none; }
+  select:focus { border-color:var(--orange); }
+  select.error { border-color:var(--red); }
+  .textarea-wrap { padding:0 16px; }
+  textarea { width:100%;padding:13px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);background:white;font-family:inherit;font-size:15px;color:var(--gray-800);resize:none;outline:none;line-height:1.55; }
+  textarea:focus { border-color:var(--orange); }
+  textarea.error { border-color:var(--red); }
+  .char-count { text-align:right;font-size:11px;color:var(--gray-400);margin-top:5px;padding:0 16px; }
+  .char-count.warn { color:var(--amber); }
+  .anonymous-row { display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px;margin:0 16px; }
+  .anonymous-info { display:flex;align-items:center;gap:10px; }
+  .anon-text .title { font-size:14px;font-weight:600;color:var(--gray-800); }
+  .anon-text .sub { font-size:12px;color:var(--gray-400);margin-top:2px; }
+  .toggle { width:44px;height:24px;background:var(--gray-200);border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent; }
+  .toggle.on { background:var(--orange); }
+  .toggle::after { content:'';position:absolute;width:20px;height:20px;background:white;border-radius:50%;top:2px;left:2px;transition:transform 0.2s;box-shadow:var(--shadow-sm); }
+  .toggle.on::after { transform:translateX(20px); }
+  .field-error { font-size:12px;color:var(--red);margin-top:5px;display:none;padding:0 16px; }
+  .field-error.show { display:block; }
+  .btn-submit { width:calc(100% - 32px);padding:15px;background:var(--orange);color:white;font-family:inherit;font-size:16px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer;margin:24px 16px 0;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent; }
+  .btn-submit:disabled { opacity:0.5; }
 
-  /* VAQT FILTRI */
-  .time-filter-row {
-    display: flex; gap: 6px; margin-top: 14px; flex-wrap: nowrap;
-  }
-  .time-btn {
-    flex: 1; padding: 7px 4px; border-radius: 20px;
-    font-family: inherit; font-size: 11px; font-weight: 600;
-    border: 1.5px solid rgba(255,255,255,0.25); background: transparent;
-    color: rgba(255,255,255,0.65); cursor: pointer;
-    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-    transition: all 0.15s; white-space: nowrap; text-align: center;
-  }
-  .time-btn.active {
-    background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.7);
-    color: white;
-  }
+  /* SUCCESS */
+  #screen-success { display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:32px 24px;text-align:center; }
+  #screen-success.active { display:flex; }
+  .success-circle { width:90px;height:90px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:24px; }
+  .success-title { font-size:24px;font-weight:700;color:var(--gray-900);margin-bottom:10px; }
+  .success-desc { font-size:15px;color:var(--gray-600);line-height:1.6;max-width:280px; }
+  .success-badge { display:inline-flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green);font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;margin-top:20px; }
+  .btn-new { margin-top:32px;padding:13px 32px;background:var(--orange-light);color:var(--orange);font-family:inherit;font-size:15px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer; }
 
-  .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
-  .stat-card { background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
-  .stat-num { font-size: 22px; font-weight: 700; color: white; }
-  .stat-lbl { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-  .stat-period { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  /* ADMIN */
+  #screen-admin { display:none;padding:0; }
+  #screen-admin.active { display:block; }
+  .admin-header { background:var(--gray-900);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top, 0px));color:white; }
+  .admin-header-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+  .admin-header h1 { font-size:20px;font-weight:700; }
+  .admin-badge { background:var(--orange);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px; }
+
+  /* DATE FILTER ROW */
+  .date-filter-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+  .date-filter-btn {
+    display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;
+    border:1.5px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.85);font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    transition:all 0.15s;
+  }
+  .date-filter-btn.has-range { background:rgba(255,255,255,0.25);border-color:white;color:white; }
+
+  /* DATE MODAL */
+  .date-modal-overlay {
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    z-index:300;align-items:flex-end;justify-content:center;
+  }
+  .date-modal-overlay.open { display:flex; }
+  .date-modal {
+    background:white;border-radius:20px 20px 0 0;
+    width:100%;max-width:480px;padding:20px 20px 32px;
+    animation:slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
+  .date-modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+  .date-modal-title { font-size:16px;font-weight:700;color:var(--gray-900); }
+  .date-modal-close { width:30px;height:30px;border-radius:50%;border:none;background:var(--gray-200);color:var(--gray-600);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center; }
+  .date-quick-btns { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px; }
+  .date-quick-btn { padding:6px 12px;border-radius:16px;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all 0.15s; }
+  .date-quick-btn:active,.date-quick-btn.selected { background:var(--orange-light);border-color:var(--orange);color:var(--orange); }
+  .date-fields { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px; }
+  .date-field label { font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px; }
+  .date-field input[type="date"] { width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;color:var(--gray-800);outline:none;background:white; }
+  .date-field input[type="date"]:focus { border-color:var(--orange); }
+  .date-modal-actions { display:flex;gap:10px; }
+  .date-apply-btn { flex:1;padding:13px;background:var(--orange);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer; }
+  .date-reset-btn { padding:13px 18px;background:var(--gray-200);color:var(--gray-600);border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer; }
+
+  .admin-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
+  .stat-card { background:rgba(255,255,255,0.1);border-radius:var(--radius-sm);padding:12px;text-align:center; }
+  .stat-num { font-size:22px;font-weight:700;color:white; }
+  .stat-lbl { font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px; }
 
   /* MAIN TABS */
-  .main-tabs {
-    display: flex; background: white;
-    border-bottom: 2px solid var(--gray-200);
-  }
-  .main-tab {
-    flex: 1; padding: 12px 8px; text-align: center;
-    font-family: inherit; font-size: 13px; font-weight: 600;
-    color: var(--gray-400); border: none; background: none; cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -2px;
-    white-space: nowrap; -webkit-tap-highlight-color: transparent;
-  }
-  .main-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
-  .main-tab .tab-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--gray-200); color: var(--gray-600);
-    font-size: 10px; font-weight: 700; min-width: 16px; height: 16px;
-    border-radius: 8px; padding: 0 4px; margin-left: 4px;
-  }
-  .main-tab.active .tab-count { background: var(--orange); color: white; }
+  .main-tabs { display:flex;background:white;border-bottom:2px solid var(--gray-200); }
+  .main-tab { flex:1;padding:12px 8px;text-align:center;font-family:inherit;font-size:13px;font-weight:600;color:var(--gray-400);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;-webkit-tap-highlight-color:transparent; }
+  .main-tab.active { color:var(--orange);border-bottom-color:var(--orange); }
+  .main-tab .tab-count { display:inline-flex;align-items:center;justify-content:center;background:var(--gray-200);color:var(--gray-600);font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 4px;margin-left:4px; }
+  .main-tab.active .tab-count { background:var(--orange);color:white; }
 
   /* SUB TABS */
-  .sub-tabs-wrapper {
-    background: white; padding: 10px 16px;
-    border-bottom: 1px solid var(--gray-200);
-    display: flex; align-items: center; gap: 8px;
-    position: relative;
-  }
-  .sub-tabs {
-    display: flex; gap: 6px; flex: 1;
-    overflow-x: auto;
-    touch-action: pan-x;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
-  }
-  .sub-tabs::-webkit-scrollbar { display: none; }
+  .sub-tabs-wrapper { background:white;padding:10px 16px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;position:relative; }
+  .sub-tabs { display:flex;gap:6px;flex:1;overflow-x:auto;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain; }
+  .sub-tabs::-webkit-scrollbar { display:none; }
+  .sub-tab { padding:7px 14px;border-radius:20px;flex-shrink:0;font-family:inherit;font-size:12px;font-weight:600;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+  .sub-tab.active-new { border-color:var(--red);background:var(--red-light);color:var(--red); }
+  .sub-tab.active-progress { border-color:var(--amber);background:var(--amber-light);color:var(--amber); }
+  .sub-tab.active-done { border-color:var(--green);background:var(--green-light);color:var(--green); }
 
-  .sub-tab {
-    padding: 7px 14px; border-radius: 20px; flex-shrink: 0;
-    font-family: inherit; font-size: 12px; font-weight: 600;
-    border: 1.5px solid var(--gray-200); background: white; color: var(--gray-600);
-    cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    transition: all 0.15s;
-  }
-
-  .sub-tab.active-new    { border-color: var(--red);   background: var(--red-light);   color: var(--red);   }
-  .sub-tab.active-progress { border-color: var(--amber); background: var(--amber-light); color: var(--amber); }
-  .sub-tab.active-done   { border-color: var(--green); background: var(--green-light); color: var(--green); }
-  .sub-tab.active-all    { border-color: var(--orange);background: var(--orange-light);color: var(--orange);}
-
-  /* FILTER BUTTON */
-  .filter-icon-btn {
-    width: 34px; height: 34px; border-radius: 10px;
-    border: 1.5px solid var(--gray-200); background: white;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; font-size: 16px;
-    -webkit-tap-highlight-color: transparent; position: relative;
-    touch-action: manipulation;
-  }
-  .filter-icon-btn.has-filter { border-color: var(--orange); background: var(--orange-light); }
-  .filter-icon-btn .filter-dot {
-    position: absolute; top: -3px; right: -3px;
-    width: 8px; height: 8px; background: var(--orange);
-    border-radius: 50%; display: none;
-  }
-  .filter-icon-btn.has-filter .filter-dot { display: block; }
-
-  /* FILTER DROPDOWN */
-  .filter-dropdown {
-    display: none; position: absolute; right: 16px; top: calc(100% + 4px);
-    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
-    border: 1px solid var(--gray-200); z-index: 100; min-width: 160px; overflow: hidden;
-  }
-  .filter-dropdown.open { display: block; }
-  .filter-dropdown-title { font-size: 11px; font-weight: 600; color: var(--gray-400); padding: 10px 14px 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .filter-option {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 500;
-    color: var(--gray-800); -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .filter-option:active { background: #F9FAFB; }
-  .filter-checkbox {
-    width: 18px; height: 18px; border-radius: 5px;
-    border: 2px solid var(--gray-200); background: white;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    font-size: 11px; font-weight: 700;
-  }
-  .filter-checkbox.checked { background: var(--orange); border-color: var(--orange); color: white; }
+  /* FILTER ICON */
+  .filter-icon-btn { width:34px;height:34px;border-radius:10px;border:1.5px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;-webkit-tap-highlight-color:transparent;position:relative;touch-action:manipulation; }
+  .filter-icon-btn.has-filter { border-color:var(--orange);background:var(--orange-light); }
+  .filter-icon-btn .filter-dot { position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--orange);border-radius:50%;display:none; }
+  .filter-icon-btn.has-filter .filter-dot { display:block; }
+  .filter-dropdown { display:none;position:absolute;right:16px;top:calc(100% + 4px);background:white;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);z-index:100;min-width:160px;overflow:hidden; }
+  .filter-dropdown.open { display:block; }
+  .filter-dropdown-title { font-size:11px;font-weight:600;color:var(--gray-400);padding:10px 14px 6px;text-transform:uppercase;letter-spacing:0.05em; }
+  .filter-option { display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray-800);-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+  .filter-checkbox { width:18px;height:18px;border-radius:5px;border:2px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700; }
+  .filter-checkbox.checked { background:var(--orange);border-color:var(--orange);color:white; }
 
   /* MESSAGE CARDS */
-  .messages-list { padding: 12px 16px; }
-  .message-card {
-    background: white; border-radius: var(--radius);
-    padding: 14px 14px 12px; margin-bottom: 10px;
-    box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
-    border-left: 4px solid var(--gray-200);
-  }
-  .message-card.sl-new      { border-left-color: var(--red); }
-  .message-card.sl-progress { border-left-color: var(--amber); }
-  .message-card.sl-done     { border-left-color: var(--green); }
-
-  .msg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
-  .msg-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-
-  .msg-type-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; font-weight: 700; padding: 3px 9px;
-    border-radius: 6px; border: 1.5px solid;
-  }
-  .msg-type-badge.taklif  { border-color: var(--green); color: var(--green); background: var(--green-light); }
-  .msg-type-badge.shikoyat { border-color: var(--red);   color: var(--red);   background: var(--red-light);  }
-
-  .msg-status-badge {
-    display: inline-flex; align-items: center;
-    font-size: 10px; font-weight: 600; padding: 3px 8px;
-    border-radius: 6px; border: 1.5px solid;
-  }
-  .msg-status-badge.s-new      { border-color: var(--red);   color: var(--red);   background: var(--red-light);   }
-  .msg-status-badge.s-progress { border-color: var(--amber); color: var(--amber); background: var(--amber-light); }
-  .msg-status-badge.s-done     { border-color: var(--green); color: var(--green); background: var(--green-light); }
-
-  .msg-time { font-size: 11px; color: var(--gray-400); flex-shrink: 0; }
-  .msg-filial { font-size: 12px; color: var(--orange); font-weight: 500; margin-bottom: 6px; }
-  .msg-text { font-size: 14px; line-height: 1.6; color: var(--gray-800); margin-bottom: 10px; }
-
-  .msg-footer {
-    display: flex; align-items: center;
-    justify-content: space-between; flex-wrap: wrap; gap: 8px;
-  }
-  .msg-sender { font-size: 12px; color: var(--gray-400); }
-  .msg-anon { font-size: 12px; color: var(--amber); font-weight: 500; }
-
-  .msg-footer-right {
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  /* Status buttons */
-  .status-row { display: flex; gap: 5px; flex-wrap: wrap; }
-  .status-btn {
-    padding: 5px 11px; border-radius: 6px;
-    font-family: inherit; font-size: 11px; font-weight: 600;
-    border: 1.5px solid var(--gray-200); background: white; color: var(--gray-600);
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation; transition: all 0.15s;
-  }
-  .status-btn.cur-new      { border-color: var(--red);   background: var(--red-light);   color: var(--red);   }
-  .status-btn.cur-progress { border-color: var(--amber); background: var(--amber-light); color: var(--amber); }
-  .status-btn.cur-done     { border-color: var(--green); background: var(--green-light); color: var(--green); }
-
-  /* DELETE BUTTON — pastki o'ng burchakda */
-  .delete-btn {
-    background: none; border: none; padding: 4px;
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation; color: var(--red);
-    opacity: 0.55; line-height: 1; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 6px;
-  }
-  .delete-btn:active { opacity: 1; background: var(--red-light); }
-  .delete-btn svg { display: block; width: 16px; height: 16px; }
-
-  .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
-  .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
-
-  .spinner {
-    width: 32px; height: 32px; border: 3px solid var(--gray-200);
-    border-top-color: var(--orange); border-radius: 50%;
-    animation: spin 0.7s linear infinite; margin: 40px auto 12px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .messages-list { padding:12px 16px; }
+  .message-card { background:white;border-radius:var(--radius);padding:14px 14px 12px;margin-bottom:10px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200); }
+  .message-card.sl-new { border-left-color:var(--red); }
+  .message-card.sl-progress { border-left-color:var(--amber); }
+  .message-card.sl-done { border-left-color:var(--green); }
+  .msg-header { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px; }
+  .msg-meta { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+  .msg-type-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;border:1.5px solid; }
+  .msg-type-badge.taklif { border-color:var(--green);color:var(--green);background:var(--green-light); }
+  .msg-type-badge.shikoyat { border-color:var(--red);color:var(--red);background:var(--red-light); }
+  .msg-status-badge { display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;border:1.5px solid; }
+  .msg-status-badge.s-new { border-color:var(--red);color:var(--red);background:var(--red-light); }
+  .msg-status-badge.s-progress { border-color:var(--amber);color:var(--amber);background:var(--amber-light); }
+  .msg-status-badge.s-done { border-color:var(--green);color:var(--green);background:var(--green-light); }
+  .msg-time { font-size:11px;color:var(--gray-400);flex-shrink:0; }
+  .msg-filial { font-size:12px;color:var(--orange);font-weight:500;margin-bottom:6px; }
+  .msg-text { font-size:14px;line-height:1.6;color:var(--gray-800);margin-bottom:10px; }
+  .msg-footer { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px; }
+  .msg-sender { font-size:12px;color:var(--gray-400); }
+  .msg-anon { font-size:12px;color:var(--amber);font-weight:500; }
+  .msg-footer-right { display:flex;align-items:center;gap:8px; }
+  .status-row { display:flex;gap:5px;flex-wrap:wrap; }
+  .status-btn { padding:5px 11px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all 0.15s; }
+  .status-btn.cur-new { border-color:var(--red);background:var(--red-light);color:var(--red); }
+  .status-btn.cur-progress { border-color:var(--amber);background:var(--amber-light);color:var(--amber); }
+  .status-btn.cur-done { border-color:var(--green);background:var(--green-light);color:var(--green); }
+  .delete-btn { background:none;border:none;padding:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:var(--red);opacity:0.55;line-height:1;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:6px; }
+  .delete-btn:active { opacity:1;background:var(--red-light); }
+  .delete-btn svg { display:block;width:16px;height:16px; }
+  .empty-state { text-align:center;padding:60px 24px;color:var(--gray-400); }
+  .empty-state .emoji { font-size:40px;margin-bottom:12px; }
+  .spinner { width:32px;height:32px;border:3px solid var(--gray-200);border-top-color:var(--orange);border-radius:50%;animation:spin 0.7s linear infinite;margin:40px auto 12px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
 </style>
 </head>
 <body>
 
-<!-- EMPLOYEE SCREEN -->
+<!-- EMPLOYEE -->
 <div id="screen-employee" class="screen active">
   <div class="header">
-    <div class="header-top">
-      <div class="header-icon">💬</div>
-      <h1>Fikr & Shikoyat</h1>
-    </div>
+    <div class="header-top"><div class="header-icon">💬</div><h1>Fikr & Shikoyat</h1></div>
     <p>Xodimlar uchun muloqot platformasi</p>
   </div>
-  <div style="padding-bottom: 32px;">
+  <div style="padding-bottom:32px;">
     <div class="section-title">Murojaat turini tanlang</div>
     <div class="type-grid">
-      <div class="type-card" id="card-taklif">
-        <div class="icon">💡</div>
-        <div class="label">Taklif</div>
-        <div class="desc">Yaxshilash g'oyasi</div>
-      </div>
-      <div class="type-card" id="card-shikoyat">
-        <div class="icon">⚠️</div>
-        <div class="label">Shikoyat</div>
-        <div class="desc">Muammo yoki norozilik</div>
-      </div>
+      <div class="type-card" id="card-taklif"><div class="icon">💡</div><div class="label">Taklif</div><div class="desc">Yaxshilash g'oyasi</div></div>
+      <div class="type-card" id="card-shikoyat"><div class="icon">⚠️</div><div class="label">Shikoyat</div><div class="desc">Muammo yoki norozilik</div></div>
     </div>
     <div class="field-error" id="err-type">Murojaat turini tanlang</div>
-
     <div class="section-title">Filial</div>
     <div class="select-wrapper">
       <select id="filial-select">
@@ -418,29 +223,21 @@
       </select>
     </div>
     <div class="field-error" id="err-filial">Filialni tanlang</div>
-
     <div class="section-title">Matn</div>
     <div class="textarea-wrap">
       <textarea id="msg-text" rows="5" maxlength="1000" placeholder="Fikringizni yozing..."></textarea>
     </div>
     <div class="char-count" id="char-count">0 / 1000</div>
     <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
-
     <div class="section-title">Maxfiylik</div>
     <div class="anonymous-row">
       <div class="anonymous-info">
         <div style="font-size:20px">🕵️</div>
-        <div class="anon-text">
-          <div class="title">Anonim yuborish</div>
-          <div class="sub">Ismingiz ko'rinmaydi</div>
-        </div>
+        <div class="anon-text"><div class="title">Anonim yuborish</div><div class="sub">Ismingiz ko'rinmaydi</div></div>
       </div>
       <div class="toggle" id="anon-toggle"></div>
     </div>
-
-    <button class="btn-submit" id="submit-btn">
-      <span>📤</span><span>Yuborish</span>
-    </button>
+    <button class="btn-submit" id="submit-btn"><span>📤</span><span>Yuborish</span></button>
   </div>
 </div>
 
@@ -460,25 +257,47 @@
       <h1>📊 Admin Panel</h1>
       <div class="admin-badge">ADMIN</div>
     </div>
-    <div class="time-filter-row">
-      <button class="time-btn active" data-period="all">Barcha vaqt</button>
-      <button class="time-btn" data-period="week">1 hafta</button>
-      <button class="time-btn" data-period="month">1 oy</button>
-      <button class="time-btn" data-period="year">1 yil</button>
+
+    <!-- DATE FILTER -->
+    <div class="date-filter-row">
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);">Statistika muddati</div>
+      <button class="date-filter-btn" id="date-filter-btn">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span id="date-filter-label">Barcha vaqt</span>
+      </button>
     </div>
+
     <div class="admin-stats">
-      <div class="stat-card">
-        <div class="stat-num" id="stat-total">—</div>
-        <div class="stat-lbl">Jami</div>
-        <div class="stat-period" id="stat-period-lbl"></div>
+      <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-lbl">Jami</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-taklif">—</div><div class="stat-lbl">Takliflar</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-shikoyat">—</div><div class="stat-lbl">Shikoyatlar</div></div>
+    </div>
+  </div>
+
+  <!-- DATE MODAL -->
+  <div class="date-modal-overlay" id="date-modal-overlay">
+    <div class="date-modal">
+      <div class="date-modal-header">
+        <span class="date-modal-title">📅 Sana oralig'ini tanlang</span>
+        <button class="date-modal-close" id="date-modal-close">✕</button>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-taklif">—</div>
-        <div class="stat-lbl">Takliflar</div>
+      <div class="date-quick-btns">
+        <button class="date-quick-btn" data-quick="week">Oxirgi 7 kun</button>
+        <button class="date-quick-btn" data-quick="month">Oxirgi 30 kun</button>
+        <button class="date-quick-btn" data-quick="year">Oxirgi 1 yil</button>
+        <button class="date-quick-btn" data-quick="thismonth">Shu oy</button>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-shikoyat">—</div>
-        <div class="stat-lbl">Shikoyatlar</div>
+      <div class="date-fields">
+        <div class="date-field"><label>Dan</label><input type="date" id="date-from"></div>
+        <div class="date-field"><label>Gacha</label><input type="date" id="date-to"></div>
+      </div>
+      <div class="date-modal-actions">
+        <button class="date-reset-btn" id="date-reset-btn">Tozalash</button>
+        <button class="date-apply-btn" id="date-apply-btn">Filtrlash</button>
       </div>
     </div>
   </div>
@@ -490,95 +309,63 @@
     <button class="main-tab" data-tab="taklif">💡 Taklif <span class="tab-count" id="tc-taklif">0</span></button>
   </div>
 
-  <!-- SUB TABS + FILTER BTN -->
+  <!-- SUB TABS -->
   <div class="sub-tabs-wrapper">
     <div class="sub-tabs" id="sub-tabs-scroll">
-      <button class="sub-tab active-new"  data-sub="new">Yangi <span class="sc" id="sc-new">0</span></button>
+      <button class="sub-tab active-new" data-sub="new">Yangi <span class="sc" id="sc-new">0</span></button>
       <button class="sub-tab" data-sub="progress">Ko'rib chiqilmoqda <span class="sc" id="sc-progress">0</span></button>
       <button class="sub-tab" data-sub="done">Yakunlandi <span class="sc" id="sc-done">0</span></button>
     </div>
     <button class="filter-icon-btn" id="filter-icon-btn">
-      ⚙️
-      <span class="filter-dot"></span>
+      ⚙️<span class="filter-dot"></span>
     </button>
     <div class="filter-dropdown" id="filter-dropdown">
       <div class="filter-dropdown-title">Ko'rinishi</div>
-      <div class="filter-option" data-anon="all">
-        <div class="filter-checkbox checked" id="fc-all">✓</div>
-        <span>Hammasi</span>
-      </div>
-      <div class="filter-option" data-anon="open">
-        <div class="filter-checkbox" id="fc-open"></div>
-        <span>👤 Ochiq</span>
-      </div>
-      <div class="filter-option" data-anon="anon">
-        <div class="filter-checkbox" id="fc-anon"></div>
-        <span>🕵️ Anonim</span>
-      </div>
+      <div class="filter-option" data-anon="all"><div class="filter-checkbox checked" id="fc-all">✓</div><span>Hammasi</span></div>
+      <div class="filter-option" data-anon="open"><div class="filter-checkbox" id="fc-open"></div><span>👤 Ochiq</span></div>
+      <div class="filter-option" data-anon="anon"><div class="filter-checkbox" id="fc-anon"></div><span>🕵️ Anonim</span></div>
     </div>
   </div>
 
-  <div class="messages-list" id="messages-list">
-    <div class="spinner"></div>
-  </div>
+  <div class="messages-list" id="messages-list"><div class="spinner"></div></div>
 </div>
 
 <script>
 const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
 const ADMIN_CHAT_ID = 7780854728;
 
-let selectedType = '';
-let isAnon = false;
-let allMessages = [];
-let currentMainTab = 'all';
-let currentSubTab = 'new';
-let currentAnonFilter = 'all';
-let currentPeriod = 'all';
+var selectedType = '', isAnon = false, allMessages = [];
+var currentMainTab = 'all', currentSubTab = 'new', currentAnonFilter = 'all';
+var dateFrom = null, dateTo = null;
 
-const tg = window.Telegram?.WebApp || {};
+var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : {};
 if (tg.ready) tg.ready();
 if (tg.expand) tg.expand();
 
-const urlParams = new URLSearchParams(window.location.search);
-const isAdmin = urlParams.get('admin') === '1' || ((tg.initDataUnsafe?.user?.id || 0) === ADMIN_CHAT_ID);
+var urlParams = new URLSearchParams(window.location.search);
+var isAdmin = urlParams.get('admin') === '1' || ((tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0) === ADMIN_CHAT_ID);
 
-// ===== UTILS =====
+// UTILS
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('screen-' + name).classList.add('active');
 }
 function showError(id) { document.getElementById(id).classList.add('show'); }
 function hideError(id) { document.getElementById(id).classList.remove('show'); }
 function escapeHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 function getStatus(m) { return m.status || 'new'; }
-function statusBadgeClass(s) {
-  if (s === 'done') return 's-done';
-  if (s === 'progress' || s === 'in_progress') return 's-progress';
-  return 's-new';
-}
-function statusLabel(s) {
-  if (s === 'done') return 'Yakunlandi';
-  if (s === 'progress' || s === 'in_progress') return "Ko'rib chiqilmoqda";
-  return 'Yangi';
-}
-function slClass(s) {
-  if (s === 'done') return 'sl-done';
-  if (s === 'progress' || s === 'in_progress') return 'sl-progress';
-  return 'sl-new';
-}
-function statusBtnClass(s) {
-  if (s === 'done') return 'cur-done';
-  if (s === 'progress' || s === 'in_progress') return 'cur-progress';
-  return 'cur-new';
-}
+function statusBadgeClass(s) { return s==='done'?'s-done':s==='progress'||s==='in_progress'?'s-progress':'s-new'; }
+function statusLabel(s) { return s==='done'?'Yakunlandi':s==='progress'||s==='in_progress'?"Ko'rib chiqilmoqda":'Yangi'; }
+function slClass(s) { return s==='done'?'sl-done':s==='progress'||s==='in_progress'?'sl-progress':'sl-new'; }
+function statusBtnClass(s) { return s==='done'?'cur-done':s==='progress'||s==='in_progress'?'cur-progress':'cur-new'; }
 
-// ===== EMPLOYEE FORM =====
+// EMPLOYEE
 function selectType(type) {
   selectedType = type;
-  document.getElementById('card-taklif').className = 'type-card' + (type === 'taklif' ? ' selected-taklif' : '');
-  document.getElementById('card-shikoyat').className = 'type-card' + (type === 'shikoyat' ? ' selected-shikoyat' : '');
+  document.getElementById('card-taklif').className = 'type-card'+(type==='taklif'?' selected-taklif':'');
+  document.getElementById('card-shikoyat').className = 'type-card'+(type==='shikoyat'?' selected-shikoyat':'');
   hideError('err-type');
 }
 function toggleAnon() {
@@ -588,12 +375,8 @@ function toggleAnon() {
 function validate() {
   var ok = true;
   if (!selectedType) { showError('err-type'); ok = false; }
-  if (!document.getElementById('filial-select').value) {
-    showError('err-filial'); document.getElementById('filial-select').classList.add('error'); ok = false;
-  }
-  if (document.getElementById('msg-text').value.trim().length < 10) {
-    showError('err-text'); document.getElementById('msg-text').classList.add('error'); ok = false;
-  }
+  if (!document.getElementById('filial-select').value) { showError('err-filial'); document.getElementById('filial-select').classList.add('error'); ok = false; }
+  if (document.getElementById('msg-text').value.trim().length < 10) { showError('err-text'); document.getElementById('msg-text').classList.add('error'); ok = false; }
   return ok;
 }
 function resetForm() {
@@ -615,310 +398,296 @@ async function submitForm() {
   if (!validate()) return;
   var btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>Yuborilmoqda...</span>';
-  var user = tg.initDataUnsafe?.user;
-  var senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : "Noma'lum";
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  var senderName = user ? (user.first_name + (user.last_name ? ' '+user.last_name : '')) : "Noma'lum";
   try {
-    var res = await fetch(SERVER_URL + '/send', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    var res = await fetch(SERVER_URL+'/send', {
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         type: selectedType,
         filial: document.getElementById('filial-select').value,
         text: document.getElementById('msg-text').value.trim(),
         anon: isAnon,
-        time: new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }),
-        sender_name: senderName, username: user?.username || ''
+        time: new Date().toLocaleString('uz-UZ',{timeZone:'Asia/Tashkent'}),
+        sender_name: senderName,
+        username: user && user.username ? user.username : ''
       })
     });
     var data = await res.json();
     if (data.ok) {
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       showScreen('success');
-    } else throw new Error(data.error || 'Xatolik');
-  } catch (err) {
-    alert('Xatolik: ' + err.message);
+    } else throw new Error(data.error||'Xatolik');
+  } catch(err) {
+    alert('Xatolik: '+err.message);
     btn.disabled = false; btn.innerHTML = '<span>📤</span><span>Yuborish</span>';
   }
 }
 
-// ===== VAQT FILTER YORDAMCHI =====
-function parseMessageDate(m) {
-  // Server "time" maydoni: "16.06.2025, 14:32:00" yoki ISO string yoki timestamp
-  if (!m.time) return null;
-  // ISO yoki timestamp
-  var d = new Date(m.time);
-  if (!isNaN(d)) return d;
-  // "DD.MM.YYYY, HH:MM:SS" formatini parse qilish
-  var match = String(m.time).match(/(\d{2})\.(\d{2})\.(\d{4})/);
-  if (match) return new Date(match[3] + '-' + match[2] + '-' + match[1]);
-  return null;
+// DATE FILTER
+function toDisplayDate(d) {
+  return d.toLocaleDateString('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function openDateModal() {
+  if (!document.getElementById('date-to').value) {
+    document.getElementById('date-to').value = new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('date-modal-overlay').classList.add('open');
+}
+function closeDateModal() {
+  document.getElementById('date-modal-overlay').classList.remove('open');
+}
+function applyDateFilter() {
+  var f = document.getElementById('date-from').value;
+  var t = document.getElementById('date-to').value;
+  dateFrom = f ? new Date(f) : null;
+  dateTo = t ? new Date(t+'T23:59:59') : null;
+  var btn = document.getElementById('date-filter-btn');
+  var lbl = document.getElementById('date-filter-label');
+  if (dateFrom || dateTo) {
+    var fromStr = dateFrom ? toDisplayDate(dateFrom) : '...';
+    var toStr = dateTo ? toDisplayDate(dateTo) : '...';
+    lbl.textContent = fromStr+' – '+toStr;
+    btn.classList.add('has-range');
+  } else {
+    lbl.textContent = 'Barcha vaqt';
+    btn.classList.remove('has-range');
+  }
+  closeDateModal();
+  updateStats();
+  refreshView();
+}
+function resetDateFilter() {
+  dateFrom = null; dateTo = null;
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  document.getElementById('date-filter-label').textContent = 'Barcha vaqt';
+  document.getElementById('date-filter-btn').classList.remove('has-range');
+  closeDateModal();
+  updateStats();
+  refreshView();
 }
 
-function filterByPeriod(msgs, period) {
-  if (period === 'all') return msgs;
-  var now = new Date();
-  var cutoff = new Date();
-  if (period === 'week')  cutoff.setDate(now.getDate() - 7);
-  if (period === 'month') cutoff.setMonth(now.getMonth() - 1);
-  if (period === 'year')  cutoff.setFullYear(now.getFullYear() - 1);
+// PARSE DATE
+function parseMessageDate(m) {
+  if (!m.time) return null;
+  var d = new Date(m.time);
+  if (!isNaN(d)) return d;
+  var match = String(m.time).match(/(\d{2})\.(\d{2})\.(\d{4})/);
+  if (match) return new Date(match[3]+'-'+match[2]+'-'+match[1]);
+  return null;
+}
+function filterByDate(msgs) {
+  if (!dateFrom && !dateTo) return msgs;
   return msgs.filter(function(m) {
     var d = parseMessageDate(m);
-    return d && d >= cutoff;
+    if (!d) return false;
+    if (dateFrom && d < dateFrom) return false;
+    if (dateTo && d > dateTo) return false;
+    return true;
   });
 }
 
-function periodLabel(period) {
-  if (period === 'week')  return 'so\'nggi 7 kun';
-  if (period === 'month') return 'so\'nggi 30 kun';
-  if (period === 'year')  return 'so\'nggi 1 yil';
-  return '';
-}
-
-// ===== ADMIN =====
+// ADMIN STATS & RENDER
 function updateStats() {
-  var filtered = filterByPeriod(allMessages, currentPeriod);
-  var total = filtered.length;
-  var taklifC = filtered.filter(m => m.type === 'taklif').length;
-  var shikoyatC = filtered.filter(m => m.type === 'shikoyat').length;
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-taklif').textContent = taklifC;
-  document.getElementById('stat-shikoyat').textContent = shikoyatC;
-  var lbl = document.getElementById('stat-period-lbl');
-  if (lbl) lbl.textContent = periodLabel(currentPeriod);
-  // Tab count larni esa BARCHA xabarlardan hisoblaymiz (filter faqat statistika uchun)
-  var allTotal = allMessages.length;
-  var allTaklif = allMessages.filter(m => m.type === 'taklif').length;
-  var allShikoyat = allMessages.filter(m => m.type === 'shikoyat').length;
-  document.getElementById('tc-all').textContent = allTotal;
-  document.getElementById('tc-taklif').textContent = allTaklif;
-  document.getElementById('tc-shikoyat').textContent = allShikoyat;
+  var filtered = filterByDate(allMessages);
+  document.getElementById('stat-total').textContent = filtered.length;
+  document.getElementById('stat-taklif').textContent = filtered.filter(function(m){return m.type==='taklif';}).length;
+  document.getElementById('stat-shikoyat').textContent = filtered.filter(function(m){return m.type==='shikoyat';}).length;
+  document.getElementById('tc-all').textContent = allMessages.length;
+  document.getElementById('tc-taklif').textContent = allMessages.filter(function(m){return m.type==='taklif';}).length;
+  document.getElementById('tc-shikoyat').textContent = allMessages.filter(function(m){return m.type==='shikoyat';}).length;
 }
-
 function getByMainTab(tab) {
-  if (tab === 'taklif') return allMessages.filter(m => m.type === 'taklif');
-  if (tab === 'shikoyat') return allMessages.filter(m => m.type === 'shikoyat');
+  if (tab==='taklif') return allMessages.filter(function(m){return m.type==='taklif';});
+  if (tab==='shikoyat') return allMessages.filter(function(m){return m.type==='shikoyat';});
   return allMessages;
 }
 function applyAnonFilter(msgs) {
-  if (currentAnonFilter === 'anon') return msgs.filter(m => m.anon || m.isAnon);
-  if (currentAnonFilter === 'open') return msgs.filter(m => !m.anon && !m.isAnon);
+  if (currentAnonFilter==='anon') return msgs.filter(function(m){return m.anon||m.isAnon;});
+  if (currentAnonFilter==='open') return msgs.filter(function(m){return !m.anon&&!m.isAnon;});
   return msgs;
 }
 function updateSubCounts(base) {
-  document.getElementById('sc-new').textContent = base.filter(m => getStatus(m) === 'new').length;
-  document.getElementById('sc-progress').textContent = base.filter(m => getStatus(m) === 'progress' || getStatus(m) === 'in_progress').length;
-  document.getElementById('sc-done').textContent = base.filter(m => getStatus(m) === 'done').length;
+  document.getElementById('sc-new').textContent = base.filter(function(m){return getStatus(m)==='new';}).length;
+  document.getElementById('sc-progress').textContent = base.filter(function(m){var s=getStatus(m);return s==='progress'||s==='in_progress';}).length;
+  document.getElementById('sc-done').textContent = base.filter(function(m){return getStatus(m)==='done';}).length;
 }
 function getFinalMessages() {
   var base = getByMainTab(currentMainTab);
-  if (currentMainTab === 'all') base = applyAnonFilter(base);
+  if (currentMainTab==='all') base = applyAnonFilter(base);
   updateSubCounts(base);
-  if (currentSubTab === 'progress') return base.filter(m => getStatus(m) === 'progress' || getStatus(m) === 'in_progress');
-  if (currentSubTab === 'done') return base.filter(m => getStatus(m) === 'done');
-  return base.filter(m => getStatus(m) === 'new');
+  if (currentSubTab==='progress') return base.filter(function(m){var s=getStatus(m);return s==='progress'||s==='in_progress';});
+  if (currentSubTab==='done') return base.filter(function(m){return getStatus(m)==='done';});
+  return base.filter(function(m){return getStatus(m)==='new';});
 }
-
 function renderMessages(msgs) {
   var list = document.getElementById('messages-list');
-  if (!msgs.length) {
-    list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>';
-    return;
-  }
+  if (!msgs.length) { list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>'; return; }
   list.innerHTML = msgs.map(function(m) {
     var s = getStatus(m);
-
-    /* Delete tugmasi — faqat "done" statusida, pastki o'ng burchakda */
-    var deleteBtnHtml = (s === 'done')
-      ? '<button class="delete-btn" onclick="deleteMessage(\'' + escapeHtml(m.id) + '\',this)" title="O\'chirish">' +
-          '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-            '<path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-          '</svg>' +
-        '</button>'
+    var deleteBtnHtml = s==='done'
+      ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="O\'chirish"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       : '';
-
-    return '<div class="message-card ' + slClass(s) + '">' +
-      '<div class="msg-header">' +
-        '<div class="msg-meta">' +
-          '<span class="msg-type-badge ' + m.type + '">' + (m.type === 'taklif' ? 'TAKLIF' : 'SHIKOYAT') + '</span>' +
-          '<span class="msg-status-badge ' + statusBadgeClass(s) + '">' + statusLabel(s) + '</span>' +
-        '</div>' +
-        '<span class="msg-time">' + escapeHtml(m.time) + '</span>' +
-      '</div>' +
-      (m.filial ? '<div class="msg-filial">🏢 ' + escapeHtml(m.filial) + '</div>' : '') +
-      '<div class="msg-text">' + escapeHtml(m.text || m.content || '') + '</div>' +
-      '<div class="msg-footer">' +
-        '<div>' +
-          ((m.anon || m.isAnon)
-            ? '<span class="msg-anon">🕵️ Anonim</span>'
-            : '<span class="msg-sender">👤 ' + escapeHtml(m.sender || '') + '</span>') +
-        '</div>' +
-        '<div class="msg-footer-right">' +
-          '<div class="status-row">' +
-            ['new','progress','done'].map(function(st) {
-              var labels = {new:'Yangi', progress:"Ko'rib chiqilmoqda", done:'Yakunlandi'};
-              var cls = (s === st || (s === 'in_progress' && st === 'progress')) ? statusBtnClass(st) : '';
-              return '<button class="status-btn ' + cls + '" onclick="changeStatus(\'' + escapeHtml(m.id) + '\',\'' + st + '\',this)">' + labels[st] + '</button>';
-            }).join('') +
-          '</div>' +
-          deleteBtnHtml +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    return '<div class="message-card '+slClass(s)+'">'+
+      '<div class="msg-header"><div class="msg-meta">'+
+        '<span class="msg-type-badge '+m.type+'">'+(m.type==='taklif'?'TAKLIF':'SHIKOYAT')+'</span>'+
+        '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
+      '</div><span class="msg-time">'+escapeHtml(m.time)+'</span></div>'+
+      (m.filial?'<div class="msg-filial">🏢 '+escapeHtml(m.filial)+'</div>':'')+
+      '<div class="msg-text">'+escapeHtml(m.text||m.content||'')+'</div>'+
+      '<div class="msg-footer"><div>'+
+        ((m.anon||m.isAnon)?'<span class="msg-anon">🕵️ Anonim</span>':'<span class="msg-sender">👤 '+escapeHtml(m.sender||'')+'</span>')+
+      '</div><div class="msg-footer-right"><div class="status-row">'+
+        ['new','progress','done'].map(function(st){
+          var labels={new:'Yangi',progress:"Ko'rib chiqilmoqda",done:'Yakunlandi'};
+          var cls=(s===st||(s==='in_progress'&&st==='progress'))?statusBtnClass(st):'';
+          return '<button class="status-btn '+cls+'" onclick="changeStatus(\''+escapeHtml(m.id)+'\',\''+st+'\',this)">'+labels[st]+'</button>';
+        }).join('')+
+      '</div>'+deleteBtnHtml+'</div></div></div>';
   }).join('');
 }
-
-function refreshView() {
-  renderMessages(getFinalMessages());
-}
+function refreshView() { renderMessages(getFinalMessages()); }
 
 async function changeStatus(msgId, newStatus, clickedBtn) {
   var card = clickedBtn.closest('.message-card');
   var btns = card.querySelectorAll('.status-btn');
-  btns.forEach(function(b) { b.disabled = true; b.style.opacity = '0.5'; });
+  btns.forEach(function(b){b.disabled=true;b.style.opacity='0.5';});
   try {
-    var res = await fetch(SERVER_URL + '/status', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: msgId, status: newStatus })
-    });
+    var res = await fetch(SERVER_URL+'/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:msgId,status:newStatus})});
     var data = await res.json();
     if (data.ok) {
-      var msg = allMessages.find(function(m) { return m.id === msgId; });
+      var msg = allMessages.find(function(m){return m.id===msgId;});
       if (msg) msg.status = newStatus;
-      updateStats();
-      refreshView();
+      updateStats(); refreshView();
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     } else throw new Error(data.error);
-  } catch (err) {
-    alert('Xatolik: ' + err.message);
-    btns.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
+  } catch(err) {
+    alert('Xatolik: '+err.message);
+    btns.forEach(function(b){b.disabled=false;b.style.opacity='1';});
   }
 }
-
 async function deleteMessage(msgId, btn) {
   if (!confirm("Bu murojaatni o'chirib tashlaysizmi?")) return;
-  btn.disabled = true; btn.style.opacity = '0.5';
+  btn.disabled=true; btn.style.opacity='0.5';
   try {
-    var res = await fetch(SERVER_URL + '/delete', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: msgId })
-    });
+    var res = await fetch(SERVER_URL+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:msgId})});
     var data = await res.json();
     if (data.ok) {
-      allMessages = allMessages.filter(function(m) { return m.id !== msgId; });
-      updateStats();
-      refreshView();
+      allMessages = allMessages.filter(function(m){return m.id!==msgId;});
+      updateStats(); refreshView();
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     } else throw new Error(data.error);
-  } catch (err) {
-    alert("Xatolik: " + err.message);
-    btn.disabled = false; btn.style.opacity = '1';
+  } catch(err) {
+    alert("Xatolik: "+err.message);
+    btn.disabled=false; btn.style.opacity='1';
   }
 }
-
 async function loadAdminMessages() {
-  document.getElementById('messages-list').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('messages-list').innerHTML='<div class="spinner"></div>';
   try {
-    var res = await fetch(SERVER_URL + '/messages');
+    var res = await fetch(SERVER_URL+'/messages');
     var data = await res.json();
-    allMessages = (data.ok && data.messages) ? data.messages : [];
-    updateStats();
-    refreshView();
-  } catch (err) {
-    document.getElementById('messages-list').innerHTML =
-      '<div class="empty-state"><div class="emoji">⚠️</div><p>Serverga ulanib bo\'lmadi</p></div>';
+    allMessages = (data.ok&&data.messages)?data.messages:[];
+    updateStats(); refreshView();
+  } catch(err) {
+    document.getElementById('messages-list').innerHTML='<div class="empty-state"><div class="emoji">⚠️</div><p>Serverga ulanib bo\'lmadi</p></div>';
   }
 }
 
-// ===== ANON FILTER =====
+// ANON FILTER
 function setAnonFilter(val) {
   currentAnonFilter = val;
-  ['all','open','anon'].forEach(function(k) {
-    var el = document.getElementById('fc-' + k);
-    if (k === val) { el.classList.add('checked'); el.textContent = '✓'; }
-    else { el.classList.remove('checked'); el.textContent = ''; }
+  ['all','open','anon'].forEach(function(k){
+    var el=document.getElementById('fc-'+k);
+    if(k===val){el.classList.add('checked');el.textContent='✓';}
+    else{el.classList.remove('checked');el.textContent='';}
   });
-  document.getElementById('filter-icon-btn').classList.toggle('has-filter', val !== 'all');
+  document.getElementById('filter-icon-btn').classList.toggle('has-filter', val!=='all');
   closeFilterDropdown();
   refreshView();
 }
-function toggleFilterDropdown(e) {
-  e.stopPropagation();
-  document.getElementById('filter-dropdown').classList.toggle('open');
-}
-function closeFilterDropdown() {
-  document.getElementById('filter-dropdown').classList.remove('open');
-}
+function toggleFilterDropdown(e) { e.stopPropagation(); document.getElementById('filter-dropdown').classList.toggle('open'); }
+function closeFilterDropdown() { document.getElementById('filter-dropdown').classList.remove('open'); }
 
-// ===== EVENTS =====
+// EVENTS
 document.addEventListener('DOMContentLoaded', function() {
   // Employee
-  document.getElementById('card-taklif').addEventListener('click', function() { selectType('taklif'); });
-  document.getElementById('card-shikoyat').addEventListener('click', function() { selectType('shikoyat'); });
+  document.getElementById('card-taklif').addEventListener('click', function(){selectType('taklif');});
+  document.getElementById('card-shikoyat').addEventListener('click', function(){selectType('shikoyat');});
   document.getElementById('anon-toggle').addEventListener('click', toggleAnon);
   document.getElementById('submit-btn').addEventListener('click', submitForm);
   document.getElementById('btn-new').addEventListener('click', resetForm);
-  document.getElementById('msg-text').addEventListener('input', function() {
-    var len = this.value.length;
-    var c = document.getElementById('char-count');
-    c.textContent = len + ' / 1000';
-    c.className = 'char-count' + (len > 800 ? ' warn' : '');
-    if (len >= 10) hideError('err-text');
+  document.getElementById('msg-text').addEventListener('input', function(){
+    var len=this.value.length;
+    var c=document.getElementById('char-count');
+    c.textContent=len+' / 1000';
+    c.className='char-count'+(len>800?' warn':'');
+    if(len>=10) hideError('err-text');
   });
-  document.getElementById('filial-select').addEventListener('change', function() {
-    if (this.value) { hideError('err-filial'); this.classList.remove('error'); }
+  document.getElementById('filial-select').addEventListener('change', function(){
+    if(this.value){hideError('err-filial');this.classList.remove('error');}
   });
 
   // Main tabs
-  document.querySelectorAll('.main-tab').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.main-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.main-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.main-tab').forEach(function(b){b.classList.remove('active');});
       this.classList.add('active');
       currentMainTab = this.getAttribute('data-tab');
       currentSubTab = 'new';
-      document.querySelectorAll('.sub-tab').forEach(function(b) { b.className = 'sub-tab'; });
+      document.querySelectorAll('.sub-tab').forEach(function(b){b.className='sub-tab';});
       document.querySelector('[data-sub="new"]').classList.add('active-new');
-      document.getElementById('filter-icon-btn').style.display = currentMainTab === 'all' ? 'flex' : 'none';
+      document.getElementById('filter-icon-btn').style.display = currentMainTab==='all'?'flex':'none';
       refreshView();
     });
   });
 
   // Sub tabs
-  document.querySelectorAll('.sub-tab').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.sub-tab').forEach(function(b) { b.className = 'sub-tab'; });
+  document.querySelectorAll('.sub-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.sub-tab').forEach(function(b){b.className='sub-tab';});
       currentSubTab = this.getAttribute('data-sub');
-      var cls = currentSubTab === 'new' ? 'active-new' : currentSubTab === 'progress' ? 'active-progress' : 'active-done';
+      var cls = currentSubTab==='new'?'active-new':currentSubTab==='progress'?'active-progress':'active-done';
       this.classList.add(cls);
       refreshView();
     });
   });
 
-  // Vaqt filtri tugmalari
-  document.querySelectorAll('.time-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
-      this.classList.add('active');
-      currentPeriod = this.getAttribute('data-period');
-      updateStats();
+  // Date filter
+  document.getElementById('date-filter-btn').addEventListener('click', openDateModal);
+  document.getElementById('date-modal-close').addEventListener('click', closeDateModal);
+  document.getElementById('date-apply-btn').addEventListener('click', applyDateFilter);
+  document.getElementById('date-reset-btn').addEventListener('click', resetDateFilter);
+  document.getElementById('date-modal-overlay').addEventListener('click', function(e){
+    if(e.target===this) closeDateModal();
+  });
+  document.querySelectorAll('.date-quick-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.date-quick-btn').forEach(function(b){b.classList.remove('selected');});
+      this.classList.add('selected');
+      var now = new Date();
+      var from = new Date();
+      var q = this.getAttribute('data-quick');
+      if(q==='week') from.setDate(now.getDate()-7);
+      else if(q==='month') from.setDate(now.getDate()-30);
+      else if(q==='year') from.setFullYear(now.getFullYear()-1);
+      else if(q==='thismonth') from = new Date(now.getFullYear(),now.getMonth(),1);
+      document.getElementById('date-from').value = from.toISOString().slice(0,10);
+      document.getElementById('date-to').value = now.toISOString().slice(0,10);
     });
   });
 
-  // Filter
+  // Anon filter
   document.getElementById('filter-icon-btn').addEventListener('click', toggleFilterDropdown);
-  document.querySelectorAll('.filter-option').forEach(function(opt) {
-    opt.addEventListener('click', function(e) {
-      e.stopPropagation();
-      setAnonFilter(this.getAttribute('data-anon'));
-    });
+  document.querySelectorAll('.filter-option').forEach(function(opt){
+    opt.addEventListener('click', function(e){e.stopPropagation();setAnonFilter(this.getAttribute('data-anon'));});
   });
   document.addEventListener('click', closeFilterDropdown);
 
   // Init
-  if (isAdmin) {
-    showScreen('admin');
-    loadAdminMessages();
-  } else {
-    showScreen('employee');
-  }
+  if (isAdmin) { showScreen('admin'); loadAdminMessages(); }
+  else { showScreen('employee'); }
 });
 </script>
 </body>
