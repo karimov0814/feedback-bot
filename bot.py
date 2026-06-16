@@ -15,7 +15,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 # =====================================================
 BOT_TOKEN = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
-ADMIN_CHAT_ID = 7780854728
+ADMIN_CHAT_ID = [7780854728, 1488298476]
 MINI_APP_URL = "https://karimov0814.github.io/feedback-bot/index.html"
 PORT = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
