@@ -11,22 +11,21 @@
   :root {
     --orange: #EA580C;
     --orange-light: #FFF7ED;
-    --orange-mid: #FED7AA;
     --green: #16A34A;
     --green-light: #F0FDF4;
     --red: #DC2626;
     --red-light: #FEF2F2;
     --amber: #D97706;
     --amber-light: #FFFBEB;
-    --gray-50: #F9FAFB;
-    --gray-100: #F3F4F6;
+    --blue: #2563EB;
+    --blue-light: #EFF6FF;
     --gray-200: #E5E7EB;
     --gray-400: #9CA3AF;
     --gray-600: #4B5563;
     --gray-800: #1F2937;
     --gray-900: #111827;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow: 0 2px 8px rgba(0,0,0,0.10);
     --radius: 12px;
     --radius-sm: 8px;
   }
@@ -35,16 +34,18 @@
 
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: var(--tg-theme-bg-color, #F9FAFB);
-    color: var(--tg-theme-text-color, var(--gray-900));
+    background: #F3F4F6;
+    color: var(--gray-900);
     min-height: 100vh;
     padding-bottom: env(safe-area-inset-bottom, 20px);
   }
 
-  .screen { display: none; padding: 20px 16px; }
+  .screen { display: none; }
   .screen.active { display: block; }
 
-  /* HEADER */
+  /* ===== EMPLOYEE FORM ===== */
+  #screen-employee { padding: 0 0 32px; }
+
   .header {
     background: var(--orange);
     padding: 20px 16px 16px;
@@ -70,20 +71,11 @@
     padding: 0 16px;
   }
 
-  /* TYPE CARDS */
-  .type-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px; padding: 0 16px; margin-bottom: 4px;
-  }
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
   .type-card {
-    border: 2px solid var(--gray-200);
-    border-radius: var(--radius);
-    padding: 16px 12px;
-    text-align: center;
-    cursor: pointer;
-    background: white;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+    border: 2px solid var(--gray-200); border-radius: var(--radius);
+    padding: 16px 12px; text-align: center; cursor: pointer; background: white;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
   .type-card .icon { font-size: 28px; margin-bottom: 8px; }
   .type-card .label { font-size: 13px; font-weight: 600; color: var(--gray-800); }
@@ -93,275 +85,245 @@
   .type-card.selected-shikoyat { border-color: var(--red); background: var(--red-light); }
   .type-card.selected-shikoyat .label { color: var(--red); }
 
-  /* SELECT */
   .select-wrapper { position: relative; padding: 0 16px; }
   .select-wrapper::after {
-    content: '▾';
-    position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
+    content: '▾'; position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
     color: var(--gray-400); pointer-events: none; font-size: 14px;
   }
   select {
-    width: 100%;
-    padding: 13px 40px 13px 14px;
-    border: 1.5px solid var(--gray-200);
-    border-radius: var(--radius-sm);
-    background: white;
-    font-family: inherit;
-    font-size: 15px;
-    color: var(--gray-800);
-    appearance: none;
-    -webkit-appearance: none;
-    outline: none;
-    touch-action: manipulation;
+    width: 100%; padding: 13px 40px 13px 14px;
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+    background: white; font-family: inherit; font-size: 15px; color: var(--gray-800);
+    appearance: none; -webkit-appearance: none; outline: none;
   }
   select:focus { border-color: var(--orange); }
   select.error { border-color: var(--red); }
 
-  /* TEXTAREA */
   .textarea-wrap { padding: 0 16px; }
   textarea {
-    width: 100%;
-    padding: 13px 14px;
-    border: 1.5px solid var(--gray-200);
-    border-radius: var(--radius-sm);
-    background: white;
-    font-family: inherit;
-    font-size: 15px;
-    color: var(--gray-800);
-    resize: none;
-    outline: none;
-    line-height: 1.55;
+    width: 100%; padding: 13px 14px;
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+    background: white; font-family: inherit; font-size: 15px; color: var(--gray-800);
+    resize: none; outline: none; line-height: 1.55;
   }
   textarea:focus { border-color: var(--orange); }
   textarea.error { border-color: var(--red); }
-  .char-count {
-    text-align: right; font-size: 11px;
-    color: var(--gray-400); margin-top: 5px;
-    padding: 0 16px;
-  }
+  .char-count { text-align: right; font-size: 11px; color: var(--gray-400); margin-top: 5px; padding: 0 16px; }
   .char-count.warn { color: var(--amber); }
 
-  /* ANON TOGGLE */
   .anonymous-row {
     display: flex; align-items: center; justify-content: space-between;
-    background: white;
-    border: 1.5px solid var(--gray-200);
-    border-radius: var(--radius-sm);
-    padding: 14px;
-    margin: 0 16px;
+    background: white; border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm); padding: 14px; margin: 0 16px;
   }
   .anonymous-info { display: flex; align-items: center; gap: 10px; }
-  .anonymous-info .anon-icon { font-size: 20px; }
-  .anonymous-info .anon-text .title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
-  .anonymous-info .anon-text .sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+  .anon-text .title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+  .anon-text .sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
 
   .toggle {
-    width: 44px; height: 24px;
-    background: var(--gray-200);
-    border-radius: 12px; position: relative;
-    cursor: pointer;
-    flex-shrink: 0;
+    width: 44px; height: 24px; background: var(--gray-200);
+    border-radius: 12px; position: relative; cursor: pointer; flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
   }
   .toggle.on { background: var(--orange); }
   .toggle::after {
-    content: '';
-    position: absolute;
-    width: 20px; height: 20px;
-    background: white;
-    border-radius: 50%;
-    top: 2px; left: 2px;
-    transition: transform 0.2s;
-    box-shadow: var(--shadow);
+    content: ''; position: absolute; width: 20px; height: 20px; background: white;
+    border-radius: 50%; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: var(--shadow-sm);
   }
   .toggle.on::after { transform: translateX(20px); }
 
-  /* SUBMIT BTN */
-  .btn-submit {
-    width: calc(100% - 32px); padding: 15px;
-    background: var(--orange);
-    color: white; font-family: inherit;
-    font-size: 16px; font-weight: 600;
-    border: none; border-radius: var(--radius-sm);
-    cursor: pointer; margin: 24px 16px 0;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* ERRORS */
-  .field-error {
-    font-size: 12px; color: var(--red);
-    margin-top: 5px; display: none;
-    padding: 0 16px;
-  }
+  .field-error { font-size: 12px; color: var(--red); margin-top: 5px; display: none; padding: 0 16px; }
   .field-error.show { display: block; }
 
-  /* SUCCESS SCREEN */
+  .btn-submit {
+    width: calc(100% - 32px); padding: 15px; background: var(--orange);
+    color: white; font-family: inherit; font-size: 16px; font-weight: 600;
+    border: none; border-radius: var(--radius-sm); cursor: pointer; margin: 24px 16px 0;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-submit:disabled { opacity: 0.5; }
+
+  /* SUCCESS */
   #screen-success {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 80vh;
-    padding: 32px 24px;
-    text-align: center;
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 80vh; padding: 32px 24px; text-align: center;
   }
   #screen-success.active { display: flex; }
   .success-circle {
-    width: 90px; height: 90px;
-    background: var(--green-light);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 44px;
-    margin-bottom: 24px;
+    width: 90px; height: 90px; background: var(--green-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 44px; margin-bottom: 24px;
   }
   .success-title { font-size: 24px; font-weight: 700; color: var(--gray-900); margin-bottom: 10px; }
   .success-desc { font-size: 15px; color: var(--gray-600); line-height: 1.6; max-width: 280px; }
   .success-badge {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--green-light); color: var(--green);
-    font-size: 13px; font-weight: 600;
-    padding: 8px 16px; border-radius: 20px; margin-top: 20px;
+    font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; margin-top: 20px;
   }
   .btn-new {
-    margin-top: 32px; padding: 13px 32px;
-    background: var(--orange-light); color: var(--orange);
-    font-family: inherit; font-size: 15px; font-weight: 600;
-    border: none; border-radius: var(--radius-sm);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+    margin-top: 32px; padding: 13px 32px; background: var(--orange-light); color: var(--orange);
+    font-family: inherit; font-size: 15px; font-weight: 600; border: none;
+    border-radius: var(--radius-sm); cursor: pointer;
   }
 
-  /* ADMIN SCREEN */
+  /* ===== ADMIN ===== */
   #screen-admin { display: none; padding: 0; }
   #screen-admin.active { display: block; }
 
   .admin-header {
-    background: var(--gray-900);
-    padding: 20px 16px;
-    padding-top: calc(20px + env(safe-area-inset-top, 0px));
-    color: white;
+    background: var(--gray-900); padding: 20px 16px;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px)); color: white;
   }
   .admin-header-top { display: flex; align-items: center; justify-content: space-between; }
   .admin-header h1 { font-size: 20px; font-weight: 700; }
-  .admin-badge {
-    background: var(--orange); color: white;
-    font-size: 11px; font-weight: 700;
-    padding: 4px 10px; border-radius: 20px;
-  }
-  .admin-stats {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 10px; margin-top: 16px;
-  }
-  .stat-card {
-    background: rgba(255,255,255,0.1);
-    border-radius: var(--radius-sm);
-    padding: 12px; text-align: center;
-  }
+  .admin-badge { background: var(--orange); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+
+  .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  .stat-card { background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
   .stat-num { font-size: 22px; font-weight: 700; color: white; }
   .stat-lbl { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
 
-  .admin-filters {
-    padding: 12px 16px;
-    background: white;
+  /* MAIN TABS */
+  .main-tabs {
+    display: flex; background: white;
+    border-bottom: 2px solid var(--gray-200);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .main-tab {
+    flex: 1; padding: 12px 8px; text-align: center;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--gray-400); border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    white-space: nowrap; -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .main-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .main-tab .tab-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--gray-200); color: var(--gray-600);
+    font-size: 10px; font-weight: 700; min-width: 16px; height: 16px;
+    border-radius: 8px; padding: 0 4px; margin-left: 4px;
+  }
+  .main-tab.active .tab-count { background: var(--orange); color: white; }
+
+  /* SUB TABS */
+  .sub-tabs-wrapper {
+    background: white; padding: 10px 16px;
     border-bottom: 1px solid var(--gray-200);
-    display: flex; gap: 8px; overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
   }
-  .filter-btn {
-    padding: 7px 14px;
-    border-radius: 20px;
-    font-family: inherit; font-size: 13px; font-weight: 500;
-    border: 1.5px solid var(--gray-200);
-    background: white; color: var(--gray-600);
-    cursor: pointer; white-space: nowrap;
-    flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
+  .sub-tabs { display: flex; gap: 6px; flex: 1; }
+  .sub-tab {
+    padding: 6px 12px; border-radius: 20px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    border: 1.5px solid var(--gray-200); background: white; color: var(--gray-600);
+    cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
   }
-  .filter-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
-  .filter-count {
-    display: inline-block;
-    background: rgba(0,0,0,0.15);
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 1px 6px;
-    margin-left: 2px;
-    min-width: 18px;
-    text-align: center;
-  }
-  .filter-btn:not(.active) .filter-count {
-    background: var(--gray-200);
-    color: var(--gray-600);
-  }
+  .sub-tab.active-new { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .sub-tab.active-progress { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .sub-tab.active-done { background: var(--green-light); border-color: var(--green); color: var(--green); }
+  .sub-tab.active-all { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+  .sub-tab .sc { font-size: 10px; font-weight: 700; margin-left: 3px; }
 
+  /* FILTER BUTTON (only on Hammasi tab) */
+  .filter-icon-btn {
+    width: 34px; height: 34px; border-radius: 10px;
+    border: 1.5px solid var(--gray-200); background: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; font-size: 16px;
+    -webkit-tap-highlight-color: transparent; position: relative;
+  }
+  .filter-icon-btn.has-filter { border-color: var(--orange); background: var(--orange-light); }
+  .filter-icon-btn .filter-dot {
+    position: absolute; top: -3px; right: -3px;
+    width: 8px; height: 8px; background: var(--orange);
+    border-radius: 50%; display: none;
+  }
+  .filter-icon-btn.has-filter .filter-dot { display: block; }
+
+  /* FILTER DROPDOWN */
+  .filter-dropdown {
+    display: none; position: absolute; right: 16px; top: 100%;
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200); z-index: 100; min-width: 160px; overflow: hidden;
+    margin-top: 6px;
+  }
+  .filter-dropdown.open { display: block; }
+  .filter-dropdown-title { font-size: 11px; font-weight: 600; color: var(--gray-400); padding: 10px 14px 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .filter-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--gray-800); -webkit-tap-highlight-color: transparent;
+  }
+  .filter-option:hover { background: #F9FAFB; }
+  .filter-checkbox {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 2px solid var(--gray-200); background: white;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .filter-checkbox.checked { background: var(--orange); border-color: var(--orange); }
+  .filter-checkbox.checked::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+
+  /* MESSAGE CARDS */
   .messages-list { padding: 12px 16px; }
-
-  /* MESSAGE CARD */
   .message-card {
-    background: white;
-    border-radius: var(--radius);
-    padding: 16px; margin-bottom: 10px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--gray-200);
+    background: white; border-radius: var(--radius);
+    padding: 14px 14px 12px; margin-bottom: 10px;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--gray-200);
   }
-  .message-card.status-new { border-left: 3px solid var(--red); }
-  .message-card.status-progress { border-left: 3px solid var(--amber); }
-  .message-card.status-in_progress { border-left: 3px solid var(--amber); }
-  .message-card.status-done { border-left: 3px solid var(--green); }
+  .message-card.sl-new { border-left-color: var(--red); }
+  .message-card.sl-progress { border-left-color: var(--amber); }
+  .message-card.sl-done { border-left-color: var(--green); }
 
-  .msg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .msg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .msg-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .msg-type-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 700;
-    padding: 4px 10px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
   }
   .msg-type-badge.taklif { background: var(--green-light); color: var(--green); }
   .msg-type-badge.shikoyat { background: var(--red-light); color: var(--red); }
-  .msg-time { font-size: 11px; color: var(--gray-400); }
-  .msg-filial { font-size: 12px; color: var(--orange); font-weight: 500; margin-bottom: 8px; }
+  .msg-status-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+  }
+  .msg-status-badge.s-new { background: var(--red-light); color: var(--red); }
+  .msg-status-badge.s-progress { background: var(--amber-light); color: var(--amber); }
+  .msg-status-badge.s-done { background: var(--green-light); color: var(--green); }
+
+  .msg-time { font-size: 11px; color: var(--gray-400); flex-shrink: 0; }
+  .msg-filial { font-size: 12px; color: var(--orange); font-weight: 500; margin-bottom: 6px; }
   .msg-text { font-size: 14px; line-height: 1.6; color: var(--gray-800); margin-bottom: 10px; }
   .msg-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
   .msg-sender { font-size: 12px; color: var(--gray-400); }
   .msg-anon { font-size: 12px; color: var(--amber); font-weight: 500; }
 
-  /* STATUS BUTTONS */
-  .status-row {
-    display: flex; gap: 6px; flex-wrap: wrap;
-  }
+  /* STATUS BUTTONS inside card */
+  .status-row { display: flex; gap: 5px; flex-wrap: wrap; }
   .status-btn {
-    padding: 5px 12px; border-radius: 20px;
-    font-family: inherit; font-size: 12px; font-weight: 600;
-    border: 1.5px solid var(--gray-200);
-    background: white; color: var(--gray-600);
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: all 0.15s;
+    padding: 4px 10px; border-radius: 20px;
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    border: 1.5px solid var(--gray-200); background: white; color: var(--gray-600);
+    cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s;
   }
-  .status-btn:hover { opacity: 0.85; }
-  .status-btn.active-new { background: var(--red-light); border-color: var(--red); color: var(--red); }
-  .status-btn.active-progress { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
-  .status-btn.active-done { background: var(--green-light); border-color: var(--green); color: var(--green); }
+  .status-btn.cur-new { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .status-btn.cur-progress { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .status-btn.cur-done { background: var(--green-light); border-color: var(--green); color: var(--green); }
 
   .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
   .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
 
   .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid var(--gray-200);
-    border-top-color: var(--orange);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 40px auto 12px;
+    width: 32px; height: 32px; border: 3px solid var(--gray-200);
+    border-top-color: var(--orange); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 40px auto 12px;
   }
-
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sub-tabs-wrapper { position: relative; }
 </style>
 </head>
 <body>
@@ -375,7 +337,6 @@
     </div>
     <p>Xodimlar uchun muloqot platformasi</p>
   </div>
-
   <div style="padding-bottom: 32px;">
     <div class="section-title">Murojaat turini tanlang</div>
     <div class="type-grid">
@@ -396,27 +357,18 @@
     <div class="select-wrapper">
       <select id="filial-select">
         <option value="">— Filialni tanlang —</option>
-        <option value="Novza">Novza</option>
-        <option value="Yunusobod Gallery">Yunusobod Gallery</option>
-        <option value="Compass">Compass</option>
-        <option value="Sergeli">Sergeli</option>
-        <option value="Anhor">Anhor</option>
-        <option value="Scopus Mall">Scopus Mall</option>
-        <option value="Eco">Eco</option>
-        <option value="Andijon Navruz">Andijon Navruz</option>
-        <option value="Beruniy">Beruniy</option>
-        <option value="Glinka">Glinka</option>
-        <option value="City Mall">City Mall</option>
-        <option value="C1 Wok">C1 Wok</option>
-        <option value="Bosh ofis">Bosh ofis</option>
+        <option>Novza</option><option>Yunusobod Gallery</option><option>Compass</option>
+        <option>Sergeli</option><option>Anhor</option><option>Scopus Mall</option>
+        <option>Eco</option><option>Andijon Navruz</option><option>Beruniy</option>
+        <option>Glinka</option><option>City Mall</option><option>C1 Wok</option>
+        <option>Bosh ofis</option>
       </select>
     </div>
     <div class="field-error" id="err-filial">Filialni tanlang</div>
 
     <div class="section-title">Matn</div>
     <div class="textarea-wrap">
-      <textarea id="msg-text" rows="5" maxlength="1000"
-        placeholder="Fikringizni yozing..."></textarea>
+      <textarea id="msg-text" rows="5" maxlength="1000" placeholder="Fikringizni yozing..."></textarea>
     </div>
     <div class="char-count" id="char-count">0 / 1000</div>
     <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
@@ -424,7 +376,7 @@
     <div class="section-title">Maxfiylik</div>
     <div class="anonymous-row">
       <div class="anonymous-info">
-        <div class="anon-icon">🕵️</div>
+        <div class="anon-icon" style="font-size:20px">🕵️</div>
         <div class="anon-text">
           <div class="title">Anonim yuborish</div>
           <div class="sub">Ismingiz ko'rinmaydi</div>
@@ -434,12 +386,12 @@
     </div>
 
     <button class="btn-submit" id="submit-btn">
-      <span>📤</span> <span>Yuborish</span>
+      <span>📤</span><span>Yuborish</span>
     </button>
   </div>
 </div>
 
-<!-- SUCCESS SCREEN -->
+<!-- SUCCESS -->
 <div id="screen-success" class="screen">
   <div class="success-circle">✅</div>
   <div class="success-title">Yuborildi!</div>
@@ -448,7 +400,7 @@
   <button class="btn-new" id="btn-new">Yangi murojaat</button>
 </div>
 
-<!-- ADMIN SCREEN -->
+<!-- ADMIN -->
 <div id="screen-admin" class="screen">
   <div class="admin-header">
     <div class="admin-header-top">
@@ -456,29 +408,50 @@
       <div class="admin-badge">ADMIN</div>
     </div>
     <div class="admin-stats">
-      <div class="stat-card">
-        <div class="stat-num" id="stat-total">—</div>
-        <div class="stat-lbl">Jami</div>
+      <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-lbl">Jami</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-taklif">—</div><div class="stat-lbl">Takliflar</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-shikoyat">—</div><div class="stat-lbl">Shikoyatlar</div></div>
+    </div>
+  </div>
+
+  <!-- MAIN TABS -->
+  <div class="main-tabs">
+    <button class="main-tab active" data-tab="all">Hammasi <span class="tab-count" id="tc-all">0</span></button>
+    <button class="main-tab" data-tab="shikoyat">⚠️ Shikoyat <span class="tab-count" id="tc-shikoyat">0</span></button>
+    <button class="main-tab" data-tab="taklif">💡 Taklif <span class="tab-count" id="tc-taklif">0</span></button>
+  </div>
+
+  <!-- SUB TABS + FILTER BTN -->
+  <div class="sub-tabs-wrapper">
+    <div class="sub-tabs" id="sub-tabs-container">
+      <button class="sub-tab active-all" data-sub="all">Barchasi <span class="sc" id="sc-all">0</span></button>
+      <button class="sub-tab" data-sub="new">🔴 Yangi <span class="sc" id="sc-new">0</span></button>
+      <button class="sub-tab" data-sub="progress">🟡 Jarayonda <span class="sc" id="sc-progress">0</span></button>
+      <button class="sub-tab" data-sub="done">🟢 Yakunlandi <span class="sc" id="sc-done">0</span></button>
+    </div>
+    <!-- Filter button (only visible on "all" tab) -->
+    <button class="filter-icon-btn" id="filter-icon-btn" title="Filter">
+      ⚙️
+      <span class="filter-dot"></span>
+    </button>
+    <!-- Dropdown -->
+    <div class="filter-dropdown" id="filter-dropdown">
+      <div class="filter-dropdown-title">Ko'rinishi</div>
+      <div class="filter-option" data-anon="all">
+        <div class="filter-checkbox checked" id="fc-all">✓</div>
+        <span>Hammasi</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-taklif">—</div>
-        <div class="stat-lbl">Takliflar</div>
+      <div class="filter-option" data-anon="open">
+        <div class="filter-checkbox" id="fc-open"></div>
+        <span>👤 Ochiq</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-shikoyat">—</div>
-        <div class="stat-lbl">Shikoyatlar</div>
+      <div class="filter-option" data-anon="anon">
+        <div class="filter-checkbox" id="fc-anon"></div>
+        <span>🕵️ Anonim</span>
       </div>
     </div>
   </div>
-  <div class="admin-filters">
-    <button class="filter-btn active" data-filter="all">Hammasi <span class="filter-count" id="count-all">0</span></button>
-    <button class="filter-btn" data-filter="new">🔴 Yangi <span class="filter-count" id="count-new">0</span></button>
-    <button class="filter-btn" data-filter="progress">🟡 Jarayonda <span class="filter-count" id="count-progress">0</span></button>
-    <button class="filter-btn" data-filter="done">🟢 Ko'rilgan <span class="filter-count" id="count-done">0</span></button>
-    <button class="filter-btn" data-filter="taklif">💡 Takliflar <span class="filter-count" id="count-taklif">0</span></button>
-    <button class="filter-btn" data-filter="shikoyat">⚠️ Shikoyatlar <span class="filter-count" id="count-shikoyat">0</span></button>
-    <button class="filter-btn" data-filter="anon">🕵️ Anonimlar <span class="filter-count" id="count-anon">0</span></button>
-  </div>
+
   <div class="messages-list" id="messages-list">
     <div class="spinner"></div>
   </div>
@@ -491,64 +464,73 @@ const ADMIN_CHAT_ID = 7780854728;
 let selectedType = '';
 let isAnon = false;
 let allMessages = [];
-let currentFilter = 'all';
+let currentMainTab = 'all';
+let currentSubTab = 'all';
+let currentAnonFilter = 'all'; // 'all' | 'anon' | 'open'
 
 const tg = window.Telegram?.WebApp || {};
 if (tg.ready) tg.ready();
 if (tg.expand) tg.expand();
 
 const urlParams = new URLSearchParams(window.location.search);
-const adminByUrl = urlParams.get('admin') === '1';
-const tgUser = tg.initDataUnsafe?.user;
-const userId = tgUser?.id || 0;
-const isAdmin = adminByUrl || (userId === ADMIN_CHAT_ID);
+const isAdmin = urlParams.get('admin') === '1' || ((tg.initDataUnsafe?.user?.id || 0) === ADMIN_CHAT_ID);
 
-// ==================== SCREENS ====================
+// ===== UTILS =====
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(function(s) {
-    s.classList.remove('active');
-  });
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
 }
-
 function showError(id) { document.getElementById(id).classList.add('show'); }
 function hideError(id) { document.getElementById(id).classList.remove('show'); }
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function getStatus(m) { return m.status || 'new'; }
+function statusClass(s) {
+  if (s === 'done') return 'cur-done';
+  if (s === 'progress' || s === 'in_progress') return 'cur-progress';
+  return 'cur-new';
+}
+function statusLabel(s) {
+  if (s === 'done') return '🟢 Yakunlandi';
+  if (s === 'progress' || s === 'in_progress') return '🟡 Jarayonda';
+  return '🔴 Yangi';
+}
+function statusBadgeClass(s) {
+  if (s === 'done') return 's-done';
+  if (s === 'progress' || s === 'in_progress') return 's-progress';
+  return 's-new';
+}
+function slClass(s) {
+  if (s === 'done') return 'sl-done';
+  if (s === 'progress' || s === 'in_progress') return 'sl-progress';
+  return 'sl-new';
+}
 
-// ==================== EMPLOYEE FORM ====================
+// ===== EMPLOYEE FORM =====
 function selectType(type) {
   selectedType = type;
   document.getElementById('card-taklif').className = 'type-card' + (type === 'taklif' ? ' selected-taklif' : '');
   document.getElementById('card-shikoyat').className = 'type-card' + (type === 'shikoyat' ? ' selected-shikoyat' : '');
   hideError('err-type');
 }
-
 function toggleAnon() {
   isAnon = !isAnon;
-  var toggle = document.getElementById('anon-toggle');
-  toggle.classList.toggle('on', isAnon);
+  document.getElementById('anon-toggle').classList.toggle('on', isAnon);
 }
-
 function validate() {
   var ok = true;
   if (!selectedType) { showError('err-type'); ok = false; }
-  var filial = document.getElementById('filial-select').value;
-  if (!filial) {
-    showError('err-filial');
-    document.getElementById('filial-select').classList.add('error');
-    ok = false;
+  if (!document.getElementById('filial-select').value) {
+    showError('err-filial'); document.getElementById('filial-select').classList.add('error'); ok = false;
   }
-  var text = document.getElementById('msg-text').value.trim();
-  if (text.length < 10) {
-    showError('err-text');
-    document.getElementById('msg-text').classList.add('error');
-    ok = false;
+  if (document.getElementById('msg-text').value.trim().length < 10) {
+    showError('err-text'); document.getElementById('msg-text').classList.add('error'); ok = false;
   }
   return ok;
 }
-
 function resetForm() {
-  selectedType = '';
-  isAnon = false;
+  selectedType = ''; isAnon = false;
   document.getElementById('card-taklif').className = 'type-card';
   document.getElementById('card-shikoyat').className = 'type-card';
   document.getElementById('filial-select').value = '';
@@ -558,107 +540,81 @@ function resetForm() {
   document.getElementById('char-count').textContent = '0 / 1000';
   document.getElementById('anon-toggle').classList.remove('on');
   var btn = document.getElementById('submit-btn');
-  btn.disabled = false;
-  btn.innerHTML = '<span>📤</span> <span>Yuborish</span>';
-  ['err-type', 'err-filial', 'err-text'].forEach(hideError);
+  btn.disabled = false; btn.innerHTML = '<span>📤</span><span>Yuborish</span>';
+  ['err-type','err-filial','err-text'].forEach(hideError);
   showScreen('employee');
 }
-
 async function submitForm() {
   if (!validate()) return;
-
   var btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span>⏳</span> <span>Yuborilmoqda...</span>';
-
-  var filial = document.getElementById('filial-select').value;
-  var text = document.getElementById('msg-text').value.trim();
+  btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>Yuborilmoqda...</span>';
   var user = tg.initDataUnsafe?.user;
   var senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : "Noma'lum";
-  var username = user?.username || '';
-
   try {
     var res = await fetch(SERVER_URL + '/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: selectedType,
-        filial: filial,
-        text: text,
+        filial: document.getElementById('filial-select').value,
+        text: document.getElementById('msg-text').value.trim(),
         anon: isAnon,
         time: new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' }),
-        sender_name: senderName,
-        username: username
+        sender_name: senderName, username: user?.username || ''
       })
     });
     var data = await res.json();
-    if (data.ok) {
-      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-      showScreen('success');
-    } else {
-      throw new Error(data.error || 'Xatolik');
-    }
+    if (data.ok) { if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); showScreen('success'); }
+    else throw new Error(data.error || 'Xatolik');
   } catch (err) {
     alert('Xatolik: ' + err.message);
-    btn.disabled = false;
-    btn.innerHTML = '<span>📤</span> <span>Yuborish</span>';
+    btn.disabled = false; btn.innerHTML = '<span>📤</span><span>Yuborish</span>';
   }
 }
 
-// ==================== ADMIN ====================
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function getStatusClass(status) {
-  if (status === 'done') return 'active-done';
-  if (status === 'progress' || status === 'in_progress') return 'active-progress';
-  return 'active-new';
-}
-
-function getStatusLabel(status) {
-  if (status === 'done') return '🟢 Ko\'rilgan';
-  if (status === 'progress' || status === 'in_progress') return '🟡 Jarayonda';
-  return '🔴 Yangi';
-}
-
+// ===== ADMIN =====
 function updateStats() {
   var total = allMessages.length;
-  var taklifCount = allMessages.filter(function(m) { return m.type === 'taklif'; }).length;
-  var shikoyatCount = allMessages.filter(function(m) { return m.type === 'shikoyat'; }).length;
-  var anonCount = allMessages.filter(function(m) { return m.anon || m.isAnon; }).length;
-  var newCount = allMessages.filter(function(m) { return !m.status || m.status === 'new'; }).length;
-  var progressCount = allMessages.filter(function(m) { return m.status === 'progress' || m.status === 'in_progress'; }).length;
-  var doneCount = allMessages.filter(function(m) { return m.status === 'done'; }).length;
-
+  var taklifC = allMessages.filter(m => m.type === 'taklif').length;
+  var shikoyatC = allMessages.filter(m => m.type === 'shikoyat').length;
   document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-taklif').textContent = taklifCount;
-  document.getElementById('stat-shikoyat').textContent = shikoyatCount;
-
-  document.getElementById('count-all').textContent = total;
-  document.getElementById('count-new').textContent = newCount;
-  document.getElementById('count-progress').textContent = progressCount;
-  document.getElementById('count-done').textContent = doneCount;
-  document.getElementById('count-taklif').textContent = taklifCount;
-  document.getElementById('count-shikoyat').textContent = shikoyatCount;
-  document.getElementById('count-anon').textContent = anonCount;
+  document.getElementById('stat-taklif').textContent = taklifC;
+  document.getElementById('stat-shikoyat').textContent = shikoyatC;
+  document.getElementById('tc-all').textContent = total;
+  document.getElementById('tc-taklif').textContent = taklifC;
+  document.getElementById('tc-shikoyat').textContent = shikoyatC;
 }
 
-function getFilteredMessages(filter) {
-  return allMessages.filter(function(m) {
-    var status = m.status || 'new';
-    if (filter === 'all') return true;
-    if (filter === 'new') return status === 'new';
-    if (filter === 'progress') return status === 'progress' || status === 'in_progress';
-    if (filter === 'done') return status === 'done';
-    if (filter === 'taklif') return m.type === 'taklif';
-    if (filter === 'shikoyat') return m.type === 'shikoyat';
-    if (filter === 'anon') return m.anon || m.isAnon;
-    return true;
-  });
+function getByMainTab(tab) {
+  if (tab === 'taklif') return allMessages.filter(m => m.type === 'taklif');
+  if (tab === 'shikoyat') return allMessages.filter(m => m.type === 'shikoyat');
+  return allMessages;
+}
+
+function applyAnonFilter(msgs) {
+  if (currentAnonFilter === 'anon') return msgs.filter(m => m.anon || m.isAnon);
+  if (currentAnonFilter === 'open') return msgs.filter(m => !m.anon && !m.isAnon);
+  return msgs;
+}
+
+function updateSubCounts(base) {
+  var newC = base.filter(m => getStatus(m) === 'new').length;
+  var progC = base.filter(m => getStatus(m) === 'progress' || getStatus(m) === 'in_progress').length;
+  var doneC = base.filter(m => getStatus(m) === 'done').length;
+  document.getElementById('sc-all').textContent = base.length;
+  document.getElementById('sc-new').textContent = newC;
+  document.getElementById('sc-progress').textContent = progC;
+  document.getElementById('sc-done').textContent = doneC;
+}
+
+function getFinalMessages() {
+  var base = getByMainTab(currentMainTab);
+  // anon filter only on "all" main tab
+  if (currentMainTab === 'all') base = applyAnonFilter(base);
+  updateSubCounts(base);
+  if (currentSubTab === 'new') return base.filter(m => getStatus(m) === 'new');
+  if (currentSubTab === 'progress') return base.filter(m => getStatus(m) === 'progress' || getStatus(m) === 'in_progress');
+  if (currentSubTab === 'done') return base.filter(m => getStatus(m) === 'done');
+  return base;
 }
 
 function renderMessages(msgs) {
@@ -667,17 +623,14 @@ function renderMessages(msgs) {
     list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>';
     return;
   }
-
   list.innerHTML = msgs.map(function(m) {
-    var status = m.status || 'new';
-    var statusClass = getStatusClass(status);
-    var cardClass = 'message-card status-' + status;
-
-    return '<div class="' + cardClass + '" data-id="' + escapeHtml(m.id) + '">' +
+    var s = getStatus(m);
+    return '<div class="message-card ' + slClass(s) + '" data-id="' + escapeHtml(m.id) + '">' +
       '<div class="msg-header">' +
-        '<span class="msg-type-badge ' + m.type + '">' +
-          (m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT') +
-        '</span>' +
+        '<div class="msg-meta">' +
+          '<span class="msg-type-badge ' + m.type + '">' + (m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT') + '</span>' +
+          '<span class="msg-status-badge ' + statusBadgeClass(s) + '">' + statusLabel(s) + '</span>' +
+        '</div>' +
         '<span class="msg-time">' + escapeHtml(m.time) + '</span>' +
       '</div>' +
       (m.filial ? '<div class="msg-filial">🏢 ' + escapeHtml(m.filial) + '</div>' : '') +
@@ -689,66 +642,41 @@ function renderMessages(msgs) {
             : '<span class="msg-sender">👤 ' + escapeHtml(m.sender || '') + '</span>') +
         '</div>' +
         '<div class="status-row">' +
-          '<button class="status-btn ' + (status === 'new' ? statusClass : '') + '" ' +
-            'onclick="changeStatus(\'' + escapeHtml(m.id) + '\', \'new\', this)">🔴 Yangi</button>' +
-          '<button class="status-btn ' + ((status === 'progress' || status === 'in_progress') ? statusClass : '') + '" ' +
-            'onclick="changeStatus(\'' + escapeHtml(m.id) + '\', \'progress\', this)">🟡 Jarayonda</button>' +
-          '<button class="status-btn ' + (status === 'done' ? statusClass : '') + '" ' +
-            'onclick="changeStatus(\'' + escapeHtml(m.id) + '\', \'done\', this)">🟢 Ko\'rilgan</button>' +
+          '<button class="status-btn ' + (s === 'new' ? 'cur-new' : '') + '" onclick="changeStatus(\'' + escapeHtml(m.id) + '\',\'new\',this)">🔴 Yangi</button>' +
+          '<button class="status-btn ' + ((s === 'progress' || s === 'in_progress') ? 'cur-progress' : '') + '" onclick="changeStatus(\'' + escapeHtml(m.id) + '\',\'progress\',this)">🟡 Jarayonda</button>' +
+          '<button class="status-btn ' + (s === 'done' ? 'cur-done' : '') + '" onclick="changeStatus(\'' + escapeHtml(m.id) + '\',\'done\',this)">🟢 Yakunlandi</button>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 }
 
+function refreshView() {
+  var msgs = getFinalMessages();
+  renderMessages(msgs);
+}
+
 async function changeStatus(msgId, newStatus, clickedBtn) {
-  // Tugmani disabled qilish
   var card = clickedBtn.closest('.message-card');
   var btns = card.querySelectorAll('.status-btn');
-  btns.forEach(function(b) { b.disabled = true; b.style.opacity = '0.5'; });
-
+  btns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
   try {
     var res = await fetch(SERVER_URL + '/status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: msgId, status: newStatus })
     });
     var data = await res.json();
-
     if (data.ok) {
-      // allMessages ichida yangilash
-      var msg = allMessages.find(function(m) { return m.id === msgId; });
-      if (msg) { msg.status = newStatus; }
-
-      // Kartochka rangini yangilash
-      card.className = 'message-card status-' + newStatus;
-
-      // Tugma ranglarini yangilash
-      btns.forEach(function(b) {
-        b.disabled = false;
-        b.style.opacity = '1';
-        b.classList.remove('active-new', 'active-progress', 'active-done');
-      });
-      var activeClass = getStatusClass(newStatus);
-      clickedBtn.classList.add(activeClass);
-
-      // Statistika yangilash
+      var msg = allMessages.find(m => m.id === msgId);
+      if (msg) msg.status = newStatus;
       updateStats();
-
+      refreshView();
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-    } else {
-      throw new Error(data.error || 'Xatolik');
-    }
+    } else throw new Error(data.error);
   } catch (err) {
-    alert('Status o\'zgartirishda xatolik: ' + err.message);
-    btns.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
+    alert('Xatolik: ' + err.message);
+    btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
   }
-}
-
-function applyFilter(filter) {
-  currentFilter = filter;
-  var filtered = getFilteredMessages(filter);
-  renderMessages(filtered);
 }
 
 async function loadAdminMessages() {
@@ -758,42 +686,95 @@ async function loadAdminMessages() {
     var data = await res.json();
     allMessages = (data.ok && data.messages) ? data.messages : [];
     updateStats();
-    renderMessages(getFilteredMessages(currentFilter));
+    refreshView();
   } catch (err) {
     document.getElementById('messages-list').innerHTML =
       '<div class="empty-state"><div class="emoji">⚠️</div><p>Serverga ulanib bo\'lmadi</p></div>';
   }
 }
 
-// ==================== EVENT LISTENERS ====================
+// ===== ANON FILTER DROPDOWN =====
+function setAnonFilter(val) {
+  currentAnonFilter = val;
+  ['all','open','anon'].forEach(function(k) {
+    var el = document.getElementById('fc-' + k);
+    if (k === val) {
+      el.classList.add('checked'); el.textContent = '✓';
+    } else {
+      el.classList.remove('checked'); el.textContent = '';
+    }
+  });
+  var btn = document.getElementById('filter-icon-btn');
+  btn.classList.toggle('has-filter', val !== 'all');
+  closeFilterDropdown();
+  refreshView();
+}
+
+function toggleFilterDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('filter-dropdown').classList.toggle('open');
+}
+function closeFilterDropdown() {
+  document.getElementById('filter-dropdown').classList.remove('open');
+}
+
+// ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', function() {
-
-  document.getElementById('card-taklif').addEventListener('click', function() { selectType('taklif'); });
-  document.getElementById('card-shikoyat').addEventListener('click', function() { selectType('shikoyat'); });
-  document.getElementById('anon-toggle').addEventListener('click', function() { toggleAnon(); });
-  document.getElementById('submit-btn').addEventListener('click', function() { submitForm(); });
-  document.getElementById('btn-new').addEventListener('click', function() { resetForm(); });
-
+  // Employee
+  document.getElementById('card-taklif').addEventListener('click', () => selectType('taklif'));
+  document.getElementById('card-shikoyat').addEventListener('click', () => selectType('shikoyat'));
+  document.getElementById('anon-toggle').addEventListener('click', toggleAnon);
+  document.getElementById('submit-btn').addEventListener('click', submitForm);
+  document.getElementById('btn-new').addEventListener('click', resetForm);
   document.getElementById('msg-text').addEventListener('input', function() {
     var len = this.value.length;
-    var counter = document.getElementById('char-count');
-    counter.textContent = len + ' / 1000';
-    counter.className = 'char-count' + (len > 800 ? ' warn' : '');
+    var c = document.getElementById('char-count');
+    c.textContent = len + ' / 1000';
+    c.className = 'char-count' + (len > 800 ? ' warn' : '');
     if (len >= 10) hideError('err-text');
   });
-
   document.getElementById('filial-select').addEventListener('change', function() {
     if (this.value) { hideError('err-filial'); this.classList.remove('error'); }
   });
 
-  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+  // Main tabs
+  document.querySelectorAll('.main-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      applyFilter(this.getAttribute('data-filter'));
+      currentMainTab = this.getAttribute('data-tab');
+      currentSubTab = 'all';
+      // highlight sub tab
+      document.querySelectorAll('.sub-tab').forEach(b => b.className = 'sub-tab');
+      document.querySelector('[data-sub="all"]').classList.add('active-all');
+      // show/hide filter btn
+      document.getElementById('filter-icon-btn').style.display = currentMainTab === 'all' ? 'flex' : 'none';
+      refreshView();
     });
   });
 
+  // Sub tabs
+  document.querySelectorAll('.sub-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.sub-tab').forEach(b => b.className = 'sub-tab');
+      currentSubTab = this.getAttribute('data-sub');
+      var cls = currentSubTab === 'all' ? 'active-all' : currentSubTab === 'new' ? 'active-new' : currentSubTab === 'progress' ? 'active-progress' : 'active-done';
+      this.classList.add(cls);
+      refreshView();
+    });
+  });
+
+  // Filter dropdown
+  document.getElementById('filter-icon-btn').addEventListener('click', toggleFilterDropdown);
+  document.querySelectorAll('.filter-option').forEach(function(opt) {
+    opt.addEventListener('click', function(e) {
+      e.stopPropagation();
+      setAnonFilter(this.getAttribute('data-anon'));
+    });
+  });
+  document.addEventListener('click', closeFilterDropdown);
+
+  // Init
   if (isAdmin) {
     showScreen('admin');
     loadAdminMessages();
