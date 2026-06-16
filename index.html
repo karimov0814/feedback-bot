@@ -341,16 +341,13 @@
   /* DELETE BUTTON */
   .message-card { position: relative; }
   .delete-btn {
-    position: absolute; top: 10px; right: 10px;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--red-light); border: 1.5px solid var(--red);
-    color: var(--red); font-size: 13px;
-    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 12px; right: 12px;
+    background: none; border: none; padding: 0;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation; transition: all 0.15s;
-    z-index: 2;
+    touch-action: manipulation; color: var(--red);
+    opacity: 0.55; line-height: 1;
   }
-  .delete-btn:active { background: var(--red); color: white; }
+  .delete-btn svg { display: block; width: 16px; height: 16px; }
 
   .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
   .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
@@ -652,7 +649,7 @@ function renderMessages(msgs) {
   }
   list.innerHTML = msgs.map(function(m) {
     var s = getStatus(m);
-    var deleteBtnHtml = (s === 'done') ? '<button class="delete-btn" onclick="deleteMessage(\'' + escapeHtml(m.id) + '\',this)" title="O\'chirish">🗑</button>' : '';
+    var deleteBtnHtml = (s === 'done') ? '<button class="delete-btn" onclick="deleteMessage(\'' + escapeHtml(m.id) + '\',this)" title="O\'chirish"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' : '';
     return '<div class="message-card ' + slClass(s) + '">' + deleteBtnHtml +
       '<div class="msg-header">' +
         '<div class="msg-meta">' +
