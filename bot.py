@@ -231,32 +231,14 @@ def update_status():
     """Xabar holatini yangilash"""
     try:
         data = request.get_json(force=True)
-        msg_id = data.get("id")
-        new_status = data.get("status")
-        if new_status not in ["new", "progress", "done"]:
-            return jsonify({"ok": False, "error": "Noto'g'ri status"}), 400
-        msgs = load_messages()
-        for msg in msgs:
-            if msg.get("id") == msg_id:
-                msg["status"] = new_status
-                break
-        save_messages(msgs)
-        return jsonify({"ok": True})
-    except Exception as e:
-        logger.error(f"/status xatolik: {e}")
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-
-@flask_app.route("/status", methods=["POST"])
-def update_status():
-    """Xabar statusini yangilash"""
-    try:
-        data = request.get_json(force=True)
         msg_id = data.get('id')
-        new_status = data.get('status')  # 'new', 'in_progress', 'done'
+        new_status = data.get('status')
 
         if not msg_id or not new_status:
             return jsonify({"ok": False, "error": "id va status kerak"}), 400
+
+        if new_status not in ["new", "progress", "in_progress", "done"]:
+            return jsonify({"ok": False, "error": "Noto'g'ri status"}), 400
 
         msgs = load_messages()
         updated = False
