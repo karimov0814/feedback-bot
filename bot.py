@@ -194,14 +194,18 @@ def send_message():
         future.result(timeout=10)
 
         # Faylga saqlash
+        import time as time_module
+        msg_id = str(int(time_module.time() * 1000))
         msgs = load_messages()
         msgs.insert(0, {
+            "id": msg_id,
             "type": msg_type,
             "filial": filial,
             "text": text,
             "anon": anon,
             "time": time,
-            "sender": display_name
+            "sender": display_name,
+            "status": "new"
         })
         # Faqat oxirgi 500 ta xabar
         if len(msgs) > 500:
@@ -220,6 +224,57 @@ def send_message():
 def get_messages():
     """Admin panel uchun xabarlar ro'yxati"""
     return jsonify({"ok": True, "messages": load_messages()})
+
+
+@flask_app.route("/status", methods=["POST"])
+def update_status():
+    """Xabar holatini yangilash"""
+    try:
+        data = request.get_json(force=True)
+        msg_id = data.get("id")
+        new_status = data.get("status")
+        if new_status not in ["new", "progress", "done"]:
+            return jsonify({"ok": False, "error": "Noto'g'ri status"}), 400
+        msgs = load_messages()
+        for msg in msgs:
+            if msg.get("id") == msg_id:
+                msg["status"] = new_status
+                break
+        save_messages(msgs)
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/status xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/status", methods=["POST"])
+def update_status():
+    """Xabar statusini yangilash"""
+    try:
+        data = request.get_json(force=True)
+        msg_id = data.get('id')
+        new_status = data.get('status')  # 'new', 'in_progress', 'done'
+
+        if not msg_id or not new_status:
+            return jsonify({"ok": False, "error": "id va status kerak"}), 400
+
+        msgs = load_messages()
+        updated = False
+        for msg in msgs:
+            if msg.get('id') == msg_id:
+                msg['status'] = new_status
+                updated = True
+                break
+
+        if updated:
+            save_messages(msgs)
+            return jsonify({"ok": True})
+        else:
+            return jsonify({"ok": False, "error": "Xabar topilmadi"}), 404
+
+    except Exception as e:
+        logger.error(f"/status xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 
 # ==================== MAIN ====================
