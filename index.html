@@ -284,6 +284,21 @@
     touch-action: manipulation;
   }
   .filter-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+  .filter-count {
+    display: inline-block;
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    margin-left: 2px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .filter-btn:not(.active) .filter-count {
+    background: var(--gray-200);
+    color: var(--gray-600);
+  }
 
   .messages-list { padding: 12px 16px; }
   .message-card {
@@ -430,10 +445,10 @@
     </div>
   </div>
   <div class="admin-filters">
-    <button class="filter-btn active" data-filter="all">Hammasi</button>
-    <button class="filter-btn" data-filter="taklif">💡 Takliflar</button>
-    <button class="filter-btn" data-filter="shikoyat">⚠️ Shikoyatlar</button>
-    <button class="filter-btn" data-filter="anon">🕵️ Anonimlar</button>
+    <button class="filter-btn active" data-filter="all">Hammasi <span class="filter-count" id="count-all"></span></button>
+    <button class="filter-btn" data-filter="taklif">💡 Takliflar <span class="filter-count" id="count-taklif"></span></button>
+    <button class="filter-btn" data-filter="shikoyat">⚠️ Shikoyatlar <span class="filter-count" id="count-shikoyat"></span></button>
+    <button class="filter-btn" data-filter="anon">🕵️ Anonimlar <span class="filter-count" id="count-anon"></span></button>
   </div>
   <div class="messages-list" id="messages-list">
     <div class="spinner"></div>
@@ -589,9 +604,19 @@ function parseMessage(msg) {
 }
 
 function updateStats() {
-  document.getElementById('stat-total').textContent = allMessages.length;
-  document.getElementById('stat-taklif').textContent = allMessages.filter(function(m) { return m.type === 'taklif'; }).length;
-  document.getElementById('stat-shikoyat').textContent = allMessages.filter(function(m) { return m.type === 'shikoyat'; }).length;
+  var total = allMessages.length;
+  var taklifCount = allMessages.filter(function(m) { return m.type === 'taklif'; }).length;
+  var shikoyatCount = allMessages.filter(function(m) { return m.type === 'shikoyat'; }).length;
+  var anonCount = allMessages.filter(function(m) { return m.anon || m.isAnon; }).length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-taklif').textContent = taklifCount;
+  document.getElementById('stat-shikoyat').textContent = shikoyatCount;
+
+  document.getElementById('count-all').textContent = total;
+  document.getElementById('count-taklif').textContent = taklifCount;
+  document.getElementById('count-shikoyat').textContent = shikoyatCount;
+  document.getElementById('count-anon').textContent = anonCount;
 }
 
 function renderMessages(msgs) {
@@ -621,7 +646,6 @@ async function loadAdminMessages() {
   try {
     var res = await fetch(SERVER_URL + '/messages');
     var data = await res.json();
-    console.log('messages data:', JSON.stringify(data));
     allMessages = [];
     if (data.ok && data.messages) {
       allMessages = data.messages;
@@ -629,7 +653,6 @@ async function loadAdminMessages() {
     updateStats();
     renderMessages(allMessages);
   } catch (err) {
-    console.log('error:', err);
     document.getElementById('messages-list').innerHTML =
       '<div class="empty-state"><div class="emoji">⚠️</div><p>Xatolik yuz berdi</p></div>';
   }
@@ -687,7 +710,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var filtered = allMessages;
       if (filter === 'taklif') filtered = allMessages.filter(function(m) { return m.type === 'taklif'; });
       if (filter === 'shikoyat') filtered = allMessages.filter(function(m) { return m.type === 'shikoyat'; });
-      if (filter === 'anon') filtered = allMessages.filter(function(m) { return m.isAnon; });
+      if (filter === 'anon') filtered = allMessages.filter(function(m) { return m.anon || m.isAnon; });
       renderMessages(filtered);
     });
   });
