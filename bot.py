@@ -236,6 +236,27 @@ def get_messages():
     return jsonify({"ok": True, "messages": load_messages()})
 
 
+@flask_app.route("/delete", methods=["POST", "OPTIONS"])
+def delete_message():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data    = request.get_json(force=True)
+        msg_id  = data.get('id')
+        if not msg_id:
+            return jsonify({"ok": False, "error": "id kerak"}), 400
+        msgs    = load_messages()
+        new_msgs = [m for m in msgs if m.get('id') != msg_id]
+        if len(new_msgs) == len(msgs):
+            return jsonify({"ok": False, "error": "Xabar topilmadi"}), 404
+        save_messages(new_msgs)
+        logger.info(f"Xabar o'chirildi: {msg_id}")
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/delete xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @flask_app.route("/status", methods=["POST", "OPTIONS"])
 def update_status():
     if request.method == "OPTIONS":
