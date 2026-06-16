@@ -7,9 +7,10 @@ import json
 import logging
 import os
 import asyncio
+import threading
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup, Bot
+from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # =====================================================
@@ -30,6 +31,7 @@ flask_app = Flask(__name__)
 CORS(flask_app)
 
 ptb_app = None
+loop = None
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -105,37 +107,86 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             text=message,
             parse_mode="HTML"
         )
-
-        await update.message.reply_text(
-            "✅ Murojaatingiz yuborildi!\n\nRahmat, tez orada ko'rib chiqiladi."
-        )
-
-        logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_user.id}")
+        await update.message.reply_text("✅ Murojaatingiz yuborildi!\n\nRahmat, tez orada ko'rib chiqiladi.")
+        logger.info(f"Yangi {type_label}: {filial}")
 
     except Exception as e:
         logger.error(f"web_app_data xatolik: {e}")
         await update.message.reply_text("❌ Xatolik yuz berdi. Qayta urinib ko'ring.")
 
 
+# ==================== FLASK ROUTES ====================
+
 @flask_app.route("/", methods=["GET"])
 def index():
     return "Bot ishlayapti! ✅", 200
+
 
 @flask_app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     data = request.get_json(force=True)
     update = Update.de_json(data, ptb_app.bot)
-    asyncio.run_coroutine_threadsafe(
-        ptb_app.process_update(update),
-        loop
-    )
+    asyncio.run_coroutine_threadsafe(ptb_app.process_update(update), loop)
     return jsonify({"ok": True})
 
+
+@flask_app.route("/send", methods=["POST"])
+def send_message():
+    """Mini App dan xabar qabul qilish va adminга yuborish"""
+    try:
+        data = request.get_json(force=True)
+
+        msg_type = data.get('type', '')
+        filial = data.get('filial', '')
+        text = data.get('text', '')
+        anon = data.get('anon', False)
+        time = data.get('time', '')
+        sender_name = data.get('sender_name', 'Noma\'lum')
+        username = data.get('username', '')
+
+        if anon:
+            sender_text = "🕵️ <b>Anonim</b>"
+        else:
+            uname = f" @{username}" if username else ""
+            sender_text = f"👤 {sender_name}{uname}"
+
+        type_emoji = "💡" if msg_type == "taklif" else "⚠️"
+        type_label = "TAKLIF" if msg_type == "taklif" else "SHIKOYAT"
+
+        message = (
+            f"{type_emoji} <b>{type_label}</b>\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
+            f"🏢 <b>Filial:</b> {filial}\n"
+            f"{sender_text}\n"
+            f"📅 <b>Vaqt:</b> {time}\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
+            f"💬 <b>Matn:</b>\n{text}"
+        )
+
+        future = asyncio.run_coroutine_threadsafe(
+            ptb_app.bot.send_message(
+                chat_id=ADMIN_CHAT_ID,
+                text=message,
+                parse_mode="HTML"
+            ),
+            loop
+        )
+        future.result(timeout=10)
+
+        logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_name}")
+        return jsonify({"ok": True})
+
+    except Exception as e:
+        logger.error(f"/send xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ==================== MAIN ====================
 
 async def setup_webhook():
     domain = WEBHOOK_URL
     if not domain:
-        logger.error("RAILWAY_PUBLIC_DOMAIN env yo'q!")
+        logger.warning("RAILWAY_PUBLIC_DOMAIN env yo'q! Webhook o'rnatilmadi.")
         return
     webhook_address = f"https://{domain}/webhook/{BOT_TOKEN}"
     await ptb_app.bot.set_webhook(webhook_address)
@@ -155,7 +206,6 @@ def run():
     loop.run_until_complete(ptb_app.initialize())
     loop.run_until_complete(setup_webhook())
 
-    import threading
     t = threading.Thread(target=loop.run_forever, daemon=True)
     t.start()
 
