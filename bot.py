@@ -1,24 +1,23 @@
 """
 Taklif & Shikoyat Telegram Bot
---------------------------------
-O'rnatish:
-  pip install python-telegram-bot==20.7
-
-Ishga tushirish:
-  python bot.py
+Railway uchun: Webhook + Flask
 """
 
 import json
 import logging
-from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
+import os
+import asyncio
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # =====================================================
-#  SOZLAMALAR  —  faqat shu qismni o'zgartiring
-# =====================================================
-BOT_TOKEN = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"          # @BotFather dan olgan token
-ADMIN_CHAT_ID = 7780854728             # Sizning Telegram ID'ingiz (https://t.me/userinfobot orqali oling)
-MINI_APP_URL = "https://karimov0814.github.io/feedback-bot/index.html"  # Mini app joylashgan URL
+BOT_TOKEN = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
+ADMIN_CHAT_ID = 7780854728
+MINI_APP_URL = "https://karimov0814.github.io/feedback-bot/index.html"
+PORT = int(os.environ.get("PORT", 5000))
+WEBHOOK_URL = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
 # =====================================================
 
 logging.basicConfig(
@@ -26,6 +25,11 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+flask_app = Flask(__name__)
+CORS(flask_app)
+
+ptb_app = None
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -63,7 +67,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Mini App'dan yuborilgan ma'lumotni qabul qilish va adminга forward qilish"""
     try:
         raw = update.message.web_app_data.data
         data = json.loads(raw)
@@ -97,14 +100,12 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             f"💬 <b>Matn:</b>\n{text}"
         )
 
-        # Adminга yuborish
         await context.bot.send_message(
             chat_id=ADMIN_CHAT_ID,
             text=message,
             parse_mode="HTML"
         )
 
-        # Xodimga tasdiqlash xabari
         await update.message.reply_text(
             "✅ Murojaatingiz yuborildi!\n\nRahmat, tez orada ko'rib chiqiladi."
         )
@@ -116,19 +117,51 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("❌ Xatolik yuz berdi. Qayta urinib ko'ring.")
 
 
-import asyncio
+@flask_app.route("/", methods=["GET"])
+def index():
+    return "Bot ishlayapti! ✅", 200
 
-async def main() -> None:
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
-    logger.info("✅ Bot ishga tushdi!")
-    async with app:
-        await app.start()
-        await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
-        logger.info("Bot polling boshlandi. To'xtatish uchun Ctrl+C")
-        await asyncio.Event().wait()
+@flask_app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
+def webhook():
+    data = request.get_json(force=True)
+    update = Update.de_json(data, ptb_app.bot)
+    asyncio.run_coroutine_threadsafe(
+        ptb_app.process_update(update),
+        loop
+    )
+    return jsonify({"ok": True})
+
+
+async def setup_webhook():
+    domain = WEBHOOK_URL
+    if not domain:
+        logger.error("RAILWAY_PUBLIC_DOMAIN env yo'q!")
+        return
+    webhook_address = f"https://{domain}/webhook/{BOT_TOKEN}"
+    await ptb_app.bot.set_webhook(webhook_address)
+    logger.info(f"Webhook o'rnatildi: {webhook_address}")
+
+
+def run():
+    global ptb_app, loop
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    ptb_app = Application.builder().token(BOT_TOKEN).build()
+    ptb_app.add_handler(CommandHandler("start", start))
+    ptb_app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
+
+    loop.run_until_complete(ptb_app.initialize())
+    loop.run_until_complete(setup_webhook())
+
+    import threading
+    t = threading.Thread(target=loop.run_forever, daemon=True)
+    t.start()
+
+    logger.info(f"✅ Flask server port {PORT} da ishga tushdi!")
+    flask_app.run(host="0.0.0.0", port=PORT)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run()
