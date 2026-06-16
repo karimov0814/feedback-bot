@@ -33,8 +33,22 @@ CORS(flask_app)
 ptb_app = None
 loop = None
 
-# Xabarlarni xotirada saqlash (server qayta ishga tushmaguncha saqlanadi)
-messages_store = []
+# Xabarlarni faylda saqlash
+MESSAGES_FILE = '/app/messages.json'
+
+def load_messages():
+    try:
+        with open(MESSAGES_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_messages(msgs):
+    try:
+        with open(MESSAGES_FILE, 'w', encoding='utf-8') as f:
+            json.dump(msgs, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Faylga yozishda xatolik: {e}")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -179,8 +193,9 @@ def send_message():
         )
         future.result(timeout=10)
 
-        # Xotirada saqlash
-        messages_store.insert(0, {
+        # Faylga saqlash
+        msgs = load_messages()
+        msgs.insert(0, {
             "type": msg_type,
             "filial": filial,
             "text": text,
@@ -188,9 +203,10 @@ def send_message():
             "time": time,
             "sender": display_name
         })
-        # Faqat oxirgi 200 ta xabar
-        if len(messages_store) > 200:
-            messages_store.pop()
+        # Faqat oxirgi 500 ta xabar
+        if len(msgs) > 500:
+            msgs = msgs[:500]
+        save_messages(msgs)
 
         logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_name}")
         return jsonify({"ok": True})
@@ -203,7 +219,7 @@ def send_message():
 @flask_app.route("/messages", methods=["GET"])
 def get_messages():
     """Admin panel uchun xabarlar ro'yxati"""
-    return jsonify({"ok": True, "messages": messages_store})
+    return jsonify({"ok": True, "messages": load_messages()})
 
 
 # ==================== MAIN ====================
