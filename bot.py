@@ -33,6 +33,9 @@ CORS(flask_app)
 ptb_app = None
 loop = None
 
+# Xabarlarni xotirada saqlash (server qayta ishga tushmaguncha saqlanadi)
+messages_store = []
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
@@ -82,12 +85,14 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         sender_user = update.effective_user
         if anon:
             sender_text = "🕵️ <b>Anonim</b>"
+            sender_name = "Anonim"
         else:
             name = sender_user.first_name
             if sender_user.last_name:
                 name += ' ' + sender_user.last_name
             username = f" @{sender_user.username}" if sender_user.username else ""
             sender_text = f"👤 {name}{username}"
+            sender_name = name + (f" @{sender_user.username}" if sender_user.username else "")
 
         type_emoji = "💡" if msg_type == "taklif" else "⚠️"
         type_label = "TAKLIF" if msg_type == "taklif" else "SHIKOYAT"
@@ -132,7 +137,6 @@ def webhook():
 
 @flask_app.route("/send", methods=["POST"])
 def send_message():
-    """Mini App dan xabar qabul qilish va adminга yuborish"""
     try:
         data = request.get_json(force=True)
 
@@ -141,19 +145,21 @@ def send_message():
         text = data.get('text', '')
         anon = data.get('anon', False)
         time = data.get('time', '')
-        sender_name = data.get('sender_name', 'Noma\'lum')
+        sender_name = data.get('sender_name', "Noma'lum")
         username = data.get('username', '')
 
         if anon:
             sender_text = "🕵️ <b>Anonim</b>"
+            display_name = "Anonim"
         else:
             uname = f" @{username}" if username else ""
             sender_text = f"👤 {sender_name}{uname}"
+            display_name = sender_name + (f" @{username}" if username else "")
 
         type_emoji = "💡" if msg_type == "taklif" else "⚠️"
         type_label = "TAKLIF" if msg_type == "taklif" else "SHIKOYAT"
 
-        message = (
+        tg_message = (
             f"{type_emoji} <b>{type_label}</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"🏢 <b>Filial:</b> {filial}\n"
@@ -166,12 +172,25 @@ def send_message():
         future = asyncio.run_coroutine_threadsafe(
             ptb_app.bot.send_message(
                 chat_id=ADMIN_CHAT_ID,
-                text=message,
+                text=tg_message,
                 parse_mode="HTML"
             ),
             loop
         )
         future.result(timeout=10)
+
+        # Xotirada saqlash
+        messages_store.insert(0, {
+            "type": msg_type,
+            "filial": filial,
+            "text": text,
+            "anon": anon,
+            "time": time,
+            "sender": display_name
+        })
+        # Faqat oxirgi 200 ta xabar
+        if len(messages_store) > 200:
+            messages_store.pop()
 
         logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_name}")
         return jsonify({"ok": True})
@@ -181,12 +200,18 @@ def send_message():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@flask_app.route("/messages", methods=["GET"])
+def get_messages():
+    """Admin panel uchun xabarlar ro'yxati"""
+    return jsonify({"ok": True, "messages": messages_store})
+
+
 # ==================== MAIN ====================
 
 async def setup_webhook():
     domain = WEBHOOK_URL
     if not domain:
-        logger.warning("RAILWAY_PUBLIC_DOMAIN env yo'q! Webhook o'rnatilmadi.")
+        logger.warning("RAILWAY_PUBLIC_DOMAIN env yo'q!")
         return
     webhook_address = f"https://{domain}/webhook/{BOT_TOKEN}"
     await ptb_app.bot.set_webhook(webhook_address)
