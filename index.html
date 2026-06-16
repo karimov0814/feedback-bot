@@ -4,31 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Taklif & Shikoyat</title>
-  
-<script src="https://telegram.org/js/telegram-web-app.js">
-  // onclick muammosini hal qilish
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('card-taklif').addEventListener('click', function() {
-    selectType('taklif');
-  });
-  document.getElementById('card-shikoyat').addEventListener('click', function() {
-    selectType('shikoyat');
-  });
-  document.getElementById('anon-toggle').addEventListener('click', function() {
-    toggleAnon();
-  });
-  document.getElementById('submit-btn').addEventListener('click', function() {
-    submitForm();
-  });
-});
-</script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
   :root {
-    --blue: #2563EB;
-    --blue-light: #EFF6FF;
-    --blue-mid: #BFDBFE;
+    --orange: #EA580C;
+    --orange-light: #FFF7ED;
+    --orange-mid: #FED7AA;
     --green: #16A34A;
     --green-light: #F0FDF4;
     --red: #DC2626;
@@ -43,8 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     --gray-800: #1F2937;
     --gray-900: #111827;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
     --radius: 12px;
     --radius-sm: 8px;
   }
@@ -62,8 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
   .screen { display: none; padding: 20px 16px; }
   .screen.active { display: block; }
 
+  /* HEADER */
   .header {
-    background: var(--blue);
+    background: var(--orange);
     padding: 20px 16px 16px;
     padding-top: calc(20px + env(safe-area-inset-top, 0px));
     color: white;
@@ -84,11 +67,13 @@ document.addEventListener('DOMContentLoaded', function() {
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--gray-400);
     margin: 20px 0 8px;
+    padding: 0 16px;
   }
 
+  /* TYPE CARDS */
   .type-grid {
     display: grid; grid-template-columns: 1fr 1fr;
-    gap: 10px; margin-bottom: 4px;
+    gap: 10px; padding: 0 16px; margin-bottom: 4px;
   }
   .type-card {
     border: 2px solid var(--gray-200);
@@ -96,9 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 16px 12px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.18s ease;
     background: white;
-    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   .type-card .icon { font-size: 28px; margin-bottom: 8px; }
   .type-card .label { font-size: 13px; font-weight: 600; color: var(--gray-800); }
@@ -108,10 +93,11 @@ document.addEventListener('DOMContentLoaded', function() {
   .type-card.selected-shikoyat { border-color: var(--red); background: var(--red-light); }
   .type-card.selected-shikoyat .label { color: var(--red); }
 
-  .select-wrapper { position: relative; }
+  /* SELECT */
+  .select-wrapper { position: relative; padding: 0 16px; }
   .select-wrapper::after {
     content: '▾';
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
     color: var(--gray-400); pointer-events: none; font-size: 14px;
   }
   select {
@@ -124,13 +110,15 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 15px;
     color: var(--gray-800);
     appearance: none;
+    -webkit-appearance: none;
     outline: none;
-    transition: border-color 0.15s;
+    touch-action: manipulation;
   }
-  select:focus { border-color: var(--blue); }
+  select:focus { border-color: var(--orange); }
   select.error { border-color: var(--red); }
 
-  .textarea-wrap { position: relative; }
+  /* TEXTAREA */
+  .textarea-wrap { padding: 0 16px; }
   textarea {
     width: 100%;
     padding: 13px 14px;
@@ -143,22 +131,24 @@ document.addEventListener('DOMContentLoaded', function() {
     resize: none;
     outline: none;
     line-height: 1.55;
-    transition: border-color 0.15s;
   }
-  textarea:focus { border-color: var(--blue); }
+  textarea:focus { border-color: var(--orange); }
   textarea.error { border-color: var(--red); }
   .char-count {
     text-align: right; font-size: 11px;
     color: var(--gray-400); margin-top: 5px;
+    padding: 0 16px;
   }
   .char-count.warn { color: var(--amber); }
 
+  /* ANON TOGGLE */
   .anonymous-row {
     display: flex; align-items: center; justify-content: space-between;
     background: white;
     border: 1.5px solid var(--gray-200);
     border-radius: var(--radius-sm);
     padding: 14px;
+    margin: 0 16px;
   }
   .anonymous-info { display: flex; align-items: center; gap: 10px; }
   .anonymous-info .anon-icon { font-size: 20px; }
@@ -169,10 +159,12 @@ document.addEventListener('DOMContentLoaded', function() {
     width: 44px; height: 24px;
     background: var(--gray-200);
     border-radius: 12px; position: relative;
-    cursor: pointer; transition: background 0.2s;
+    cursor: pointer;
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
-  .toggle.on { background: var(--blue); }
+  .toggle.on { background: var(--orange); }
   .toggle::after {
     content: '';
     position: absolute;
@@ -185,25 +177,31 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   .toggle.on::after { transform: translateX(20px); }
 
+  /* SUBMIT BTN */
   .btn-submit {
     width: 100%; padding: 15px;
-    background: var(--blue);
+    background: var(--orange);
     color: white; font-family: inherit;
     font-size: 16px; font-weight: 600;
     border: none; border-radius: var(--radius-sm);
     cursor: pointer; margin-top: 24px;
-    transition: all 0.15s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    margin: 24px 16px 0;
+    width: calc(100% - 32px);
   }
-  .btn-submit:active { transform: scale(0.98); }
-  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* ERRORS */
   .field-error {
     font-size: 12px; color: var(--red);
     margin-top: 5px; display: none;
+    padding: 0 16px;
   }
   .field-error.show { display: block; }
 
+  /* SUCCESS SCREEN */
   #screen-success {
     display: none;
     flex-direction: column;
@@ -221,27 +219,26 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex; align-items: center; justify-content: center;
     font-size: 44px;
     margin-bottom: 24px;
-    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   .success-title { font-size: 24px; font-weight: 700; color: var(--gray-900); margin-bottom: 10px; }
   .success-desc { font-size: 15px; color: var(--gray-600); line-height: 1.6; max-width: 280px; }
   .success-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: var(--green-light);
-    color: var(--green);
+    background: var(--green-light); color: var(--green);
     font-size: 13px; font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 20px;
-    margin-top: 20px;
+    padding: 8px 16px; border-radius: 20px; margin-top: 20px;
   }
   .btn-new {
     margin-top: 32px; padding: 13px 32px;
-    background: var(--blue-light); color: var(--blue);
+    background: var(--orange-light); color: var(--orange);
     font-family: inherit; font-size: 15px; font-weight: 600;
     border: none; border-radius: var(--radius-sm);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
+  /* ADMIN SCREEN */
   #screen-admin { display: none; padding: 0; }
   #screen-admin.active { display: block; }
 
@@ -254,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .admin-header-top { display: flex; align-items: center; justify-content: space-between; }
   .admin-header h1 { font-size: 20px; font-weight: 700; }
   .admin-badge {
-    background: var(--blue); color: white;
+    background: var(--orange); color: white;
     font-size: 11px; font-weight: 700;
     padding: 4px 10px; border-radius: 20px;
   }
@@ -283,19 +280,18 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 1.5px solid var(--gray-200);
     background: white; color: var(--gray-600);
     cursor: pointer; white-space: nowrap;
-    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
-  .filter-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .filter-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
 
   .messages-list { padding: 12px 16px; }
   .message-card {
     background: white;
     border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 10px;
+    padding: 16px; margin-bottom: 10px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
-    animation: slideIn 0.3s ease;
   }
   .msg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
   .msg-type-badge {
@@ -306,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .msg-type-badge.taklif { background: var(--green-light); color: var(--green); }
   .msg-type-badge.shikoyat { background: var(--red-light); color: var(--red); }
   .msg-time { font-size: 11px; color: var(--gray-400); }
-  .msg-filial { font-size: 12px; color: var(--blue); font-weight: 500; margin-bottom: 8px; }
+  .msg-filial { font-size: 12px; color: var(--orange); font-weight: 500; margin-bottom: 8px; }
   .msg-text { font-size: 14px; line-height: 1.6; color: var(--gray-800); }
   .msg-footer { margin-top: 10px; }
   .msg-sender { font-size: 12px; color: var(--gray-400); }
@@ -314,27 +310,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
   .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
-  .empty-state p { font-size: 15px; }
 
-  .loading-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
   .spinner {
     width: 32px; height: 32px;
     border: 3px solid var(--gray-200);
-    border-top-color: var(--blue);
+    border-top-color: var(--orange);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
-    margin: 0 auto 12px;
+    margin: 40px auto 12px;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes popIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-  @keyframes slideIn {
-    from { transform: translateY(10px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
 </style>
 </head>
 <body>
@@ -349,75 +335,66 @@ document.addEventListener('DOMContentLoaded', function() {
     <p>Xodimlar uchun muloqot platformasi</p>
   </div>
 
-  <div style="padding: 0 0 32px;">
-    <div class="section-title" style="padding: 0 16px;">Murojaat turini tanlang!</div>
-    <div class="type-grid" style="padding: 0 16px;">
-      <div class="type-card" id="card-taklif" onclick="selectType('taklif')">
+  <div style="padding-bottom: 32px;">
+    <div class="section-title">Murojaat turini tanlang</div>
+    <div class="type-grid">
+      <div class="type-card" id="card-taklif">
         <div class="icon">💡</div>
         <div class="label">Taklif</div>
         <div class="desc">Yaxshilash g'oyasi</div>
       </div>
-      <div class="type-card" id="card-shikoyat" onclick="selectType('shikoyat')">
+      <div class="type-card" id="card-shikoyat">
         <div class="icon">⚠️</div>
         <div class="label">Shikoyat</div>
         <div class="desc">Muammo yoki norozilik</div>
       </div>
     </div>
-    <div class="field-error" id="err-type" style="padding: 0 16px;">Murojaat turini tanlang</div>
+    <div class="field-error" id="err-type">Murojaat turini tanlang</div>
 
-    <div class="section-title" style="padding: 0 16px;">Filial</div>
-    <div style="padding: 0 16px;">
-      <div class="select-wrapper">
-        <select id="filial-select">
-          <option value="">— Filialni tanlang —</option>
-          <option value="Novza">Novza</option>
-          <option value="Yunusobod Gallery">Yunusobod Gallery</option>
-          <option value="Compass">Compass</option>
-          <option value="Sergeli">Sergeli</option>
-          <option value="Anhor">Anhor</option>
-          <option value="Scopus Mall">Scopus Mall</option>
-          <option value="Eco">Eco</option>
-          <option value="Andijon Navruz">Andijon Navruz</option>
-          <option value="Beruniy">Beruniy</option>
-          <option value="Glinka">Glinka</option>
-          <option value="City Mall">City Mall</option>
-          <option value="C1 Wok">C1 Wok</option>
-          <option value="Bosh ofis">Bosh ofis</option>
-        </select>
-      </div>
-      <div class="field-error" id="err-filial">Filialni tanlang</div>
+    <div class="section-title">Filial</div>
+    <div class="select-wrapper">
+      <select id="filial-select">
+        <option value="">— Filialni tanlang —</option>
+        <option value="Novza">Novza</option>
+        <option value="Yunusobod Gallery">Yunusobod Gallery</option>
+        <option value="Compass">Compass</option>
+        <option value="Sergeli">Sergeli</option>
+        <option value="Anhor">Anhor</option>
+        <option value="Scopus Mall">Scopus Mall</option>
+        <option value="Eco">Eco</option>
+        <option value="Andijon Navruz">Andijon Navruz</option>
+        <option value="Beruniy">Beruniy</option>
+        <option value="Glinka">Glinka</option>
+        <option value="City Mall">City Mall</option>
+        <option value="C1 Wok">C1 Wok</option>
+        <option value="Bosh ofis">Bosh ofis</option>
+      </select>
     </div>
+    <div class="field-error" id="err-filial">Filialni tanlang</div>
 
-    <div class="section-title" style="padding: 0 16px;">Matn</div>
-    <div style="padding: 0 16px;">
-      <div class="textarea-wrap">
-        <textarea id="msg-text" rows="5" maxlength="1000"
-          placeholder="Fikringizni yozing...&#10;Batafsil yozilgan murojaatlar tezroq ko'rib chiqiladi.">
-        </textarea>
-      </div>
-      <div class="char-count" id="char-count">0 / 1000</div>
-      <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
+    <div class="section-title">Matn</div>
+    <div class="textarea-wrap">
+      <textarea id="msg-text" rows="5" maxlength="1000"
+        placeholder="Fikringizni yozing..."></textarea>
     </div>
+    <div class="char-count" id="char-count">0 / 1000</div>
+    <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
 
-    <div class="section-title" style="padding: 0 16px;">Maxfiylik</div>
-    <div style="padding: 0 16px;">
-      <div class="anonymous-row">
-        <div class="anonymous-info">
-          <div class="anon-icon">🕵️</div>
-          <div class="anon-text">
-            <div class="title">Anonim yuborish</div>
-            <div class="sub">Ismingiz ko'rinmaydi</div>
-          </div>
+    <div class="section-title">Maxfiylik</div>
+    <div class="anonymous-row">
+      <div class="anonymous-info">
+        <div class="anon-icon">🕵️</div>
+        <div class="anon-text">
+          <div class="title">Anonim yuborish</div>
+          <div class="sub">Ismingiz ko'rinmaydi</div>
         </div>
-        <div class="toggle" id="anon-toggle" onclick="toggleAnon()"></div>
       </div>
+      <div class="toggle" id="anon-toggle"></div>
     </div>
 
-    <div style="padding: 0 16px;">
-      <button class="btn-submit" id="submit-btn" onclick="submitForm()">
-        <span>📤</span> <span>Yuborish</span>
-      </button>
-    </div>
+    <button class="btn-submit" id="submit-btn">
+      <span>📤</span> <span>Yuborish</span>
+    </button>
   </div>
 </div>
 
@@ -427,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="success-title">Yuborildi!</div>
   <div class="success-desc">Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!</div>
   <div class="success-badge">🔒 Maxfiylik kafolatlangan</div>
-  <button class="btn-new" onclick="resetForm()">Yangi murojaat</button>
+  <button class="btn-new" id="btn-new">Yangi murojaat</button>
 </div>
 
 <!-- ADMIN SCREEN -->
@@ -453,66 +430,45 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
   <div class="admin-filters">
-    <button class="filter-btn active" onclick="filterMessages('all', this)">Hammasi</button>
-    <button class="filter-btn" onclick="filterMessages('taklif', this)">💡 Takliflar</button>
-    <button class="filter-btn" onclick="filterMessages('shikoyat', this)">⚠️ Shikoyatlar</button>
-    <button class="filter-btn" onclick="filterMessages('anon', this)">🕵️ Anonimlar</button>
+    <button class="filter-btn active" data-filter="all">Hammasi</button>
+    <button class="filter-btn" data-filter="taklif">💡 Takliflar</button>
+    <button class="filter-btn" data-filter="shikoyat">⚠️ Shikoyatlar</button>
+    <button class="filter-btn" data-filter="anon">🕵️ Anonimlar</button>
   </div>
   <div class="messages-list" id="messages-list">
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Yuklanmoqda...</p>
-    </div>
+    <div class="spinner"></div>
   </div>
 </div>
 
 <script>
-// ==================== CONFIG ====================
-// FAQAT admin ID kerak (token kerak emas — tg.sendData() ishlatiladi)
+const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
 const ADMIN_CHAT_ID = 7780854728;
 
-// ==================== STATE ====================
 let selectedType = '';
 let isAnon = false;
 let allMessages = [];
-const tg = window.Telegram.WebApp;
 
-// ==================== INIT ====================
-tg.ready();
-tg.expand();
+const tg = window.Telegram?.WebApp || {};
+if (tg.ready) tg.ready();
+if (tg.expand) tg.expand();
 
-// Admin tekshirish — bir necha usul bilan
+// Admin tekshirish
 const urlParams = new URLSearchParams(window.location.search);
 const adminByUrl = urlParams.get('admin') === '1';
-
-// initDataUnsafe dan ID olish
 const tgUser = tg.initDataUnsafe?.user;
 const userId = tgUser?.id || 0;
-const adminById = (userId === ADMIN_CHAT_ID);
+const isAdmin = adminByUrl || (userId === ADMIN_CHAT_ID);
 
-const isAdmin = adminByUrl || adminById;
-
-// DEBUG — konsolda ko'rish uchun
-console.log('URL admin:', adminByUrl);
-console.log('User ID:', userId, '| Admin ID:', ADMIN_CHAT_ID, '| Match:', adminById);
-console.log('initData:', tg.initData ? 'bor' : 'yoq');
-console.log('initDataUnsafe:', JSON.stringify(tg.initDataUnsafe));
-console.log('FINAL isAdmin:', isAdmin);
-
-if (isAdmin) {
-  showScreen('admin');
-  loadAdminMessages();
-} else {
-  showScreen('employee');
-}
-
-// ==================== SCREEN ====================
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active');
+  });
   document.getElementById('screen-' + name).classList.add('active');
 }
 
-// ==================== TYPE SELECT ====================
+function showError(id) { document.getElementById(id).classList.add('show'); }
+function hideError(id) { document.getElementById(id).classList.remove('show'); }
+
 function selectType(type) {
   selectedType = type;
   document.getElementById('card-taklif').className = 'type-card' + (type === 'taklif' ? ' selected-taklif' : '');
@@ -520,53 +476,67 @@ function selectType(type) {
   hideError('err-type');
 }
 
-// ==================== ANON TOGGLE ====================
 function toggleAnon() {
   isAnon = !isAnon;
-  document.getElementById('anon-toggle').classList.toggle('on', isAnon);
+  var toggle = document.getElementById('anon-toggle');
+  if (isAnon) {
+    toggle.classList.add('on');
+  } else {
+    toggle.classList.remove('on');
+  }
 }
 
-// ==================== CHAR COUNT ====================
-document.getElementById('msg-text').addEventListener('input', function() {
-  const len = this.value.length;
-  const counter = document.getElementById('char-count');
-  counter.textContent = len + ' / 1000';
-  counter.className = 'char-count' + (len > 800 ? ' warn' : '');
-  if (len >= 10) hideError('err-text');
-});
-
-// ==================== VALIDATION ====================
-function showError(id) { document.getElementById(id).classList.add('show'); }
-function hideError(id) { document.getElementById(id).classList.remove('show'); }
-
 function validate() {
-  let ok = true;
+  var ok = true;
   if (!selectedType) { showError('err-type'); ok = false; }
-  const filial = document.getElementById('filial-select').value;
-  if (!filial) { showError('err-filial'); document.getElementById('filial-select').classList.add('error'); ok = false; }
-  const text = document.getElementById('msg-text').value.trim();
-  if (text.length < 10) { showError('err-text'); document.getElementById('msg-text').classList.add('error'); ok = false; }
+  var filial = document.getElementById('filial-select').value;
+  if (!filial) {
+    showError('err-filial');
+    document.getElementById('filial-select').classList.add('error');
+    ok = false;
+  }
+  var text = document.getElementById('msg-text').value.trim();
+  if (text.length < 10) {
+    showError('err-text');
+    document.getElementById('msg-text').classList.add('error');
+    ok = false;
+  }
   return ok;
 }
 
-// ==================== SUBMIT (Railway server orqali) ====================
-const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
+function resetForm() {
+  selectedType = '';
+  isAnon = false;
+  document.getElementById('card-taklif').className = 'type-card';
+  document.getElementById('card-shikoyat').className = 'type-card';
+  document.getElementById('filial-select').value = '';
+  document.getElementById('filial-select').classList.remove('error');
+  document.getElementById('msg-text').value = '';
+  document.getElementById('msg-text').classList.remove('error');
+  document.getElementById('char-count').textContent = '0 / 1000';
+  document.getElementById('anon-toggle').classList.remove('on');
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<span>📤</span> <span>Yuborish</span>';
+  ['err-type', 'err-filial', 'err-text'].forEach(hideError);
+  showScreen('employee');
+}
 
 async function submitForm() {
   if (!validate()) return;
 
-  const btn = document.getElementById('submit-btn');
+  var btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> <span>Yuborilmoqda...</span>';
 
-  const filial = document.getElementById('filial-select').value;
-  const text = document.getElementById('msg-text').value.trim();
-  const user = tg.initDataUnsafe?.user;
-  const senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Noma\'lum';
-  const username = user?.username || '';
+  var filial = document.getElementById('filial-select').value;
+  var text = document.getElementById('msg-text').value.trim();
+  var user = tg.initDataUnsafe?.user;
+  var senderName = user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Noma\'lum';
+  var username = user?.username || '';
 
   try {
-    const res = await fetch('https://web-production-dd6e7.up.railway.app/send', {
+    var res = await fetch(SERVER_URL + '/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -579,9 +549,9 @@ async function submitForm() {
         username: username
       })
     });
-    const data = await res.json();
+    var data = await res.json();
     if (data.ok) {
-      tg.HapticFeedback?.notificationOccurred('success');
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       showScreen('success');
     } else {
       throw new Error(data.error || 'Xatolik');
@@ -593,37 +563,70 @@ async function submitForm() {
   }
 }
 
-// ==================== RESET ====================
-function resetForm() {
-  selectedType = '';
-  isAnon = false;
-  document.getElementById('card-taklif').className = 'type-card';
-  document.getElementById('card-shikoyat').className = 'type-card';
-  document.getElementById('filial-select').value = '';
-  document.getElementById('filial-select').classList.remove('error');
-  document.getElementById('msg-text').value = '';
-  document.getElementById('msg-text').classList.remove('error');
-  document.getElementById('char-count').textContent = '0 / 1000';
-  document.getElementById('anon-toggle').classList.remove('on');
-  document.getElementById('submit-btn').disabled = false;
-  document.getElementById('submit-btn').innerHTML = '<span>📤</span> <span>Yuborish</span>';
-  ['err-type', 'err-filial', 'err-text'].forEach(hideError);
-  showScreen('employee');
+// Admin messages
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-// ==================== ADMIN: LOAD MESSAGES ====================
-async function loadAdminMessages() {
-  const BOT_TOKEN = '8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M';
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=100`);
-    const data = await res.json();
-    if (!data.ok) throw new Error('API xatoligi');
+function parseMessage(msg) {
+  var text = msg.text || '';
+  var filialMatch = text.match(/Filial:\s*(.+)/);
+  var contentMatch = text.match(/Matn:\n([\s\S]+)$/);
+  var senderMatch = text.match(/👤\s*(.+)/);
+  var timeMatch = text.match(/Vaqt:\s*(.+)/);
+  return {
+    id: msg.message_id,
+    type: text.includes('SHIKOYAT') ? 'shikoyat' : 'taklif',
+    filial: filialMatch ? filialMatch[1].trim() : '',
+    content: contentMatch ? contentMatch[1].trim() : '',
+    sender: senderMatch ? senderMatch[1].trim() : '',
+    time: timeMatch ? timeMatch[1].trim() : '',
+    isAnon: text.includes('Anonim')
+  };
+}
 
+function updateStats() {
+  document.getElementById('stat-total').textContent = allMessages.length;
+  document.getElementById('stat-taklif').textContent = allMessages.filter(function(m) { return m.type === 'taklif'; }).length;
+  document.getElementById('stat-shikoyat').textContent = allMessages.filter(function(m) { return m.type === 'shikoyat'; }).length;
+}
+
+function renderMessages(msgs) {
+  var list = document.getElementById('messages-list');
+  if (!msgs.length) {
+    list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>';
+    return;
+  }
+  list.innerHTML = msgs.map(function(m) {
+    return '<div class="message-card">' +
+      '<div class="msg-header">' +
+        '<span class="msg-type-badge ' + m.type + '">' + (m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT') + '</span>' +
+        '<span class="msg-time">' + escapeHtml(m.time) + '</span>' +
+      '</div>' +
+      (m.filial ? '<div class="msg-filial">🏢 ' + escapeHtml(m.filial) + '</div>' : '') +
+      '<div class="msg-text">' + escapeHtml(m.content) + '</div>' +
+      '<div class="msg-footer">' +
+        (m.isAnon
+          ? '<span class="msg-anon">🕵️ Anonim</span>'
+          : '<span class="msg-sender">👤 ' + escapeHtml(m.sender) + '</span>') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function loadAdminMessages() {
+  var BOT_TOKEN = '8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M';
+  try {
+    var res = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/getUpdates?limit=100');
+    var data = await res.json();
     allMessages = [];
     if (data.result) {
-      data.result.reverse().forEach(update => {
-        const msg = update.message;
-        if (msg && msg.text && msg.chat.id.toString() === ADMIN_CHAT_ID.toString()) {
+      data.result.reverse().forEach(function(update) {
+        var msg = update.message;
+        if (msg && msg.text && String(msg.chat.id) === String(ADMIN_CHAT_ID)) {
           if (msg.text.includes('TAKLIF') || msg.text.includes('SHIKOYAT')) {
             allMessages.push(parseMessage(msg));
           }
@@ -634,77 +637,75 @@ async function loadAdminMessages() {
     renderMessages(allMessages);
   } catch (err) {
     document.getElementById('messages-list').innerHTML =
-      '<div class="empty-state"><div class="emoji">⚠️</div><p>Ma\'lumotlarni yuklashda xatolik</p></div>';
+      '<div class="empty-state"><div class="emoji">⚠️</div><p>Xatolik yuz berdi</p></div>';
   }
 }
 
-function parseMessage(msg) {
-  const text = msg.text || '';
-  const isAnon = text.includes('Anonim');
-  let filial = '';
-  const filialMatch = text.match(/Filial:\s*(.+)/);
-  if (filialMatch) filial = filialMatch[1].trim();
-  let content = '';
-  const contentMatch = text.match(/Matn:\n([\s\S]+)$/);
-  if (contentMatch) content = contentMatch[1].trim();
-  let sender = '';
-  const senderMatch = text.match(/👤\s*(.+)/);
-  if (senderMatch) sender = senderMatch[1].trim();
-  let time = '';
-  const timeMatch = text.match(/Vaqt:\s*(.+)/);
-  if (timeMatch) time = timeMatch[1].trim();
-  return {
-    id: msg.message_id,
-    type: text.includes('SHIKOYAT') ? 'shikoyat' : 'taklif',
-    filial, content, sender, time, isAnon
-  };
-}
+// ==================== EVENT LISTENERS ====================
+document.addEventListener('DOMContentLoaded', function() {
 
-function updateStats() {
-  document.getElementById('stat-total').textContent = allMessages.length;
-  document.getElementById('stat-taklif').textContent = allMessages.filter(m => m.type === 'taklif').length;
-  document.getElementById('stat-shikoyat').textContent = allMessages.filter(m => m.type === 'shikoyat').length;
-}
+  // Type cards
+  document.getElementById('card-taklif').addEventListener('click', function() {
+    selectType('taklif');
+  });
+  document.getElementById('card-shikoyat').addEventListener('click', function() {
+    selectType('shikoyat');
+  });
 
-function filterMessages(type, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  let filtered = allMessages;
-  if (type === 'taklif') filtered = allMessages.filter(m => m.type === 'taklif');
-  if (type === 'shikoyat') filtered = allMessages.filter(m => m.type === 'shikoyat');
-  if (type === 'anon') filtered = allMessages.filter(m => m.isAnon);
-  renderMessages(filtered);
-}
+  // Anon toggle
+  document.getElementById('anon-toggle').addEventListener('click', function() {
+    toggleAnon();
+  });
 
-function renderMessages(msgs) {
-  const list = document.getElementById('messages-list');
-  if (!msgs.length) {
-    list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>';
-    return;
+  // Submit
+  document.getElementById('submit-btn').addEventListener('click', function() {
+    submitForm();
+  });
+
+  // New message
+  document.getElementById('btn-new').addEventListener('click', function() {
+    resetForm();
+  });
+
+  // Char count
+  document.getElementById('msg-text').addEventListener('input', function() {
+    var len = this.value.length;
+    var counter = document.getElementById('char-count');
+    counter.textContent = len + ' / 1000';
+    counter.className = 'char-count' + (len > 800 ? ' warn' : '');
+    if (len >= 10) hideError('err-text');
+  });
+
+  // Filial change
+  document.getElementById('filial-select').addEventListener('change', function() {
+    if (this.value) {
+      hideError('err-filial');
+      this.classList.remove('error');
+    }
+  });
+
+  // Admin filter buttons
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      var filter = this.getAttribute('data-filter');
+      var filtered = allMessages;
+      if (filter === 'taklif') filtered = allMessages.filter(function(m) { return m.type === 'taklif'; });
+      if (filter === 'shikoyat') filtered = allMessages.filter(function(m) { return m.type === 'shikoyat'; });
+      if (filter === 'anon') filtered = allMessages.filter(function(m) { return m.isAnon; });
+      renderMessages(filtered);
+    });
+  });
+
+  // Init screen
+  if (isAdmin) {
+    showScreen('admin');
+    loadAdminMessages();
+  } else {
+    showScreen('employee');
   }
-  list.innerHTML = msgs.map(m => `
-    <div class="message-card">
-      <div class="msg-header">
-        <span class="msg-type-badge ${m.type}">${m.type === 'taklif' ? '💡 TAKLIF' : '⚠️ SHIKOYAT'}</span>
-        <span class="msg-time">${m.time || ''}</span>
-      </div>
-      ${m.filial ? `<div class="msg-filial">🏢 ${m.filial}</div>` : ''}
-      <div class="msg-text">${escapeHtml(m.content)}</div>
-      <div class="msg-footer">
-        ${m.isAnon
-          ? '<span class="msg-anon">🕵️ Anonim</span>'
-          : `<span class="msg-sender">👤 ${escapeHtml(m.sender || 'Noma\'lum')}</span>`}
-      </div>
-    </div>
-  `).join('');
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+});
 </script>
 </body>
 </html>
