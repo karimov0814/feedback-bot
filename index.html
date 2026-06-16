@@ -464,8 +464,9 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-const userId = tg.initDataUnsafe?.user?.id || 0;
-const isAdmin = (userId === ADMIN_CHAT_ID);
+// Admin tekshirish — URL parameter orqali
+const urlParams = new URLSearchParams(window.location.search);
+const isAdmin = urlParams.get('admin') === '1';
 
 if (isAdmin) {
   showScreen('admin');
