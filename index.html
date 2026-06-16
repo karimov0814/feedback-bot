@@ -621,6 +621,7 @@ async function loadAdminMessages() {
   try {
     var res = await fetch(SERVER_URL + '/messages');
     var data = await res.json();
+    console.log('messages data:', JSON.stringify(data));
     allMessages = [];
     if (data.ok && data.messages) {
       allMessages = data.messages;
@@ -628,6 +629,7 @@ async function loadAdminMessages() {
     updateStats();
     renderMessages(allMessages);
   } catch (err) {
+    console.log('error:', err);
     document.getElementById('messages-list').innerHTML =
       '<div class="empty-state"><div class="emoji">⚠️</div><p>Xatolik yuz berdi</p></div>';
   }
