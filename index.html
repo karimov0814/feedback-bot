@@ -338,6 +338,20 @@
   .status-btn.cur-progress { border-color: var(--amber); background: var(--amber-light); color: var(--amber); }
   .status-btn.cur-done     { border-color: var(--green); background: var(--green-light); color: var(--green); }
 
+  /* DELETE BUTTON */
+  .message-card { position: relative; }
+  .delete-btn {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--red-light); border: 1.5px solid var(--red);
+    color: var(--red); font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; transition: all 0.15s;
+    z-index: 2;
+  }
+  .delete-btn:active { background: var(--red); color: white; }
+
   .empty-state { text-align: center; padding: 60px 24px; color: var(--gray-400); }
   .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
 
@@ -638,7 +652,8 @@ function renderMessages(msgs) {
   }
   list.innerHTML = msgs.map(function(m) {
     var s = getStatus(m);
-    return '<div class="message-card ' + slClass(s) + '">' +
+    var deleteBtnHtml = (s === 'done') ? '<button class="delete-btn" onclick="deleteMessage(\'' + escapeHtml(m.id) + '\',this)" title="O\'chirish">🗑</button>' : '';
+    return '<div class="message-card ' + slClass(s) + '">' + deleteBtnHtml +
       '<div class="msg-header">' +
         '<div class="msg-meta">' +
           '<span class="msg-type-badge ' + m.type + '">' + (m.type === 'taklif' ? 'TAKLIF' : 'SHIKOYAT') + '</span>' +
@@ -690,6 +705,27 @@ async function changeStatus(msgId, newStatus, clickedBtn) {
   } catch (err) {
     alert('Xatolik: ' + err.message);
     btns.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
+  }
+}
+
+async function deleteMessage(msgId, btn) {
+  if (!confirm("Bu murojaatni o'chirib tashlaysizmi?")) return;
+  btn.disabled = true; btn.style.opacity = '0.5';
+  try {
+    var res = await fetch(SERVER_URL + '/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: msgId })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      allMessages = allMessages.filter(function(m) { return m.id !== msgId; });
+      updateStats();
+      refreshView();
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else throw new Error(data.error);
+  } catch (err) {
+    alert("Xatolik: " + err.message);
+    btn.disabled = false; btn.style.opacity = '1';
   }
 }
 
