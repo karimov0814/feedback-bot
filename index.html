@@ -520,6 +520,7 @@ function updateSubCounts(base) {
 }
 function getFinalMessages() {
   var base = getByMainTab(currentMainTab);
+  base = filterByDate(base);
   if (currentMainTab==='all') base = applyAnonFilter(base);
   updateSubCounts(base);
   if (currentSubTab==='progress') return base.filter(function(m){var s=getStatus(m);return s==='progress'||s==='in_progress';});
