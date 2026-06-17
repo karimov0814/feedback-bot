@@ -1,6 +1,6 @@
 """
 Taklif & Shikoyat Telegram Bot
-Railway uchun: Webhook + Flask
+Railway uchun: Webhook + Flask + PostgreSQL (Supabase)
 """
 
 import json
@@ -9,6 +9,8 @@ import os
 import asyncio
 import threading
 import time as time_module
+import psycopg2
+import psycopg2.extras
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
@@ -20,6 +22,7 @@ ADMIN_CHAT_ID = 7780854728
 MINI_APP_URL = "https://karimov0814.github.io/feedback-bot/index.html"
 PORT = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 # =====================================================
 
 logging.basicConfig(
@@ -30,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 flask_app = Flask(__name__)
 
-# CORS — barcha domenlardan so'rov qabul qilish
 CORS(flask_app, resources={r"/*": {"origins": "*"}}, supports_credentials=False)
 
 @flask_app.after_request
@@ -48,21 +50,95 @@ def options_handler(path):
 ptb_app = None
 loop = None
 
-MESSAGES_FILE = '/app/messages.json'
+
+# ==================== DATABASE ====================
+
+def get_conn():
+    return psycopg2.connect(DATABASE_URL, sslmode='require')
+
+def init_db():
+    """Jadval mavjud bo'lmasa yaratadi"""
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id TEXT PRIMARY KEY,
+                type TEXT,
+                filial TEXT,
+                text TEXT,
+                anon BOOLEAN DEFAULT FALSE,
+                time TEXT,
+                sender TEXT,
+                status TEXT DEFAULT 'new',
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info("✅ Database jadval tayyor")
+    except Exception as e:
+        logger.error(f"init_db xatolik: {e}")
 
 def load_messages():
     try:
-        with open(MESSAGES_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM messages ORDER BY created_at DESC LIMIT 500")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        logger.error(f"load_messages xatolik: {e}")
         return []
 
-def save_messages(msgs):
+def save_message(msg):
     try:
-        with open(MESSAGES_FILE, 'w', encoding='utf-8') as f:
-            json.dump(msgs, f, ensure_ascii=False, indent=2)
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO messages (id, type, filial, text, anon, time, sender, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO NOTHING
+        """, (
+            msg['id'], msg['type'], msg['filial'], msg['text'],
+            msg['anon'], msg['time'], msg['sender'], msg.get('status', 'new')
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
     except Exception as e:
-        logger.error(f"Faylga yozishda xatolik: {e}")
+        logger.error(f"save_message xatolik: {e}")
+
+def delete_message_db(msg_id):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM messages WHERE id = %s", (msg_id,))
+        affected = cur.rowcount
+        conn.commit()
+        cur.close()
+        conn.close()
+        return affected > 0
+    except Exception as e:
+        logger.error(f"delete_message xatolik: {e}")
+        return False
+
+def update_status_db(msg_id, new_status):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("UPDATE messages SET status = %s WHERE id = %s", (new_status, msg_id))
+        affected = cur.rowcount
+        conn.commit()
+        cur.close()
+        conn.close()
+        return affected > 0
+    except Exception as e:
+        logger.error(f"update_status xatolik: {e}")
+        return False
 
 
 # ==================== BOT HANDLERS ====================
@@ -206,8 +282,7 @@ def send_message():
         future.result(timeout=10)
 
         msg_id = str(int(time_module.time() * 1000))
-        msgs = load_messages()
-        msgs.insert(0, {
+        save_message({
             "id":     msg_id,
             "type":   msg_type,
             "filial": filial,
@@ -217,9 +292,6 @@ def send_message():
             "sender": display_name,
             "status": "new"
         })
-        if len(msgs) > 500:
-            msgs = msgs[:500]
-        save_messages(msgs)
 
         logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_name}")
         return jsonify({"ok": True})
@@ -241,15 +313,13 @@ def delete_message():
     if request.method == "OPTIONS":
         return jsonify({"ok": True}), 200
     try:
-        data    = request.get_json(force=True)
-        msg_id  = data.get('id')
+        data   = request.get_json(force=True)
+        msg_id = data.get('id')
         if not msg_id:
             return jsonify({"ok": False, "error": "id kerak"}), 400
-        msgs    = load_messages()
-        new_msgs = [m for m in msgs if m.get('id') != msg_id]
-        if len(new_msgs) == len(msgs):
+        found = delete_message_db(msg_id)
+        if not found:
             return jsonify({"ok": False, "error": "Xabar topilmadi"}), 404
-        save_messages(new_msgs)
         logger.info(f"Xabar o'chirildi: {msg_id}")
         return jsonify({"ok": True})
     except Exception as e:
@@ -272,19 +342,10 @@ def update_status():
         if new_status not in ["new", "progress", "in_progress", "done"]:
             return jsonify({"ok": False, "error": "Noto'g'ri status"}), 400
 
-        msgs    = load_messages()
-        updated = False
-        for msg in msgs:
-            if msg.get('id') == msg_id:
-                msg['status'] = new_status
-                updated = True
-                break
-
-        if updated:
-            save_messages(msgs)
-            return jsonify({"ok": True})
-        else:
+        found = update_status_db(msg_id, new_status)
+        if not found:
             return jsonify({"ok": False, "error": "Xabar topilmadi"}), 404
+        return jsonify({"ok": True})
 
     except Exception as e:
         logger.error(f"/status xatolik: {e}")
@@ -305,6 +366,8 @@ async def setup_webhook():
 
 def run():
     global ptb_app, loop
+
+    init_db()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
