@@ -1,6 +1,6 @@
 """
 Taklif & Shikoyat Telegram Bot
-Railway uchun: Webhook + Flask + PostgreSQL (Supabase)
+Railway: Webhook + Flask + PostgreSQL (Supabase) + Google Sheets
 """
 
 import json
@@ -11,18 +11,42 @@ import threading
 import time as time_module
 import psycopg2
 import psycopg2.extras
+import gspread
+from google.oauth2.service_account import Credentials
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # =====================================================
-BOT_TOKEN = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
-ADMIN_CHAT_ID = 7780854728
-MINI_APP_URL = "https://karimov0814.github.io/feedback-bot/index.html"
-PORT = int(os.environ.get("PORT", 5000))
-WEBHOOK_URL = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
+BOT_TOKEN      = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
+ADMIN_CHAT_ID  = 7780854728
+MINI_APP_URL   = "https://karimov0814.github.io/feedback-bot/index.html"
+PORT           = int(os.environ.get("PORT", 5000))
+WEBHOOK_URL    = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+DATABASE_URL   = os.environ.get("DATABASE_URL", "")
+SHEET_ID       = "13Dy2zeKPn4dmEHLKsjvtTi5qj4_X8aEefhJYrOpV2wI"
+
+def _build_google_creds():
+    raw_key = os.environ.get("GOOGLE_PRIVATE_KEY", "")
+    # Railway ba'zan \n ni literal saqlaydi — ikkalasini ham tekshiramiz
+    if "\\n" in raw_key:
+        raw_key = raw_key.replace("\\n", "\n")
+    return {
+        "type": "service_account",
+        "project_id": "feedback-bot-499705",
+        "private_key_id": "4e34a0b830ead7e9f6995dd6efe1b6f9e12f8c51",
+        "private_key": raw_key,
+        "client_email": "feedback-bot@feedback-bot-499705.iam.gserviceaccount.com",
+        "client_id": "103704228425417838636",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/feedback-bot%40feedback-bot-499705.iam.gserviceaccount.com",
+        "universe_domain": "googleapis.com"
+    }
+
+GOOGLE_CREDS = _build_google_creds()
 # =====================================================
 
 logging.basicConfig(
@@ -32,7 +56,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 flask_app = Flask(__name__)
-
 CORS(flask_app, resources={r"/*": {"origins": "*"}}, supports_credentials=False)
 
 @flask_app.after_request
@@ -51,13 +74,55 @@ ptb_app = None
 loop = None
 
 
+# ==================== GOOGLE SHEETS ====================
+
+def get_sheet():
+    try:
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        creds = Credentials.from_service_account_info(GOOGLE_CREDS, scopes=scopes)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(SHEET_ID).sheet1
+
+        # Agar birinchi qator bo'sh bo'lsa header qo'shamiz
+        if sheet.row_count == 0 or sheet.cell(1, 1).value != "ID":
+            sheet.insert_row(
+                ["ID", "Tur", "Filial", "Matn", "Yuboruvchi", "Anonim", "Vaqt", "Status"],
+                index=1
+            )
+        return sheet
+    except Exception as e:
+        logger.error(f"get_sheet xatolik: {e}")
+        return None
+
+def append_to_sheet(msg):
+    try:
+        sheet = get_sheet()
+        if not sheet:
+            return
+        sheet.append_row([
+            msg.get("id", ""),
+            msg.get("type", "").upper(),
+            msg.get("filial", ""),
+            msg.get("text", ""),
+            msg.get("sender", ""),
+            "Ha" if msg.get("anon") else "Yo'q",
+            msg.get("time", ""),
+            "Yangi"
+        ])
+        logger.info(f"Google Sheets ga yozildi: {msg.get('id')}")
+    except Exception as e:
+        logger.error(f"append_to_sheet xatolik: {e}")
+
+
 # ==================== DATABASE ====================
 
 def get_conn():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
 
 def init_db():
-    """Jadval mavjud bo'lmasa yaratadi"""
     try:
         conn = get_conn()
         cur = conn.cursor()
@@ -77,7 +142,7 @@ def init_db():
         conn.commit()
         cur.close()
         conn.close()
-        logger.info("✅ Database jadval tayyor")
+        logger.info("✅ Database tayyor")
     except Exception as e:
         logger.error(f"init_db xatolik: {e}")
 
@@ -150,10 +215,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if is_admin:
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                "📊 Admin Panel",
-                web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1")
-            )
+            InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))
         ]])
         await update.message.reply_text(
             "👋 Salom, Admin!\n\nXodimlarning murojaatlari shu yerga keladi.",
@@ -161,10 +223,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
     else:
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                "💬 Taklif yoki Shikoyat yuborish",
-                web_app=WebAppInfo(url=MINI_APP_URL)
-            )
+            InlineKeyboardButton("💬 Taklif yoki Shikoyat yuborish", web_app=WebAppInfo(url=MINI_APP_URL))
         ]])
         await update.message.reply_text(
             f"👋 Salom, {user.first_name}!\n\n"
@@ -176,16 +235,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             parse_mode="HTML"
         )
 
-
 async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         raw = update.message.web_app_data.data
         data = json.loads(raw)
-        msg_type = data.get('type', '')
-        filial = data.get('filial', '')
-        text = data.get('text', '')
-        anon = data.get('anon', False)
-        time_str = data.get('time', '')
+        msg_type   = data.get('type', '')
+        filial     = data.get('filial', '')
+        text       = data.get('text', '')
+        anon       = data.get('anon', False)
+        time_str   = data.get('time', '')
         sender_user = update.effective_user
 
         if anon:
@@ -226,14 +284,12 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 def index():
     return "Bot ishlayapti! ✅", 200
 
-
 @flask_app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     data = request.get_json(force=True)
     update = Update.de_json(data, ptb_app.bot)
     asyncio.run_coroutine_threadsafe(ptb_app.process_update(update), loop)
     return jsonify({"ok": True})
-
 
 @flask_app.route("/send", methods=["POST", "OPTIONS"])
 def send_message():
@@ -272,17 +328,13 @@ def send_message():
         )
 
         future = asyncio.run_coroutine_threadsafe(
-            ptb_app.bot.send_message(
-                chat_id=ADMIN_CHAT_ID,
-                text=tg_message,
-                parse_mode="HTML"
-            ),
+            ptb_app.bot.send_message(chat_id=ADMIN_CHAT_ID, text=tg_message, parse_mode="HTML"),
             loop
         )
         future.result(timeout=10)
 
         msg_id = str(int(time_module.time() * 1000))
-        save_message({
+        msg = {
             "id":     msg_id,
             "type":   msg_type,
             "filial": filial,
@@ -291,7 +343,13 @@ def send_message():
             "time":   time_str,
             "sender": display_name,
             "status": "new"
-        })
+        }
+
+        # Supabase ga saqlash
+        save_message(msg)
+
+        # Google Sheets ga yozish (alohida thread da)
+        threading.Thread(target=append_to_sheet, args=(msg,), daemon=True).start()
 
         logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_name}")
         return jsonify({"ok": True})
@@ -300,13 +358,11 @@ def send_message():
         logger.error(f"/send xatolik: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
-
 @flask_app.route("/messages", methods=["GET", "OPTIONS"])
 def get_messages():
     if request.method == "OPTIONS":
         return jsonify({"ok": True}), 200
     return jsonify({"ok": True, "messages": load_messages()})
-
 
 @flask_app.route("/delete", methods=["POST", "OPTIONS"])
 def delete_message():
@@ -326,7 +382,6 @@ def delete_message():
         logger.error(f"/delete xatolik: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
-
 @flask_app.route("/status", methods=["POST", "OPTIONS"])
 def update_status():
     if request.method == "OPTIONS":
@@ -338,7 +393,6 @@ def update_status():
 
         if not msg_id or not new_status:
             return jsonify({"ok": False, "error": "id va status kerak"}), 400
-
         if new_status not in ["new", "progress", "in_progress", "done"]:
             return jsonify({"ok": False, "error": "Noto'g'ri status"}), 400
 
@@ -363,7 +417,6 @@ async def setup_webhook():
     await ptb_app.bot.set_webhook(webhook_address)
     logger.info(f"Webhook o'rnatildi: {webhook_address}")
 
-
 def run():
     global ptb_app, loop
 
@@ -384,7 +437,6 @@ def run():
 
     logger.info(f"✅ Flask server port {PORT} da ishga tushdi!")
     flask_app.run(host="0.0.0.0", port=PORT)
-
 
 if __name__ == "__main__":
     run()
