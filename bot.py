@@ -333,9 +333,12 @@ def send_message():
             f"💬 <b>Matn:</b>\n{text}"
         )
 
+        # Telegram ga qisqa notification
+        type_emoji = "💡" if msg_type == "taklif" else "⚠️"
+        notif = f"{type_emoji} Yangi {'taklif' if msg_type == 'taklif' else 'shikoyat'} keldi — {filial}"
         for _aid in ADMIN_IDS:
             future = asyncio.run_coroutine_threadsafe(
-                ptb_app.bot.send_message(chat_id=_aid, text=tg_message, parse_mode="HTML"),
+                ptb_app.bot.send_message(chat_id=_aid, text=notif),
                 loop
             )
             future.result(timeout=10)
