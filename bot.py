@@ -1,6 +1,7 @@
 """
 Taklif & Shikoyat Telegram Bot
 Railway: Webhook + Flask + PostgreSQL (Supabase) + Google Sheets
+Ikki tilli: O'zbek / Rus
 """
 
 import json
@@ -23,7 +24,7 @@ BOT_TOKEN      = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
 ADMINS = {
     7780854728: "superadmin",
     1488298476: "moderator",
-    555648201: "moderator",
+    555648201:  "moderator",
 }
 ADMIN_IDS     = list(ADMINS.keys())
 ADMIN_CHAT_ID = ADMIN_IDS[0]
@@ -35,7 +36,6 @@ SHEET_ID       = "13Dy2zeKPn4dmEHLKsjvtTi5qj4_X8aEefhJYrOpV2wI"
 
 def _build_google_creds():
     raw_key = os.environ.get("GOOGLE_PRIVATE_KEY", "")
-    # Railway ba'zan \n ni literal saqlaydi — ikkalasini ham tekshiramiz
     if "\\n" in raw_key:
         raw_key = raw_key.replace("\\n", "\n")
     return {
@@ -82,6 +82,13 @@ loop = None
 
 # ==================== GOOGLE SHEETS ====================
 
+SHEET_HEADERS = [
+    "ID", "Tur / Тип", "Filial / Филиал",
+    "Matn (UZ) / Текст (UZ)", "Matn (RU) / Текст (RU)",
+    "Yuboruvchi / Отправитель", "Anonim / Анонимно",
+    "Til / Язык", "Vaqt / Время", "Status"
+]
+
 def get_sheet():
     try:
         scopes = [
@@ -92,33 +99,69 @@ def get_sheet():
         client = gspread.authorize(creds)
         sheet = client.open_by_key(SHEET_ID).sheet1
 
-        # Agar birinchi qator bo'sh bo'lsa header qo'shamiz
+        # Header qatori tekshiruvi / yangilash
         if sheet.row_count == 0 or sheet.cell(1, 1).value != "ID":
-            sheet.insert_row(
-                ["ID", "Tur", "Filial", "Matn", "Yuboruvchi", "Anonim", "Vaqt", "Status"],
-                index=1
-            )
+            sheet.insert_row(SHEET_HEADERS, index=1)
+        elif sheet.cell(1, 4).value != "Matn (UZ) / Текст (UZ)":
+            # Eski header — yangi formatga yangilaymiz
+            sheet.update('A1', [SHEET_HEADERS])
+
         return sheet
     except Exception as e:
         logger.error(f"get_sheet xatolik: {e}")
         return None
 
 def append_to_sheet(msg):
+    """
+    Google Sheets ga ikki tilli yozuv:
+    - Tur / Тип: UZ va RU
+    - Matn: alohida ustunlarda (UZ va RU)
+    - Anonim: UZ va RU
+    - Status: UZ va RU
+    """
     try:
         sheet = get_sheet()
         if not sheet:
             return
+
+        msg_type = msg.get("type", "")
+        lang = msg.get("lang", "uz")
+        is_anon = msg.get("anon", False)
+
+        # Tur — ikki tilda
+        if msg_type == "taklif":
+            type_label = "Taklif / Предложение"
+        else:
+            type_label = "Shikoyat / Жалоба"
+
+        # Anonim — ikki tilda
+        anon_label = "Ha / Да" if is_anon else "Yo'q / Нет"
+
+        # Til qaysi
+        lang_label = "O'zbek" if lang == "uz" else "Русский"
+
+        # Status
+        status_raw = msg.get("status", "new")
+        if status_raw == "new":
+            status_label = "Yangi / Новое"
+        elif status_raw in ("progress", "in_progress"):
+            status_label = "Ko'rib chiqilmoqda / В обработке"
+        else:
+            status_label = "Yakunlandi / Завершено"
+
         sheet.append_row([
             msg.get("id", ""),
-            msg.get("type", "").upper(),
+            type_label,
             msg.get("filial", ""),
-            msg.get("text", ""),
+            msg.get("text_uz") or msg.get("text", ""),    # UZ ustun
+            msg.get("text_ru") or msg.get("text", ""),    # RU ustun
             msg.get("sender", ""),
-            "Ha" if msg.get("anon") else "Yo'q",
+            anon_label,
+            lang_label,
             msg.get("time", ""),
-            "Yangi"
+            status_label,
         ])
-        logger.info(f"Google Sheets ga yozildi: {msg.get('id')}")
+        logger.info(f"Google Sheets ga yozildi (ikki tilda): {msg.get('id')}")
     except Exception as e:
         logger.error(f"append_to_sheet xatolik: {e}")
 
@@ -129,15 +172,24 @@ def get_conn():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
 
 def init_db():
+    """
+    Jadval yaratish / yangilash.
+    Eski jadval bo'lsa, text_uz, text_ru, lang ustunlarini qo'shamiz.
+    """
     try:
         conn = get_conn()
         cur = conn.cursor()
+
+        # Asosiy jadval
         cur.execute("""
             CREATE TABLE IF NOT EXISTS messages (
                 id TEXT PRIMARY KEY,
                 type TEXT,
                 filial TEXT,
                 text TEXT,
+                text_uz TEXT,
+                text_ru TEXT,
+                lang TEXT DEFAULT 'uz',
                 anon BOOLEAN DEFAULT FALSE,
                 time TEXT,
                 sender TEXT,
@@ -145,10 +197,22 @@ def init_db():
                 created_at TIMESTAMP DEFAULT NOW()
             )
         """)
+
+        # Eski jadvalga yangi ustunlarni qo'shish (migration)
+        for col, col_type, default in [
+            ("text_uz", "TEXT", "''"),
+            ("text_ru", "TEXT", "''"),
+            ("lang", "TEXT", "'uz'"),
+        ]:
+            try:
+                cur.execute(f"ALTER TABLE messages ADD COLUMN IF NOT EXISTS {col} {col_type} DEFAULT {default}")
+            except Exception:
+                pass
+
         conn.commit()
         cur.close()
         conn.close()
-        logger.info("✅ Database tayyor")
+        logger.info("✅ Database tayyor (ikki tilli)")
     except Exception as e:
         logger.error(f"init_db xatolik: {e}")
 
@@ -170,12 +234,18 @@ def save_message(msg):
         conn = get_conn()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO messages (id, type, filial, text, anon, time, sender, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO messages (id, type, filial, text, text_uz, text_ru, lang, anon, time, sender, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
         """, (
-            msg['id'], msg['type'], msg['filial'], msg['text'],
-            msg['anon'], msg['time'], msg['sender'], msg.get('status', 'new')
+            msg['id'], msg['type'], msg['filial'],
+            msg['text'],
+            msg.get('text_uz', msg['text']),
+            msg.get('text_ru', msg['text']),
+            msg.get('lang', 'uz'),
+            msg['anon'],
+            msg['time'], msg['sender'],
+            msg.get('status', 'new')
         ))
         conn.commit()
         cur.close()
@@ -236,7 +306,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             f"💡 <b>Taklif</b> — g'oyalaringizni yuboring\n"
             f"⚠️ <b>Shikoyat</b> — muammolaringizni bildiring\n\n"
             f"🔒 Anonim yuborish imkoniyati mavjud.\n\n"
-            f"Boshlash uchun tugmani bosing 👇",
+            f"👋 Привет, {user.first_name}!\n\n"
+            f"💡 <b>Предложение</b> — поделитесь идеей\n"
+            f"⚠️ <b>Жалоба</b> — сообщите о проблеме\n\n"
+            f"🔒 Доступна анонимная отправка.\n\n"
+            f"Boshlash / Начать 👇",
             reply_markup=keyboard,
             parse_mode="HTML"
         )
@@ -248,6 +322,9 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         msg_type   = data.get('type', '')
         filial     = data.get('filial', '')
         text       = data.get('text', '')
+        text_uz    = data.get('text_uz', text)
+        text_ru    = data.get('text_ru', text)
+        lang       = data.get('lang', 'uz')
         anon       = data.get('anon', False)
         time_str   = data.get('time', '')
         sender_user = update.effective_user
@@ -263,33 +340,36 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             sender_text = f"👤 {name}{username}"
             sender_name = name + (f" @{sender_user.username}" if sender_user.username else "")
 
-        type_emoji = "💡" if msg_type == "taklif" else "⚠️"
-        type_label = "TAKLIF" if msg_type == "taklif" else "SHIKOYAT"
+        # Telegram xabari: ikki tilda
+        type_uz = "💡 TAKLIF" if msg_type == "taklif" else "⚠️ SHIKOYAT"
+        type_ru = "💡 ПРЕДЛОЖЕНИЕ" if msg_type == "taklif" else "⚠️ ЖАЛОБА"
 
         message = (
-            f"{type_emoji} <b>{type_label}</b>\n"
+            f"{type_uz} / {type_ru}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"🏢 <b>Filial:</b> {filial}\n"
+            f"🏢 {filial}\n"
             f"{sender_text}\n"
-            f"📅 <b>Vaqt:</b> {time_str}\n"
+            f"📅 {time_str}\n"
+            f"🌐 {'O\'zbek' if lang == 'uz' else 'Русский'}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"💬 <b>Matn:</b>\n{text}"
+            f"🇺🇿 {text_uz}\n\n"
+            f"🇷🇺 {text_ru}"
         )
 
         for _aid in ADMIN_IDS:
             await context.bot.send_message(chat_id=_aid, text=message, parse_mode="HTML")
-        await update.message.reply_text("✅ Murojaatingiz yuborildi!\n\nRahmat, tez orada ko'rib chiqiladi.")
+        await update.message.reply_text("✅ Murojaatingiz yuborildi! / Ваше обращение отправлено!\n\nRahmat / Спасибо!")
 
     except Exception as e:
         logger.error(f"web_app_data xatolik: {e}")
-        await update.message.reply_text("❌ Xatolik yuz berdi.")
+        await update.message.reply_text("❌ Xatolik yuz berdi. / Произошла ошибка.")
 
 
 # ==================== FLASK ROUTES ====================
 
 @flask_app.route("/", methods=["GET"])
 def index():
-    return "Bot ishlayapti! ✅", 200
+    return "Bot ishlayapti! / Бот работает! ✅", 200
 
 @flask_app.route("/role/<int:telegram_id>", methods=["GET"])
 def get_role(telegram_id):
@@ -315,75 +395,82 @@ def send_message():
         msg_type    = data.get('type', '')
         filial      = data.get('filial', '')
         text        = data.get('text', '')
+        text_uz     = data.get('text_uz', text)   # frontend tarjima qilib yuboradi
+        text_ru     = data.get('text_ru', text)   # frontend tarjima qilib yuboradi
+        lang        = data.get('lang', 'uz')       # yuboruvchi tanlagan til
         anon        = data.get('anon', False)
         time_str    = data.get('time', '')
-        sender_name = data.get('sender_name', "Noma'lum")
+        sender_name = data.get('sender_name', "Noma'lum / Неизвестно")
         username    = data.get('username', '')
 
-        # To'liq ism — Sheets va Telegram uchun
         uname     = f" @{username}" if username else ""
         real_name = sender_name + uname
 
-        # Mini app uchun — anonim bo'lsa yashiriladi
         if anon:
-            sender_text  = "🕵️ <b>Anonim</b>"
+            sender_text  = "🕵️ <b>Anonim / Анонимно</b>"
             display_name = "Anonim"
         else:
             sender_text  = f"👤 {real_name}"
             display_name = real_name
 
-        type_emoji = "💡" if msg_type == "taklif" else "⚠️"
-        type_label = "TAKLIF" if msg_type == "taklif" else "SHIKOYAT"
+        type_uz = "💡 TAKLIF" if msg_type == "taklif" else "⚠️ SHIKOYAT"
+        type_ru = "💡 ПРЕДЛОЖЕНИЕ" if msg_type == "taklif" else "⚠️ ЖАЛОБА"
 
+        # Telegram notification: ikki tilda matn bilan
         tg_message = (
-            f"{type_emoji} <b>{type_label}</b>\n"
+            f"{type_uz} / {type_ru}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"🏢 <b>Filial:</b> {filial}\n"
+            f"🏢 <b>Filial / Филиал:</b> {filial}\n"
             f"{sender_text}\n"
-            f"📅 <b>Vaqt:</b> {time_str}\n"
+            f"📅 <b>Vaqt / Время:</b> {time_str}\n"
+            f"🌐 <b>Til / Язык:</b> {'O\'zbek' if lang == 'uz' else 'Русский'}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"💬 <b>Matn:</b>\n{text}"
+            f"🇺🇿 <b>UZ:</b> {text_uz}\n\n"
+            f"🇷🇺 <b>RU:</b> {text_ru}"
         )
 
-        # Telegram ga qisqa notification
-        type_emoji = "💡" if msg_type == "taklif" else "⚠️"
-        notif = f"{type_emoji} Yangi {'taklif' if msg_type == 'taklif' else 'shikoyat'} keldi — {filial}"
         for _aid in ADMIN_IDS:
             future = asyncio.run_coroutine_threadsafe(
-                ptb_app.bot.send_message(chat_id=_aid, text=notif),
+                ptb_app.bot.send_message(chat_id=_aid, text=tg_message, parse_mode="HTML"),
                 loop
             )
             future.result(timeout=10)
 
         msg_id = str(int(time_module.time() * 1000))
 
-        # Supabase ga — mini app uchun (anonim bo'lsa "Anonim" ko'rinadi)
+        # DB ga saqlash (mini app uchun — anonim bo'lsa "Anonim" ko'rinadi)
         msg = {
-            "id":     msg_id,
-            "type":   msg_type,
-            "filial": filial,
-            "text":   text,
-            "anon":   anon,
-            "time":   time_str,
-            "sender": display_name,
-            "status": "new"
+            "id":      msg_id,
+            "type":    msg_type,
+            "filial":  filial,
+            "text":    text,
+            "text_uz": text_uz,
+            "text_ru": text_ru,
+            "lang":    lang,
+            "anon":    anon,
+            "time":    time_str,
+            "sender":  display_name,
+            "status":  "new"
         }
         save_message(msg)
 
-        # Google Sheets ga — har doim to'liq ma'lumot
+        # Google Sheets ga — har doim to'liq ism + ikki tilda matn
         sheet_msg = {
-            "id":     msg_id,
-            "type":   msg_type,
-            "filial": filial,
-            "text":   text,
-            "anon":   anon,
-            "time":   time_str,
-            "sender": real_name,  # anonim bo'lsa ham to'liq ism
-            "status": "new"
+            "id":      msg_id,
+            "type":    msg_type,
+            "filial":  filial,
+            "text":    text,
+            "text_uz": text_uz,
+            "text_ru": text_ru,
+            "lang":    lang,
+            "anon":    anon,
+            "time":    time_str,
+            "sender":  real_name,   # har doim to'liq ism
+            "status":  "new"
         }
         threading.Thread(target=append_to_sheet, args=(sheet_msg,), daemon=True).start()
 
-        logger.info(f"Yangi {type_label}: {filial} — {'anonim' if anon else sender_name}")
+        logger.info(f"Yangi {msg_type}: {filial} — {'anonim' if anon else sender_name} [{lang}]")
         return jsonify({"ok": True})
 
     except Exception as e:
