@@ -23,7 +23,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 BOT_TOKEN      = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
 ADMINS = {
     7780854728: "superadmin",
-    1488298476: "moderator",
+    1488298476: "superadmin",
     555648201:  "moderator",
 }
 ADMIN_IDS     = list(ADMINS.keys())
