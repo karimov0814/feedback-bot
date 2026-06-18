@@ -17,13 +17,13 @@ from google.oauth2.service_account import Credentials
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # =====================================================
 BOT_TOKEN      = "8919742379:AAG_mBtlsxU4DluKoeXUvCfn2mscdZ1pP1M"
 ADMINS = {
     7780854728: "superadmin",
-    1488298476: "superadmin",
+    1488298476: "moderator",
     555648201:  "moderator",
 }
 ADMIN_IDS     = list(ADMINS.keys())
@@ -78,6 +78,9 @@ def options_handler(path):
 
 ptb_app = None
 loop = None
+
+# notif_id -> { admin_id: message_id, ... } — "Hammadan o'chirish" uchun
+SENT_NOTIFICATIONS = {}
 
 
 # ==================== GOOGLE SHEETS ====================
@@ -320,6 +323,32 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("❌ Xatolik yuz berdi. / Произошла ошибка.")
 
 
+async def delete_all_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """'🗑 Hammadan o'chirish' tugmasi — faqat superadmin uchun ishlaydi."""
+    query = update.callback_query
+    user_id = query.from_user.id
+
+    if ADMINS.get(user_id) != "superadmin":
+        await query.answer("Sizda bu amal uchun ruxsat yo'q", show_alert=True)
+        return
+
+    notif_id = query.data.split(":", 1)[1]
+    sent_ids = SENT_NOTIFICATIONS.get(notif_id)
+
+    if not sent_ids:
+        await query.answer("Xabar topilmadi yoki muddati o'tgan", show_alert=True)
+        return
+
+    for _aid, _mid in sent_ids.items():
+        try:
+            await context.bot.delete_message(chat_id=_aid, message_id=_mid)
+        except Exception as e:
+            logger.error(f"delete_all_callback: {_aid} uchun o'chirib bo'lmadi: {e}")
+
+    SENT_NOTIFICATIONS.pop(notif_id, None)
+    await query.answer("Hammadan o'chirildi ✅")
+
+
 # ==================== FLASK ROUTES ====================
 
 @flask_app.route("/", methods=["GET"])
@@ -372,18 +401,24 @@ def send_message():
         emoji = "⚠️" if msg_type == "shikoyat" else "💡"
         notif_text = f"{emoji} Yangi {type_label_uz} — {filial} filialidan"
 
-        admin_panel_kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))
-        ]])
+        msg_id = str(int(time_module.time() * 1000))
 
+        # Har bir admin uchun rolga mos klaviatura va yuborilgan message_id larni saqlash
+        sent_ids = {}
         for _aid in ADMIN_IDS:
+            buttons = [InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))]
+            if ADMINS.get(_aid) == "superadmin":
+                buttons.append(InlineKeyboardButton("🗑 Hammadan o'chirish", callback_data=f"delall:{msg_id}"))
+            kb = InlineKeyboardMarkup([buttons])
+
             future = asyncio.run_coroutine_threadsafe(
-                ptb_app.bot.send_message(chat_id=_aid, text=notif_text, reply_markup=admin_panel_kb),
+                ptb_app.bot.send_message(chat_id=_aid, text=notif_text, reply_markup=kb),
                 loop
             )
-            future.result(timeout=10)
+            sent_msg = future.result(timeout=10)
+            sent_ids[_aid] = sent_msg.message_id
 
-        msg_id = str(int(time_module.time() * 1000))
+        SENT_NOTIFICATIONS[msg_id] = sent_ids
 
         # To'liq ma'lumot — faqat DB ga (Mini App buni o'qiydi)
         msg = {
@@ -494,6 +529,7 @@ def run():
     ptb_app = Application.builder().token(BOT_TOKEN).build()
     ptb_app.add_handler(CommandHandler("start", start))
     ptb_app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
+    ptb_app.add_handler(CallbackQueryHandler(delete_all_callback, pattern=r"^delall:"))
 
     loop.run_until_complete(ptb_app.initialize())
     loop.run_until_complete(setup_webhook())
