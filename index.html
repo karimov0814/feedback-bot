@@ -29,7 +29,49 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* EMPLOYEE */
+  /* ===== LANGUAGE SCREEN ===== */
+  #screen-lang {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 32px 24px; text-align: center; background: #F3F4F6;
+  }
+  #screen-lang.active { display: flex; }
+  .lang-logo { font-size: 56px; margin-bottom: 24px; animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+  .lang-title {
+    font-size: 26px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px;
+    animation: fadeUp 0.4s 0.1s ease both;
+  }
+  .lang-sub {
+    font-size: 14px; color: var(--gray-600); margin-bottom: 36px; line-height: 1.6;
+    animation: fadeUp 0.4s 0.18s ease both;
+  }
+  @keyframes fadeUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .lang-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 320px;
+    animation: fadeUp 0.4s 0.26s ease both;
+  }
+  .lang-card {
+    background: white; border: 2px solid var(--gray-200); border-radius: 16px;
+    padding: 24px 16px; cursor: pointer; transition: all 0.18s;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .lang-card:active { transform: scale(0.96); }
+  .lang-card.selected { border-color: var(--orange); background: var(--orange-light); }
+  .lang-flag { font-size: 36px; }
+  .lang-name { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+  .lang-native { font-size: 12px; color: var(--gray-400); }
+  .lang-card.selected .lang-name { color: var(--orange); }
+  .btn-lang-confirm {
+    margin-top: 24px; padding: 15px 40px; background: var(--orange); color: white;
+    font-family: inherit; font-size: 16px; font-weight: 600; border: none;
+    border-radius: var(--radius-sm); cursor: pointer; width: 100%; max-width: 320px;
+    opacity: 0.45; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent;
+    animation: fadeUp 0.4s 0.32s ease both;
+  }
+  .btn-lang-confirm.ready { opacity: 1; }
+
+  /* ===== EMPLOYEE ===== */
   #screen-employee { padding: 0 0 32px; }
   .header {
     background: var(--orange); padding: 20px 16px 16px;
@@ -39,6 +81,17 @@
   .header-icon { width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px; }
   .header h1 { font-size:20px;font-weight:700; }
   .header p { font-size:13px;opacity:0.8;margin-left:52px; }
+
+  /* lang switch pill in header */
+  .lang-switch-pill {
+    position: absolute; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px));
+    background: rgba(255,255,255,0.22); border: 1.5px solid rgba(255,255,255,0.45);
+    border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 700;
+    color: white; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; display: flex; align-items: center; gap: 5px;
+  }
+  .header { position: relative; }
+
   .section-title { font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-400);margin:20px 0 8px;padding:0 16px; }
   .type-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px; }
   .type-card { border:2px solid var(--gray-200);border-radius:var(--radius);padding:16px 12px;text-align:center;cursor:pointer;background:white;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
@@ -73,7 +126,7 @@
   .btn-submit { width:calc(100% - 32px);padding:15px;background:var(--orange);color:white;font-family:inherit;font-size:16px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer;margin:24px 16px 0;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent; }
   .btn-submit:disabled { opacity:0.5; }
 
-  /* SUCCESS */
+  /* ===== SUCCESS ===== */
   #screen-success { display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:32px 24px;text-align:center; }
   #screen-success.active { display:flex; }
   .success-circle { width:90px;height:90px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:24px; }
@@ -82,7 +135,7 @@
   .success-badge { display:inline-flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green);font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;margin-top:20px; }
   .btn-new { margin-top:32px;padding:13px 32px;background:var(--orange-light);color:var(--orange);font-family:inherit;font-size:15px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer; }
 
-  /* ADMIN */
+  /* ===== ADMIN ===== */
   #screen-admin { display:none;padding:0; }
   #screen-admin.active { display:block; }
   .admin-header { background:var(--gray-900);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top, 0px));color:white; }
@@ -91,7 +144,14 @@
   .admin-badge { background:var(--orange);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px; }
   .admin-badge.mod { background:var(--blue); }
 
-  /* DATE FILTER ROW */
+  /* admin lang switch */
+  .admin-lang-pill {
+    background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 20px; padding: 5px 10px; font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.9); cursor: pointer; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+  }
+
   .date-filter-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
   .date-filter-btn {
     display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;
@@ -102,7 +162,6 @@
   }
   .date-filter-btn.has-range { background:rgba(255,255,255,0.25);border-color:white;color:white; }
 
-  /* DATE MODAL */
   .date-modal-overlay {
     display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
     z-index:300;align-items:flex-end;justify-content:center;
@@ -133,14 +192,12 @@
   .stat-num { font-size:22px;font-weight:700;color:white; }
   .stat-lbl { font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px; }
 
-  /* MAIN TABS */
   .main-tabs { display:flex;background:white;border-bottom:2px solid var(--gray-200); }
   .main-tab { flex:1;padding:12px 8px;text-align:center;font-family:inherit;font-size:13px;font-weight:600;color:var(--gray-400);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;-webkit-tap-highlight-color:transparent; }
   .main-tab.active { color:var(--orange);border-bottom-color:var(--orange); }
   .main-tab .tab-count { display:inline-flex;align-items:center;justify-content:center;background:var(--gray-200);color:var(--gray-600);font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 4px;margin-left:4px; }
   .main-tab.active .tab-count { background:var(--orange);color:white; }
 
-  /* SUB TABS */
   .sub-tabs-wrapper { background:white;padding:10px 16px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;position:relative; }
   .sub-tabs { display:flex;gap:6px;flex:1;overflow-x:auto;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain; }
   .sub-tabs::-webkit-scrollbar { display:none; }
@@ -149,7 +206,6 @@
   .sub-tab.active-progress { border-color:var(--amber);background:var(--amber-light);color:var(--amber); }
   .sub-tab.active-done { border-color:var(--green);background:var(--green-light);color:var(--green); }
 
-  /* FILTER ICON */
   .filter-icon-btn { width:34px;height:34px;border-radius:10px;border:1.5px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;-webkit-tap-highlight-color:transparent;position:relative;touch-action:manipulation; }
   .filter-icon-btn.has-filter { border-color:var(--orange);background:var(--orange-light); }
   .filter-icon-btn .filter-dot { position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--orange);border-radius:50%;display:none; }
@@ -161,7 +217,25 @@
   .filter-checkbox { width:18px;height:18px;border-radius:5px;border:2px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700; }
   .filter-checkbox.checked { background:var(--orange);border-color:var(--orange);color:white; }
 
-  /* MESSAGE CARDS */
+  /* Translation badge on cards */
+  .msg-translated-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; color: var(--blue);
+    background: var(--blue-light); border-radius: 5px; padding: 2px 7px;
+    margin-top: 4px; margin-bottom: 4px;
+  }
+  .msg-original-toggle {
+    font-size: 11px; color: var(--blue); cursor: pointer; text-decoration: underline;
+    display: inline-block; margin-bottom: 6px;
+  }
+  .msg-original-text {
+    font-size: 13px; color: var(--gray-600); line-height: 1.55;
+    background: #F8F9FB; border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 8px; display: none; border-left: 3px solid var(--gray-200);
+    font-style: italic;
+  }
+  .msg-original-text.show { display: block; }
+
   .messages-list { padding:12px 16px; }
   .message-card { background:white;border-radius:var(--radius);padding:14px 14px 12px;margin-bottom:10px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200); }
   .message-card.sl-new { border-left-color:var(--red); }
@@ -195,27 +269,73 @@
   .empty-state .emoji { font-size:40px;margin-bottom:12px; }
   .spinner { width:32px;height:32px;border:3px solid var(--gray-200);border-top-color:var(--orange);border-radius:50%;animation:spin 0.7s linear infinite;margin:40px auto 12px; }
   @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* Translate loading */
+  .translating-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .translating-overlay.show { display: flex; }
+  .translating-box {
+    background: white; border-radius: 16px; padding: 24px 32px;
+    text-align: center; font-size: 15px; font-weight: 600; color: var(--gray-800);
+  }
+  .translating-box .t-spinner {
+    width: 28px; height: 28px; border: 3px solid var(--gray-200);
+    border-top-color: var(--orange); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 12px;
+  }
 </style>
 </head>
 <body>
 
+<!-- TRANSLATING OVERLAY -->
+<div class="translating-overlay" id="translating-overlay">
+  <div class="translating-box">
+    <div class="t-spinner"></div>
+    <div id="translating-text">Tarjima qilinmoqda...</div>
+  </div>
+</div>
+
+<!-- LANGUAGE SELECT -->
+<div id="screen-lang" class="screen active">
+  <div class="lang-logo">💬</div>
+  <div class="lang-title">Taklif &amp; Shikoyat</div>
+  <div class="lang-sub">Tilni tanlang / Выберите язык</div>
+  <div class="lang-cards">
+    <div class="lang-card" id="lang-uz" onclick="selectLang('uz')">
+      <div class="lang-flag">🇺🇿</div>
+      <div class="lang-name">O'zbek</div>
+      <div class="lang-native">O'zbek tili</div>
+    </div>
+    <div class="lang-card" id="lang-ru" onclick="selectLang('ru')">
+      <div class="lang-flag">🇷🇺</div>
+      <div class="lang-name">Русский</div>
+      <div class="lang-native">Русский язык</div>
+    </div>
+  </div>
+  <button class="btn-lang-confirm" id="btn-lang-confirm" onclick="confirmLang()">Davom etish</button>
+</div>
+
 <!-- EMPLOYEE -->
-<div id="screen-employee" class="screen active">
+<div id="screen-employee" class="screen">
   <div class="header">
-    <div class="header-top"><div class="header-icon">💬</div><h1>Taklif & Shikoyat</h1></div>
-    <p>Xodimlar uchun muloqot platformasi</p>
+    <div class="header-top"><div class="header-icon">💬</div><h1 id="h-title">Taklif & Shikoyat</h1></div>
+    <p id="h-sub">Xodimlar uchun muloqot platformasi</p>
+    <div class="lang-switch-pill" onclick="switchLang()" id="lang-switch-pill">🌐 RU</div>
   </div>
   <div style="padding-bottom:32px;">
-    <div class="section-title">Murojaat turini tanlang</div>
+    <div class="section-title" id="st-type">Murojaat turini tanlang</div>
     <div class="type-grid">
-      <div class="type-card" id="card-taklif"><div class="icon">💡</div><div class="label">Taklif</div><div class="desc">Yaxshilash g'oyasi</div></div>
-      <div class="type-card" id="card-shikoyat"><div class="icon">⚠️</div><div class="label">Shikoyat</div><div class="desc">Muammo yoki norozilik</div></div>
+      <div class="type-card" id="card-taklif"><div class="icon">💡</div><div class="label" id="lbl-taklif">Taklif</div><div class="desc" id="desc-taklif">Yaxshilash g'oyasi</div></div>
+      <div class="type-card" id="card-shikoyat"><div class="icon">⚠️</div><div class="label" id="lbl-shikoyat">Shikoyat</div><div class="desc" id="desc-shikoyat">Muammo yoki norozilik</div></div>
     </div>
     <div class="field-error" id="err-type">Murojaat turini tanlang</div>
-    <div class="section-title">Filial</div>
+    <div class="section-title" id="st-filial">Filial</div>
     <div class="select-wrapper">
       <select id="filial-select">
-        <option value="">— Filialni tanlang —</option>
+        <option value="" id="filial-placeholder">— Filialni tanlang —</option>
         <option>Novza</option><option>Yunusobod Gallery</option><option>Compass Mall</option>
         <option>Sergeli</option><option>Anhor</option><option>Scopus Mall</option>
         <option>Eco</option><option>Andijon Navruz</option><option>Beruniy</option>
@@ -225,30 +345,30 @@
       </select>
     </div>
     <div class="field-error" id="err-filial">Filialni tanlang</div>
-    <div class="section-title">Matn</div>
+    <div class="section-title" id="st-text">Matn</div>
     <div class="textarea-wrap">
       <textarea id="msg-text" rows="5" maxlength="1000" placeholder="Fikringizni yozing..."></textarea>
     </div>
     <div class="char-count" id="char-count">0 / 1000</div>
     <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
-    <div class="section-title">Maxfiylik</div>
+    <div class="section-title" id="st-privacy">Maxfiylik</div>
     <div class="anonymous-row">
       <div class="anonymous-info">
         <div style="font-size:20px">🕵️</div>
-        <div class="anon-text"><div class="title">Anonim yuborish</div><div class="sub">Ismingiz ko'rinmaydi</div></div>
+        <div class="anon-text"><div class="title" id="anon-title">Anonim yuborish</div><div class="sub" id="anon-sub">Ismingiz ko'rinmaydi</div></div>
       </div>
       <div class="toggle" id="anon-toggle"></div>
     </div>
-    <button class="btn-submit" id="submit-btn"><span>📤</span><span>Yuborish</span></button>
+    <button class="btn-submit" id="submit-btn"><span>📤</span><span id="btn-submit-lbl">Yuborish</span></button>
   </div>
 </div>
 
 <!-- SUCCESS -->
 <div id="screen-success" class="screen">
   <div class="success-circle">✅</div>
-  <div class="success-title">Yuborildi!</div>
-  <div class="success-desc">Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!</div>
-  <div class="success-badge">🔒 Maxfiylik kafolatlangan</div>
+  <div class="success-title" id="succ-title">Yuborildi!</div>
+  <div class="success-desc" id="succ-desc">Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!</div>
+  <div class="success-badge">🔒 <span id="succ-badge">Maxfiylik kafolatlangan</span></div>
   <button class="btn-new" id="btn-new">Yangi murojaat</button>
 </div>
 
@@ -256,27 +376,25 @@
 <div id="screen-admin" class="screen">
   <div class="admin-header">
     <div class="admin-header-top">
-      <h1>📊 Admin Panel</h1>
-      <div class="admin-badge" id="admin-role-badge">ADMIN</div>
+      <h1 id="admin-title">📊 Admin Panel</h1>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="admin-lang-pill" onclick="switchLang()" id="admin-lang-pill">🌐 RU</div>
+        <div class="admin-badge" id="admin-role-badge">ADMIN</div>
+      </div>
     </div>
 
-    <!-- DATE FILTER -->
     <div class="date-filter-row">
-      <div style="font-size:12px;color:rgba(255,255,255,0.6);">Statistika muddati</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);" id="lbl-stat-period">Statistika muddati</div>
       <button class="date-filter-btn" id="date-filter-btn">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         <span id="date-filter-label"></span>
       </button>
     </div>
 
     <div class="admin-stats">
-      <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-lbl">Jami</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-taklif">—</div><div class="stat-lbl">Takliflar</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-shikoyat">—</div><div class="stat-lbl">Shikoyatlar</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-lbl" id="stat-lbl-total">Jami</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-taklif">—</div><div class="stat-lbl" id="stat-lbl-taklif">Takliflar</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-shikoyat">—</div><div class="stat-lbl" id="stat-lbl-shikoyat">Shikoyatlar</div></div>
     </div>
   </div>
 
@@ -284,18 +402,18 @@
   <div class="date-modal-overlay" id="date-modal-overlay">
     <div class="date-modal">
       <div class="date-modal-header">
-        <span class="date-modal-title">📅 Davrni tanlang</span>
+        <span class="date-modal-title" id="dmodal-title">📅 Davrni tanlang</span>
         <button class="date-modal-close" id="date-modal-close">✕</button>
       </div>
       <div class="date-quick-btns">
-        <button class="date-quick-btn" data-quick="week">Oxirgi 7 kun</button>
-        <button class="date-quick-btn" data-quick="month">Oxirgi 30 kun</button>
-        <button class="date-quick-btn" data-quick="year">Oxirgi 1 yil</button>
-        <button class="date-quick-btn" data-quick="thismonth">Shu oy</button>
+        <button class="date-quick-btn" data-quick="week" id="dq-week">Oxirgi 7 kun</button>
+        <button class="date-quick-btn" data-quick="month" id="dq-month">Oxirgi 30 kun</button>
+        <button class="date-quick-btn" data-quick="year" id="dq-year">Oxirgi 1 yil</button>
+        <button class="date-quick-btn" data-quick="thismonth" id="dq-thismonth">Shu oy</button>
       </div>
       <div class="date-fields">
-        <div class="date-field"><label>Dan</label><input type="date" id="date-from"></div>
-        <div class="date-field"><label>Gacha</label><input type="date" id="date-to"></div>
+        <div class="date-field"><label id="dfield-from">Dan</label><input type="date" id="date-from"></div>
+        <div class="date-field"><label id="dfield-to">Gacha</label><input type="date" id="date-to"></div>
       </div>
       <div class="date-modal-actions">
         <button class="date-reset-btn" id="date-reset-btn">Tozalash</button>
@@ -306,26 +424,26 @@
 
   <!-- MAIN TABS -->
   <div class="main-tabs">
-    <button class="main-tab active" data-tab="all">Hammasi <span class="tab-count" id="tc-all">0</span></button>
-    <button class="main-tab" data-tab="shikoyat">⚠️ Shikoyat <span class="tab-count" id="tc-shikoyat">0</span></button>
-    <button class="main-tab" data-tab="taklif">💡 Taklif <span class="tab-count" id="tc-taklif">0</span></button>
+    <button class="main-tab active" data-tab="all" id="mtab-all">Hammasi <span class="tab-count" id="tc-all">0</span></button>
+    <button class="main-tab" data-tab="shikoyat" id="mtab-shikoyat">⚠️ Shikoyat <span class="tab-count" id="tc-shikoyat">0</span></button>
+    <button class="main-tab" data-tab="taklif" id="mtab-taklif">💡 Taklif <span class="tab-count" id="tc-taklif">0</span></button>
   </div>
 
   <!-- SUB TABS -->
   <div class="sub-tabs-wrapper">
     <div class="sub-tabs" id="sub-tabs-scroll">
-      <button class="sub-tab active-new" data-sub="new">Yangi <span class="sc" id="sc-new">0</span></button>
-      <button class="sub-tab" data-sub="progress">Ko'rib chiqilmoqda <span class="sc" id="sc-progress">0</span></button>
-      <button class="sub-tab" data-sub="done">Yakunlandi <span class="sc" id="sc-done">0</span></button>
+      <button class="sub-tab active-new" data-sub="new" id="stab-new">Yangi <span class="sc" id="sc-new">0</span></button>
+      <button class="sub-tab" data-sub="progress" id="stab-progress">Ko'rib chiqilmoqda <span class="sc" id="sc-progress">0</span></button>
+      <button class="sub-tab" data-sub="done" id="stab-done">Yakunlandi <span class="sc" id="sc-done">0</span></button>
     </div>
     <button class="filter-icon-btn" id="filter-icon-btn">
       ⚙️<span class="filter-dot"></span>
     </button>
     <div class="filter-dropdown" id="filter-dropdown">
-      <div class="filter-dropdown-title">Filter</div>
-      <div class="filter-option" data-anon="all"><div class="filter-checkbox checked" id="fc-all">✓</div><span>Hammasi</span></div>
-      <div class="filter-option" data-anon="open"><div class="filter-checkbox" id="fc-open"></div><span>👤 Ochiq</span></div>
-      <div class="filter-option" data-anon="anon"><div class="filter-checkbox" id="fc-anon"></div><span>🕵️ Anonim</span></div>
+      <div class="filter-dropdown-title" id="fdd-title">Filter</div>
+      <div class="filter-option" data-anon="all"><div class="filter-checkbox checked" id="fc-all">✓</div><span id="ff-all">Hammasi</span></div>
+      <div class="filter-option" data-anon="open"><div class="filter-checkbox" id="fc-open"></div><span id="ff-open">👤 Ochiq</span></div>
+      <div class="filter-option" data-anon="anon"><div class="filter-checkbox" id="fc-anon"></div><span id="ff-anon">🕵️ Anonim</span></div>
     </div>
   </div>
 
@@ -335,12 +453,183 @@
 <script>
 const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
 
+// ===================================================
+// I18N — barcha matnlar
+// ===================================================
+var LANG = {
+  uz: {
+    // Lang screen
+    lang_continue: 'Davom etish',
+    // Header
+    app_title: "Taklif & Shikoyat",
+    app_sub: "Xodimlar uchun muloqot platformasi",
+    lang_switch_pill: '🌐 RU',
+    // Employee form
+    st_type: "Murojaat turini tanlang",
+    lbl_taklif: "Taklif",
+    desc_taklif: "Yaxshilash g'oyasi",
+    lbl_shikoyat: "Shikoyat",
+    desc_shikoyat: "Muammo yoki norozilik",
+    err_type: "Murojaat turini tanlang",
+    st_filial: "Filial",
+    filial_placeholder: "— Filialni tanlang —",
+    err_filial: "Filialni tanlang",
+    st_text: "Matn",
+    textarea_ph: "Fikringizni yozing...",
+    err_text: "Kamida 10 ta belgi kiriting",
+    st_privacy: "Maxfiylik",
+    anon_title: "Anonim yuborish",
+    anon_sub: "Ismingiz ko'rinmaydi",
+    btn_submit: "Yuborish",
+    btn_sending: "Yuborilmoqda...",
+    // Success
+    succ_title: "Yuborildi!",
+    succ_desc: "Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!",
+    succ_badge: "Maxfiylik kafolatlangan",
+    btn_new: "Yangi murojaat",
+    // Admin
+    admin_title: "📊 Admin Panel",
+    lbl_stat_period: "Statistika muddati",
+    date_all: "Barcha vaqt",
+    stat_lbl_total: "Jami",
+    stat_lbl_taklif: "Takliflar",
+    stat_lbl_shikoyat: "Shikoyatlar",
+    // Date modal
+    dmodal_title: "📅 Davrni tanlang",
+    dq_week: "Oxirgi 7 kun",
+    dq_month: "Oxirgi 30 kun",
+    dq_year: "Oxirgi 1 yil",
+    dq_thismonth: "Shu oy",
+    dfield_from: "Dan",
+    dfield_to: "Gacha",
+    date_reset: "Tozalash",
+    date_apply: "Filtrlash",
+    // Main tabs
+    mtab_all: "Hammasi",
+    mtab_shikoyat: "Shikoyat",
+    mtab_taklif: "Taklif",
+    // Sub tabs
+    stab_new: "Yangi",
+    stab_progress: "Ko'rib chiqilmoqda",
+    stab_done: "Yakunlandi",
+    // Filter dropdown
+    fdd_title: "Filter",
+    ff_all: "Hammasi",
+    ff_open: "👤 Ochiq",
+    ff_anon: "🕵️ Anonim",
+    // Message card
+    type_taklif: "TAKLIF",
+    type_shikoyat: "SHIKOYAT",
+    status_new: "Yangi",
+    status_progress: "Ko'rib chiqilmoqda",
+    status_done: "Yakunlandi",
+    anon_lbl: "🕵️ Anonim",
+    sender_lbl: "👤 ",
+    filial_lbl: "🏢 ",
+    // Status btns
+    sbtn_new: "Yangi",
+    sbtn_progress: "Ko'rib chiqilmoqda",
+    sbtn_done: "Yakunlandi",
+    // Empty
+    empty_msg: "Murojaatlar yo'q",
+    server_err: "Serverga ulanib bo'lmadi",
+    // Translated badge
+    translated_badge: "🤖 Tarjima (RU→UZ)",
+    show_original: "Asl matnni ko'rish",
+    hide_original: "Yashirish",
+    translating: "Tarjima qilinmoqda...",
+    // Admin lang
+    admin_lang_pill: '🌐 RU',
+    // Confirm delete
+    confirm_delete: "Bu murojaatni o'chirib tashlaysizmi?",
+    // Error
+    err_send: "Xatolik: ",
+  },
+  ru: {
+    lang_continue: 'Продолжить',
+    app_title: "Предложения & Жалобы",
+    app_sub: "Платформа общения для сотрудников",
+    lang_switch_pill: '🌐 UZ',
+    st_type: "Выберите тип обращения",
+    lbl_taklif: "Предложение",
+    desc_taklif: "Идея по улучшению",
+    lbl_shikoyat: "Жалоба",
+    desc_shikoyat: "Проблема или недовольство",
+    err_type: "Выберите тип обращения",
+    st_filial: "Филиал",
+    filial_placeholder: "— Выберите филиал —",
+    err_filial: "Выберите филиал",
+    st_text: "Текст",
+    textarea_ph: "Напишите ваше мнение...",
+    err_text: "Введите не менее 10 символов",
+    st_privacy: "Конфиденциальность",
+    anon_title: "Анонимная отправка",
+    anon_sub: "Ваше имя не будет видно",
+    btn_submit: "Отправить",
+    btn_sending: "Отправляется...",
+    succ_title: "Отправлено!",
+    succ_desc: "Ваше обращение передано ответственному лицу. Спасибо!",
+    succ_badge: "Конфиденциальность гарантирована",
+    btn_new: "Новое обращение",
+    admin_title: "📊 Панель администратора",
+    lbl_stat_period: "Период статистики",
+    date_all: "Всё время",
+    stat_lbl_total: "Всего",
+    stat_lbl_taklif: "Предложения",
+    stat_lbl_shikoyat: "Жалобы",
+    dmodal_title: "📅 Выберите период",
+    dq_week: "Последние 7 дней",
+    dq_month: "Последние 30 дней",
+    dq_year: "Последний год",
+    dq_thismonth: "Этот месяц",
+    dfield_from: "С",
+    dfield_to: "По",
+    date_reset: "Сбросить",
+    date_apply: "Применить",
+    mtab_all: "Все",
+    mtab_shikoyat: "Жалобы",
+    mtab_taklif: "Предложения",
+    stab_new: "Новые",
+    stab_progress: "В обработке",
+    stab_done: "Завершено",
+    fdd_title: "Фильтр",
+    ff_all: "Все",
+    ff_open: "👤 Открытые",
+    ff_anon: "🕵️ Анонимные",
+    type_taklif: "ПРЕДЛОЖЕНИЕ",
+    type_shikoyat: "ЖАЛОБА",
+    status_new: "Новое",
+    status_progress: "В обработке",
+    status_done: "Завершено",
+    anon_lbl: "🕵️ Анонимно",
+    sender_lbl: "👤 ",
+    filial_lbl: "🏢 ",
+    sbtn_new: "Новое",
+    sbtn_progress: "В обработке",
+    sbtn_done: "Завершено",
+    empty_msg: "Обращений нет",
+    server_err: "Не удалось подключиться к серверу",
+    translated_badge: "🤖 Перевод (UZ→RU)",
+    show_original: "Показать оригинал",
+    hide_original: "Скрыть",
+    translating: "Переводим...",
+    admin_lang_pill: '🌐 UZ',
+    confirm_delete: "Удалить это обращение?",
+    err_send: "Ошибка: ",
+  }
+};
+
+// ===================================================
+// STATE
+// ===================================================
+var currentLang = 'uz'; // will be set on lang select
+var selectedLangConfirmed = false;
 var selectedType = '', isAnon = false, allMessages = [];
 var currentMainTab = 'all', currentSubTab = 'new', currentAnonFilter = 'all';
 var dateFrom = null, dateTo = null;
-var isAdmin = false;
-var canDelete = false; // faqat superadmin true bo'ladi
-var userRole = 'user';
+var isAdmin = false, canDelete = false, userRole = 'user';
+// Translation cache: { msgId: { uz: '...', ru: '...' } }
+var translationCache = {};
 
 var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : {};
 if (tg.ready) tg.ready();
@@ -350,7 +639,155 @@ var urlParams = new URLSearchParams(window.location.search);
 var urlAdminFlag = urlParams.get('admin') === '1';
 var currentUserId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : 0;
 
-// UTILS
+// ===================================================
+// LANGUAGE
+// ===================================================
+function t(key) { return (LANG[currentLang] && LANG[currentLang][key]) || key; }
+
+function selectLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-uz').classList.toggle('selected', lang === 'uz');
+  document.getElementById('lang-ru').classList.toggle('selected', lang === 'ru');
+  var btn = document.getElementById('btn-lang-confirm');
+  btn.textContent = lang === 'uz' ? 'Davom etish' : 'Продолжить';
+  btn.classList.add('ready');
+}
+
+function confirmLang() {
+  if (!currentLang) return;
+  selectedLangConfirmed = true;
+  localStorage.setItem('app_lang', currentLang);
+  applyLangToUI();
+  // Now decide which screen to show
+  initApp();
+}
+
+function switchLang() {
+  currentLang = currentLang === 'uz' ? 'ru' : 'uz';
+  localStorage.setItem('app_lang', currentLang);
+  applyLangToUI();
+  refreshView();
+}
+
+function applyLangToUI() {
+  var L = currentLang;
+  var T = LANG[L];
+  document.documentElement.lang = L;
+
+  // Lang screen button
+  document.getElementById('btn-lang-confirm').textContent = T.lang_continue;
+
+  // Employee
+  document.getElementById('h-title').textContent = T.app_title;
+  document.getElementById('h-sub').textContent = T.app_sub;
+  document.getElementById('lang-switch-pill').textContent = T.lang_switch_pill;
+  document.getElementById('st-type').textContent = T.st_type;
+  document.getElementById('lbl-taklif').textContent = T.lbl_taklif;
+  document.getElementById('desc-taklif').textContent = T.desc_taklif;
+  document.getElementById('lbl-shikoyat').textContent = T.lbl_shikoyat;
+  document.getElementById('desc-shikoyat').textContent = T.desc_shikoyat;
+  document.getElementById('err-type').textContent = T.err_type;
+  document.getElementById('st-filial').textContent = T.st_filial;
+  document.getElementById('filial-placeholder').textContent = T.filial_placeholder;
+  document.getElementById('err-filial').textContent = T.err_filial;
+  document.getElementById('st-text').textContent = T.st_text;
+  document.getElementById('msg-text').placeholder = T.textarea_ph;
+  document.getElementById('err-text').textContent = T.err_text;
+  document.getElementById('st-privacy').textContent = T.st_privacy;
+  document.getElementById('anon-title').textContent = T.anon_title;
+  document.getElementById('anon-sub').textContent = T.anon_sub;
+  document.getElementById('btn-submit-lbl').textContent = T.btn_submit;
+
+  // Success
+  document.getElementById('succ-title').textContent = T.succ_title;
+  document.getElementById('succ-desc').textContent = T.succ_desc;
+  document.getElementById('succ-badge').textContent = T.succ_badge;
+  document.getElementById('btn-new').textContent = T.btn_new;
+
+  // Admin header
+  document.getElementById('admin-title').textContent = T.admin_title;
+  document.getElementById('admin-lang-pill').textContent = T.admin_lang_pill;
+  document.getElementById('lbl-stat-period').textContent = T.lbl_stat_period;
+  document.getElementById('stat-lbl-total').textContent = T.stat_lbl_total;
+  document.getElementById('stat-lbl-taklif').textContent = T.stat_lbl_taklif;
+  document.getElementById('stat-lbl-shikoyat').textContent = T.stat_lbl_shikoyat;
+  // Date modal
+  document.getElementById('dmodal-title').textContent = T.dmodal_title;
+  document.getElementById('dq-week').textContent = T.dq_week;
+  document.getElementById('dq-month').textContent = T.dq_month;
+  document.getElementById('dq-year').textContent = T.dq_year;
+  document.getElementById('dq-thismonth').textContent = T.dq_thismonth;
+  document.getElementById('dfield-from').textContent = T.dfield_from;
+  document.getElementById('dfield-to').textContent = T.dfield_to;
+  document.getElementById('date-reset-btn').textContent = T.date_reset;
+  document.getElementById('date-apply-btn').textContent = T.date_apply;
+  // Main tabs
+  document.getElementById('mtab-all').innerHTML = T.mtab_all + ' <span class="tab-count" id="tc-all">'+document.getElementById('tc-all').textContent+'</span>';
+  document.getElementById('mtab-shikoyat').innerHTML = '⚠️ ' + T.mtab_shikoyat + ' <span class="tab-count" id="tc-shikoyat">'+document.getElementById('tc-shikoyat').textContent+'</span>';
+  document.getElementById('mtab-taklif').innerHTML = '💡 ' + T.mtab_taklif + ' <span class="tab-count" id="tc-taklif">'+document.getElementById('tc-taklif').textContent+'</span>';
+  // Sub tabs
+  document.getElementById('stab-new').innerHTML = T.stab_new + ' <span class="sc" id="sc-new">'+document.getElementById('sc-new').textContent+'</span>';
+  document.getElementById('stab-progress').innerHTML = T.stab_progress + ' <span class="sc" id="sc-progress">'+document.getElementById('sc-progress').textContent+'</span>';
+  document.getElementById('stab-done').innerHTML = T.stab_done + ' <span class="sc" id="sc-done">'+document.getElementById('sc-done').textContent+'</span>';
+  // Filter dropdown
+  document.getElementById('fdd-title').textContent = T.fdd_title;
+  document.getElementById('ff-all').textContent = T.ff_all;
+  document.getElementById('ff-open').textContent = T.ff_open;
+  document.getElementById('ff-anon').textContent = T.ff_anon;
+  // Date filter label
+  if (!dateFrom && !dateTo) {
+    document.getElementById('date-filter-label').textContent = T.date_all;
+  }
+  // Translating overlay
+  document.getElementById('translating-text').textContent = T.translating;
+}
+
+// ===================================================
+// TRANSLATE via Anthropic API
+// ===================================================
+async function translateText(text, targetLang) {
+  var cacheKey = text.slice(0, 60) + '_' + targetLang;
+  if (translationCache[cacheKey]) return translationCache[cacheKey];
+
+  var systemPrompt = targetLang === 'ru'
+    ? 'Ты переводчик. Переведи текст с узбекского на русский. Верни ТОЛЬКО перевод, без пояснений, без кавычек.'
+    : "Siz tarjimonisiz. Matnni ruscha tilidan o'zbek tiliga tarjima qiling. FAQAT tarjimani qaytaring, tushuntirishsiz.";
+
+  var res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: text }]
+    })
+  });
+  var data = await res.json();
+  var translated = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text.trim() : text;
+  translationCache[cacheKey] = translated;
+  return translated;
+}
+
+// Detect if text is likely written in the OTHER language than currentLang
+// Simple heuristic: Uzbek uses specific chars, Russian uses Cyrillic
+function detectLang(text) {
+  var cyrillicCount = (text.match(/[а-яёА-ЯЁ]/g) || []).length;
+  var latinCount = (text.match(/[a-zA-Zа-яёА-ЯЁ\u0400-\u04FF]/g) || []).length;
+  var uzSpecific = (text.match(/[oʻgʻ']/g) || []).length;
+  // If mostly Cyrillic Russian
+  if (cyrillicCount > latinCount * 0.5 && cyrillicCount > 4) return 'ru';
+  return 'uz';
+}
+
+function needsTranslation(text) {
+  var detectedLang = detectLang(text);
+  return detectedLang !== currentLang;
+}
+
+// ===================================================
+// SCREEN / FORM UTILS
+// ===================================================
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('screen-' + name).classList.add('active');
@@ -362,11 +799,17 @@ function escapeHtml(str) {
 }
 function getStatus(m) { return m.status || 'new'; }
 function statusBadgeClass(s) { return s==='done'?'s-done':s==='progress'||s==='in_progress'?'s-progress':'s-new'; }
-function statusLabel(s) { return s==='done'?'Yakunlandi':s==='progress'||s==='in_progress'?"Ko'rib chiqilmoqda":'Yangi'; }
+function statusLabel(s) {
+  if (s==='done') return t('status_done');
+  if (s==='progress'||s==='in_progress') return t('status_progress');
+  return t('status_new');
+}
 function slClass(s) { return s==='done'?'sl-done':s==='progress'||s==='in_progress'?'sl-progress':'sl-new'; }
 function statusBtnClass(s) { return s==='done'?'cur-done':s==='progress'||s==='in_progress'?'cur-progress':'cur-new'; }
 
-// EMPLOYEE
+// ===================================================
+// EMPLOYEE FORM
+// ===================================================
 function selectType(type) {
   selectedType = type;
   document.getElementById('card-taklif').className = 'type-card'+(type==='taklif'?' selected-taklif':'');
@@ -395,23 +838,45 @@ function resetForm() {
   document.getElementById('char-count').textContent = '0 / 1000';
   document.getElementById('anon-toggle').classList.remove('on');
   var btn = document.getElementById('submit-btn');
-  btn.disabled = false; btn.innerHTML = '<span>📤</span><span>Yuborish</span>';
+  btn.disabled = false;
+  btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
   ['err-type','err-filial','err-text'].forEach(hideError);
   showScreen('employee');
 }
+
 async function submitForm() {
   if (!validate()) return;
   var btn = document.getElementById('submit-btn');
-  btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>Yuborilmoqda...</span>';
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span><span>' + t('btn_sending') + '</span>';
   var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
   var senderName = user ? (user.first_name + (user.last_name ? ' '+user.last_name : '')) : "Noma'lum";
+  var originalText = document.getElementById('msg-text').value.trim();
+
+  // Translate text to the OTHER language for storage
+  var textUz = '', textRu = '';
+  try {
+    if (currentLang === 'uz') {
+      textUz = originalText;
+      textRu = await translateText(originalText, 'ru');
+    } else {
+      textRu = originalText;
+      textUz = await translateText(originalText, 'uz');
+    }
+  } catch(e) {
+    textUz = originalText; textRu = originalText;
+  }
+
   try {
     var res = await fetch(SERVER_URL+'/send', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         type: selectedType,
         filial: document.getElementById('filial-select').value,
-        text: document.getElementById('msg-text').value.trim(),
+        text: originalText,
+        text_uz: textUz,
+        text_ru: textRu,
+        lang: currentLang,
         anon: isAnon,
         time: new Date().toLocaleString('uz-UZ',{timeZone:'Asia/Tashkent'}),
         sender_name: senderName,
@@ -424,14 +889,17 @@ async function submitForm() {
       showScreen('success');
     } else throw new Error(data.error||'Xatolik');
   } catch(err) {
-    alert('Xatolik: '+err.message);
-    btn.disabled = false; btn.innerHTML = '<span>📤</span><span>Yuborish</span>';
+    alert(t('err_send')+err.message);
+    btn.disabled = false;
+    btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
   }
 }
 
+// ===================================================
 // DATE FILTER
+// ===================================================
 function toDisplayDate(d) {
-  return d.toLocaleDateString('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'});
+  return d.toLocaleDateString(currentLang === 'ru' ? 'ru-RU' : 'uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 function openDateModal() {
   if (!document.getElementById('date-to').value) {
@@ -444,9 +912,9 @@ function closeDateModal() {
 }
 function applyDateFilter() {
   var f = document.getElementById('date-from').value;
-  var t = document.getElementById('date-to').value;
+  var tv = document.getElementById('date-to').value;
   dateFrom = f ? new Date(f) : null;
-  dateTo = t ? new Date(t+'T23:59:59') : null;
+  dateTo = tv ? new Date(tv+'T23:59:59') : null;
   var btn = document.getElementById('date-filter-btn');
   var lbl = document.getElementById('date-filter-label');
   if (dateFrom || dateTo) {
@@ -455,43 +923,28 @@ function applyDateFilter() {
     lbl.textContent = fromStr+' – '+toStr;
     btn.classList.add('has-range');
   } else {
-    lbl.textContent = 'Barcha vaqt';
+    lbl.textContent = t('date_all');
     btn.classList.remove('has-range');
   }
   closeDateModal();
-  updateStats();
-  refreshView();
+  updateStats(); refreshView();
 }
 function resetDateFilter() {
   dateFrom = null; dateTo = null;
   document.getElementById('date-from').value = '';
   document.getElementById('date-to').value = '';
-  document.getElementById('date-filter-label').textContent = 'Barcha vaqt';
+  document.getElementById('date-filter-label').textContent = t('date_all');
   document.getElementById('date-filter-btn').classList.remove('has-range');
-  closeDateModal();
-  updateStats();
-  refreshView();
+  closeDateModal(); updateStats(); refreshView();
 }
-
-// PARSE DATE
 function parseMessageDate(m) {
   if (!m.time) return null;
   var str = String(m.time);
-  // Format: "17/06/2026, 12:20:50" yoki "17.06.2026, 12:20:50"
   var match = str.match(/(\d{1,2})[\.\/](\d{1,2})[\.\/](\d{4})(?:,?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
   if (match) {
-    var day = parseInt(match[1], 10);
-    var month = parseInt(match[2], 10) - 1;
-    var year = parseInt(match[3], 10);
-    var hour = match[4] ? parseInt(match[4], 10) : 0;
-    var min = match[5] ? parseInt(match[5], 10) : 0;
-    var sec = match[6] ? parseInt(match[6], 10) : 0;
-    return new Date(year, month, day, hour, min, sec);
+    return new Date(parseInt(match[3]),parseInt(match[2])-1,parseInt(match[1]),match[4]?parseInt(match[4]):0,match[5]?parseInt(match[5]):0,match[6]?parseInt(match[6]):0);
   }
-  // Fallback: ISO yoki boshqa standart format
-  var d = new Date(str);
-  if (!isNaN(d)) return d;
-  return null;
+  var d = new Date(str); if (!isNaN(d)) return d; return null;
 }
 function filterByDate(msgs) {
   if (!dateFrom && !dateTo) return msgs;
@@ -504,15 +957,17 @@ function filterByDate(msgs) {
   });
 }
 
+// ===================================================
 // ADMIN STATS & RENDER
+// ===================================================
 function updateStats() {
   var filtered = filterByDate(allMessages);
   document.getElementById('stat-total').textContent = filtered.length;
   document.getElementById('stat-taklif').textContent = filtered.filter(function(m){return m.type==='taklif';}).length;
   document.getElementById('stat-shikoyat').textContent = filtered.filter(function(m){return m.type==='shikoyat';}).length;
   document.getElementById('tc-all').textContent = allMessages.length;
-  document.getElementById('tc-taklif').textContent = allMessages.filter(function(m){return m.type==='taklif';}).length;
   document.getElementById('tc-shikoyat').textContent = allMessages.filter(function(m){return m.type==='shikoyat';}).length;
+  document.getElementById('tc-taklif').textContent = allMessages.filter(function(m){return m.type==='taklif';}).length;
 }
 function getByMainTab(tab) {
   if (tab==='taklif') return allMessages.filter(function(m){return m.type==='taklif';});
@@ -538,35 +993,76 @@ function getFinalMessages() {
   if (currentSubTab==='done') return base.filter(function(m){return getStatus(m)==='done';});
   return base.filter(function(m){return getStatus(m)==='new';});
 }
+
+// Get the text to display based on current language and message
+function getDisplayText(m) {
+  // If message has stored translation for current lang, use it
+  if (currentLang === 'ru' && m.text_ru) return { text: m.text_ru, isTranslated: (m.lang === 'uz'), original: m.text };
+  if (currentLang === 'uz' && m.text_uz) return { text: m.text_uz, isTranslated: (m.lang === 'ru'), original: m.text };
+  // Fallback: return original text
+  return { text: m.text || m.content || '', isTranslated: false, original: null };
+}
+
 function renderMessages(msgs) {
   var list = document.getElementById('messages-list');
-  if (!msgs.length) { list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>Murojaatlar yo\'q</p></div>'; return; }
+  if (!msgs.length) {
+    list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>'+t('empty_msg')+'</p></div>';
+    return;
+  }
   list.innerHTML = msgs.map(function(m) {
     var s = getStatus(m);
-    // Delete tugmasi FAQAT: status === done VA canDelete === true (ya'ni superadmin)
+    var displayData = getDisplayText(m);
+    var displayText = displayData.text;
+    var isTranslated = displayData.isTranslated;
+    var originalText = displayData.original;
+
+    var translatedBadgeHtml = '';
+    var originalTextHtml = '';
+    if (isTranslated && originalText && originalText !== displayText) {
+      translatedBadgeHtml = '<div class="msg-translated-badge">'+t('translated_badge')+'</div>';
+      originalTextHtml =
+        '<span class="msg-original-toggle" onclick="toggleOriginal(\'orig-'+escapeHtml(m.id)+'\',this)">'+t('show_original')+'</span>'+
+        '<div class="msg-original-text" id="orig-'+escapeHtml(m.id)+'">'+escapeHtml(originalText)+'</div>';
+    }
+
+    var typeLabel = m.type === 'taklif' ? t('type_taklif') : t('type_shikoyat');
     var deleteBtnHtml = (s==='done' && canDelete)
-      ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="O\'chirish"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="'+t('confirm_delete')+'"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       : '';
+
     return '<div class="message-card '+slClass(s)+'">'+
       '<div class="msg-header"><div class="msg-meta">'+
-        '<span class="msg-type-badge '+m.type+'">'+(m.type==='taklif'?'TAKLIF':'SHIKOYAT')+'</span>'+
+        '<span class="msg-type-badge '+m.type+'">'+typeLabel+'</span>'+
         '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
       '</div><span class="msg-time">'+escapeHtml(m.time)+'</span></div>'+
-      (m.filial?'<div class="msg-filial">🏢 '+escapeHtml(m.filial)+'</div>':'')+
-      '<div class="msg-text">'+escapeHtml(m.text||m.content||'')+'</div>'+
+      (m.filial?'<div class="msg-filial">'+t('filial_lbl')+escapeHtml(m.filial)+'</div>':'')+
+      translatedBadgeHtml+
+      '<div class="msg-text">'+escapeHtml(displayText)+'</div>'+
+      originalTextHtml+
       '<div class="msg-footer"><div>'+
-        ((m.anon||m.isAnon)?'<span class="msg-anon">🕵️ Anonim</span>':'<span class="msg-sender">👤 '+escapeHtml(m.sender||'')+'</span>')+
+        ((m.anon||m.isAnon)?'<span class="msg-anon">'+t('anon_lbl')+'</span>':'<span class="msg-sender">'+t('sender_lbl')+escapeHtml(m.sender||'')+'</span>')+
       '</div><div class="msg-footer-right"><div class="status-row">'+
         ['new','progress','done'].map(function(st){
-          var labels={new:'Yangi',progress:"Ko'rib chiqilmoqda",done:'Yakunlandi'};
           var cls=(s===st||(s==='in_progress'&&st==='progress'))?statusBtnClass(st):'';
-          return '<button class="status-btn '+cls+'" onclick="changeStatus(\''+escapeHtml(m.id)+'\',\''+st+'\',this)">'+labels[st]+'</button>';
+          var stLbls = {new:t('sbtn_new'),progress:t('sbtn_progress'),done:t('sbtn_done')};
+          return '<button class="status-btn '+cls+'" onclick="changeStatus(\''+escapeHtml(m.id)+'\',\''+st+'\',this)">'+stLbls[st]+'</button>';
         }).join('')+
       '</div>'+deleteBtnHtml+'</div></div></div>';
   }).join('');
 }
+
+function toggleOriginal(id, btn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('show');
+  btn.textContent = el.classList.contains('show') ? t('hide_original') : t('show_original');
+}
+
 function refreshView() { renderMessages(getFinalMessages()); }
 
+// ===================================================
+// STATUS & DELETE
+// ===================================================
 async function changeStatus(msgId, newStatus, clickedBtn) {
   var card = clickedBtn.closest('.message-card');
   var btns = card.querySelectorAll('.status-btn');
@@ -581,13 +1077,13 @@ async function changeStatus(msgId, newStatus, clickedBtn) {
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     } else throw new Error(data.error);
   } catch(err) {
-    alert('Xatolik: '+err.message);
+    alert(t('err_send')+err.message);
     btns.forEach(function(b){b.disabled=false;b.style.opacity='1';});
   }
 }
 async function deleteMessage(msgId, btn) {
-  if (!canDelete) return; // qo'shimcha xavfsizlik — moderator hech qachon shu yerga kelmaydi
-  if (!confirm("Bu murojaatni o'chirib tashlaysizmi?")) return;
+  if (!canDelete) return;
+  if (!confirm(t('confirm_delete'))) return;
   btn.disabled=true; btn.style.opacity='0.5';
   try {
     var res = await fetch(SERVER_URL+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:msgId})});
@@ -598,10 +1094,14 @@ async function deleteMessage(msgId, btn) {
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     } else throw new Error(data.error);
   } catch(err) {
-    alert("Xatolik: "+err.message);
+    alert(t('err_send')+err.message);
     btn.disabled=false; btn.style.opacity='1';
   }
 }
+
+// ===================================================
+// LOAD ADMIN MESSAGES
+// ===================================================
 async function loadAdminMessages() {
   document.getElementById('messages-list').innerHTML='<div class="spinner"></div>';
   try {
@@ -609,12 +1109,15 @@ async function loadAdminMessages() {
     var data = await res.json();
     allMessages = (data.ok&&data.messages)?data.messages:[];
     updateStats(); refreshView();
+    document.getElementById('date-filter-label').textContent = t('date_all');
   } catch(err) {
-    document.getElementById('messages-list').innerHTML='<div class="empty-state"><div class="emoji">⚠️</div><p>Serverga ulanib bo\'lmadi</p></div>';
+    document.getElementById('messages-list').innerHTML='<div class="empty-state"><div class="emoji">⚠️</div><p>'+t('server_err')+'</p></div>';
   }
 }
 
+// ===================================================
 // ANON FILTER
+// ===================================================
 function setAnonFilter(val) {
   currentAnonFilter = val;
   ['all','open','anon'].forEach(function(k){
@@ -623,56 +1126,68 @@ function setAnonFilter(val) {
     else{el.classList.remove('checked');el.textContent='';}
   });
   document.getElementById('filter-icon-btn').classList.toggle('has-filter', val!=='all');
-  closeFilterDropdown();
-  refreshView();
+  closeFilterDropdown(); refreshView();
 }
 function toggleFilterDropdown(e) { e.stopPropagation(); document.getElementById('filter-dropdown').classList.toggle('open'); }
 function closeFilterDropdown() { document.getElementById('filter-dropdown').classList.remove('open'); }
 
-// ===== ROLE CHECK (superadmin / moderator / user) =====
+// ===================================================
+// ROLE CHECK
+// ===================================================
 async function checkRoleAndInit() {
-  // Agar URL orqali ?admin=1 berilgan bo'lsa ham, role serverdan tekshiriladi
   if (!currentUserId && !urlAdminFlag) {
-    showScreen('employee');
-    return;
+    showScreen('employee'); return;
   }
   try {
     var res = await fetch(SERVER_URL + '/role/' + (currentUserId || 0));
     var data = await res.json();
     if (data.ok && data.is_admin) {
-      userRole = data.role; // "superadmin" yoki "moderator"
+      userRole = data.role;
       isAdmin = true;
       canDelete = (userRole === 'superadmin');
       var badge = document.getElementById('admin-role-badge');
-      if (userRole === 'moderator') {
-        badge.textContent = 'MODERATOR';
-        badge.classList.add('mod');
-      } else {
-        badge.textContent = 'ADMIN';
-      }
+      if (userRole === 'moderator') { badge.textContent = 'MODERATOR'; badge.classList.add('mod'); }
+      else { badge.textContent = 'ADMIN'; }
       showScreen('admin');
       loadAdminMessages();
     } else if (urlAdminFlag) {
-      // fallback: agar /role ishlamasa-yu URL admin=1 bo'lsa, ehtiyot bilan oddiy admin sifatida (delete YO'Q)
       isAdmin = true; canDelete = false;
-      showScreen('admin');
-      loadAdminMessages();
+      showScreen('admin'); loadAdminMessages();
     } else {
       showScreen('employee');
     }
   } catch (err) {
-    if (urlAdminFlag) {
-      isAdmin = true; canDelete = false;
-      showScreen('admin');
-      loadAdminMessages();
-    } else {
-      showScreen('employee');
-    }
+    if (urlAdminFlag) { isAdmin = true; canDelete = false; showScreen('admin'); loadAdminMessages(); }
+    else { showScreen('employee'); }
   }
 }
 
+// ===================================================
+// INIT APP (called after lang confirmed)
+// ===================================================
+function initApp() {
+  applyLangToUI();
+  checkRoleAndInit();
+}
+
+// ===================================================
 // EVENTS
+// ===================================================
 document.addEventListener('DOMContentLoaded', function() {
+
+  // --- Check saved lang, skip lang screen if already chosen ---
+  var savedLang = localStorage.getItem('app_lang');
+  if (savedLang === 'uz' || savedLang === 'ru') {
+    currentLang = savedLang;
+    selectLang(savedLang); // highlight in case they go back
+    selectedLangConfirmed = true;
+    applyLangToUI();
+    checkRoleAndInit();
+  } else {
+    showScreen('lang');
+  }
+
+  // Employee
   document.getElementById('card-taklif').addEventListener('click', function(){selectType('taklif');});
   document.getElementById('card-shikoyat').addEventListener('click', function(){selectType('shikoyat');});
   document.getElementById('anon-toggle').addEventListener('click', toggleAnon);
@@ -719,15 +1234,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('date-modal-close').addEventListener('click', closeDateModal);
   document.getElementById('date-apply-btn').addEventListener('click', applyDateFilter);
   document.getElementById('date-reset-btn').addEventListener('click', resetDateFilter);
-  document.getElementById('date-modal-overlay').addEventListener('click', function(e){
-    if(e.target===this) closeDateModal();
-  });
+  document.getElementById('date-modal-overlay').addEventListener('click', function(e){if(e.target===this) closeDateModal();});
   document.querySelectorAll('.date-quick-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
       document.querySelectorAll('.date-quick-btn').forEach(function(b){b.classList.remove('selected');});
       this.classList.add('selected');
-      var now = new Date();
-      var from = new Date();
+      var now = new Date(), from = new Date();
       var q = this.getAttribute('data-quick');
       if(q==='week') from.setDate(now.getDate()-7);
       else if(q==='month') from.setDate(now.getDate()-30);
@@ -744,9 +1256,6 @@ document.addEventListener('DOMContentLoaded', function() {
     opt.addEventListener('click', function(e){e.stopPropagation();setAnonFilter(this.getAttribute('data-anon'));});
   });
   document.addEventListener('click', closeFilterDropdown);
-
-  // Init — role serverdan tekshiriladi
-  checkRoleAndInit();
 });
 </script>
 </body>
