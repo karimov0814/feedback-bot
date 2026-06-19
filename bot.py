@@ -25,7 +25,6 @@ ADMINS = {
     7780854728: "superadmin",
     1488298476: "superadmin",
     43552178: "superadmin",
-    99512840: "superadmin",
     555648201:  "moderator",
 }
 ADMIN_IDS     = list(ADMINS.keys())
