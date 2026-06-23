@@ -192,10 +192,28 @@ def init_db():
             except Exception:
                 pass
 
+        try:
+            cur.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id BIGINT")
+        except Exception:
+            pass
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS replies (
+                id SERIAL PRIMARY KEY,
+                message_id TEXT REFERENCES messages(id) ON DELETE CASCADE,
+                admin_id BIGINT,
+                admin_name TEXT,
+                text TEXT,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_replies_message_id ON replies(message_id)")
+
         conn.commit()
         cur.close()
         conn.close()
-        logger.info("✅ Database tayyor (ikki tilli)")
+        logger.info("✅ Database tayyor (ikki tilli, javoblar bilan)")
     except Exception as e:
         logger.error(f"init_db xatolik: {e}")
 
@@ -203,7 +221,12 @@ def load_messages():
     try:
         conn = get_conn()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM messages ORDER BY created_at DESC LIMIT 500")
+        cur.execute("""
+            SELECT m.*,
+                   COALESCE((SELECT COUNT(*) FROM replies r WHERE r.message_id = m.id), 0) AS reply_count
+            FROM messages m
+            ORDER BY m.created_at DESC LIMIT 500
+        """)
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -217,8 +240,8 @@ def save_message(msg):
         conn = get_conn()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO messages (id, type, filial, text, text_uz, text_ru, lang, anon, time, sender, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO messages (id, type, filial, text, text_uz, text_ru, lang, anon, time, sender, status, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
         """, (
             msg['id'], msg['type'], msg['filial'],
@@ -228,7 +251,8 @@ def save_message(msg):
             msg.get('lang', 'uz'),
             msg['anon'],
             msg['time'], msg['sender'],
-            msg.get('status', 'new')
+            msg.get('status', 'new'),
+            msg.get('user_id'),
         ))
         conn.commit()
         cur.close()
@@ -263,6 +287,86 @@ def update_status_db(msg_id, new_status):
     except Exception as e:
         logger.error(f"update_status xatolik: {e}")
         return False
+
+
+# ==================== JAVOBLAR (REPLIES) ====================
+
+def save_reply(message_id, admin_id, admin_name, text):
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            INSERT INTO replies (message_id, admin_id, admin_name, text)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, message_id, admin_id, admin_name, text, created_at, is_read
+        """, (message_id, admin_id, admin_name, text))
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        return dict(row) if row else None
+    except Exception as e:
+        logger.error(f"save_reply xatolik: {e}")
+        return None
+
+def get_message_owner(message_id):
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT id, user_id, type, filial FROM messages WHERE id = %s", (message_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return dict(row) if row else None
+    except Exception as e:
+        logger.error(f"get_message_owner xatolik: {e}")
+        return None
+
+def load_my_messages(user_id):
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM messages WHERE user_id = %s ORDER BY created_at DESC LIMIT 200", (user_id,))
+        msgs = [dict(r) for r in cur.fetchall()]
+
+        if msgs:
+            ids = [m['id'] for m in msgs]
+            cur.execute("SELECT * FROM replies WHERE message_id = ANY(%s) ORDER BY created_at ASC", (ids,))
+            replies = [dict(r) for r in cur.fetchall()]
+        else:
+            replies = []
+
+        cur.close()
+        conn.close()
+
+        by_msg = {}
+        for r in replies:
+            by_msg.setdefault(r['message_id'], []).append(r)
+
+        for m in msgs:
+            m_replies = by_msg.get(m['id'], [])
+            m['replies'] = m_replies
+            m['reply_count'] = len(m_replies)
+            m['unread_count'] = sum(1 for r in m_replies if not r['is_read'])
+
+        return msgs
+    except Exception as e:
+        logger.error(f"load_my_messages xatolik: {e}")
+        return []
+
+def mark_replies_read(message_id):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("UPDATE replies SET is_read = TRUE WHERE message_id = %s AND is_read = FALSE", (message_id,))
+        affected = cur.rowcount
+        conn.commit()
+        cur.close()
+        conn.close()
+        return affected
+    except Exception as e:
+        logger.error(f"mark_replies_read xatolik: {e}")
+        return 0
 
 
 # ==================== BOT HANDLERS ====================
@@ -386,6 +490,7 @@ def send_message():
         time_str    = data.get('time', '')
         sender_name = data.get('sender_name', "Noma'lum / Неизвестно")
         username    = data.get('username', '')
+        tg_user_id  = data.get('user_id') or None
 
         uname     = f" @{username}" if username else ""
         real_name = sender_name + uname
@@ -432,7 +537,8 @@ def send_message():
             "anon":    anon,
             "time":    time_str,
             "sender":  display_name,
-            "status":  "new"
+            "status":  "new",
+            "user_id": tg_user_id,
         }
         save_message(msg)
 
@@ -504,6 +610,77 @@ def update_status():
 
     except Exception as e:
         logger.error(f"/status xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/my-messages/<int:user_id>", methods=["GET", "OPTIONS"])
+def my_messages(user_id):
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    return jsonify({"ok": True, "messages": load_my_messages(user_id)})
+
+
+@flask_app.route("/reply", methods=["POST", "OPTIONS"])
+def reply_message():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        message_id = data.get('message_id')
+        admin_id   = data.get('admin_id')
+        admin_name = (data.get('admin_name') or 'Admin').strip()
+        text       = (data.get('text') or '').strip()
+
+        if not message_id or not text:
+            return jsonify({"ok": False, "error": "message_id va text kerak"}), 400
+        if ADMINS.get(admin_id) is None:
+            return jsonify({"ok": False, "error": "Sizda bu amal uchun ruxsat yo'q"}), 403
+
+        reply = save_reply(message_id, admin_id, admin_name, text)
+        if not reply:
+            return jsonify({"ok": False, "error": "Javob saqlanmadi"}), 500
+
+        owner = get_message_owner(message_id)
+        if owner and owner.get('user_id'):
+            try:
+                type_label_uz = "SHIKOYAT" if owner.get('type') == 'shikoyat' else "TAKLIF"
+                notif = (
+                    f"✉️ Sizning {type_label_uz}ingizga javob keldi!\n\n"
+                    f"💬 {text}\n\n"
+                    f"Ko'rish uchun pastdagi tugmani bosing 👇"
+                )
+                kb = InlineKeyboardMarkup([[
+                    InlineKeyboardButton("📂 Mening murojaatlarim", web_app=WebAppInfo(url=MINI_APP_URL + "?view=my"))
+                ]])
+                future = asyncio.run_coroutine_threadsafe(
+                    ptb_app.bot.send_message(chat_id=owner['user_id'], text=notif, reply_markup=kb),
+                    loop
+                )
+                future.result(timeout=10)
+            except Exception as e:
+                logger.error(f"reply notif xatolik: {e}")
+
+        logger.info(f"Javob yozildi: {message_id} <- admin {admin_id}")
+        return jsonify({"ok": True, "reply": reply})
+
+    except Exception as e:
+        logger.error(f"/reply xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/reply/read", methods=["POST", "OPTIONS"])
+def reply_read():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data       = request.get_json(force=True)
+        message_id = data.get('message_id')
+        if not message_id:
+            return jsonify({"ok": False, "error": "message_id kerak"}), 400
+        mark_replies_read(message_id)
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/reply/read xatolik: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
