@@ -1256,7 +1256,7 @@ function renderMessages(msgs) {
       : '';
     var replyCountHtml = (m.reply_count > 0) ? '<span class="reply-count-badge">💬 '+m.reply_count+'</span>' : '';
     var replyBtnHtml = '<button class="reply-btn" onclick="openReplyModal(\''+escapeHtml(m.id)+'\')">'+t('btn_reply')+'</button>';
-    var chatBtnHtml = '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''})+',\'admin\')">'+t('btn_chat')+'</button>';
+    var chatBtnHtml = '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'admin\')">'+t('btn_chat')+'</button>';
 
     return '<div class="message-card '+slClass(s)+'">'+
       '<div class="msg-header"><div class="msg-meta">'+
@@ -1401,7 +1401,7 @@ function renderMyMessages() {
       '<div class="msg-text">'+escapeHtml(displayText)+'</div>'+
       repliesHtml+
       '<div class="msg-footer" style="margin-top:10px;"><div></div><div class="msg-footer-right">'+
-        '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''})+',\'my\')">'+t('btn_chat')+'</button>'+
+        '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'my\')">'+t('btn_chat')+'</button>'+
       '</div></div>'+
     '</div>';
   }).join('');
