@@ -214,6 +214,7 @@ def init_db():
         cur.close()
         conn.close()
         logger.info("✅ Database tayyor (ikki tilli, javoblar bilan)")
+        init_chat_table()
     except Exception as e:
         logger.error(f"init_db xatolik: {e}")
 
@@ -367,6 +368,122 @@ def mark_replies_read(message_id):
     except Exception as e:
         logger.error(f"mark_replies_read xatolik: {e}")
         return 0
+
+
+# ==================== CHAT ====================
+
+def init_chat_table():
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chats (
+                id SERIAL PRIMARY KEY,
+                message_id TEXT REFERENCES messages(id) ON DELETE CASCADE,
+                sender_type TEXT NOT NULL,  -- 'admin' or 'employee'
+                sender_id BIGINT,
+                sender_name TEXT,
+                text TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_chats_message_id ON chats(message_id)")
+        try:
+            cur.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS chat_closed BOOLEAN DEFAULT FALSE")
+        except Exception:
+            pass
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info("✅ Chat jadvali tayyor")
+    except Exception as e:
+        logger.error(f"init_chat_table xatolik: {e}")
+
+def get_chat_messages(message_id):
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT id, message_id, sender_type, sender_id, sender_name, text, is_read,
+                   TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI') as created_at
+            FROM chats WHERE message_id = %s ORDER BY created_at ASC
+        """, (message_id,))
+        rows = [dict(r) for r in cur.fetchall()]
+        # Also get chat_closed status
+        cur.execute("SELECT chat_closed FROM messages WHERE id = %s", (message_id,))
+        msg = cur.fetchone()
+        cur.close()
+        conn.close()
+        return rows, (msg['chat_closed'] if msg else False)
+    except Exception as e:
+        logger.error(f"get_chat_messages xatolik: {e}")
+        return [], False
+
+def save_chat_message(message_id, sender_type, sender_id, sender_name, text):
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            INSERT INTO chats (message_id, sender_type, sender_id, sender_name, text)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id, message_id, sender_type, sender_id, sender_name, text, created_at
+        """, (message_id, sender_type, sender_id, sender_name, text))
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        return dict(row) if row else None
+    except Exception as e:
+        logger.error(f"save_chat_message xatolik: {e}")
+        return None
+
+def set_chat_closed(message_id, closed):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("UPDATE messages SET chat_closed = %s WHERE id = %s", (closed, message_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"set_chat_closed xatolik: {e}")
+        return False
+
+def get_chat_unread_count(message_id, for_admin=False):
+    """Count unread messages for the OTHER side"""
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        sender_type = 'employee' if for_admin else 'admin'
+        cur.execute(
+            "SELECT COUNT(*) FROM chats WHERE message_id = %s AND sender_type = %s AND is_read = FALSE",
+            (message_id, sender_type)
+        )
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return count
+    except Exception as e:
+        logger.error(f"get_chat_unread_count xatolik: {e}")
+        return 0
+
+def mark_chat_read(message_id, reader_type):
+    """Mark messages sent by OTHER side as read"""
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        other = 'employee' if reader_type == 'admin' else 'admin'
+        cur.execute(
+            "UPDATE chats SET is_read = TRUE WHERE message_id = %s AND sender_type = %s AND is_read = FALSE",
+            (message_id, other)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.error(f"mark_chat_read xatolik: {e}")
 
 
 # ==================== BOT HANDLERS ====================
@@ -682,6 +799,168 @@ def reply_read():
     except Exception as e:
         logger.error(f"/reply/read xatolik: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ==================== CHAT ROUTES ====================
+
+@flask_app.route("/chat/messages/<message_id>", methods=["GET", "OPTIONS"])
+def chat_get(message_id):
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    reader = request.args.get('reader', 'employee')  # 'admin' or 'employee'
+    mark_chat_read(message_id, reader)
+    msgs, closed = get_chat_messages(message_id)
+    return jsonify({"ok": True, "messages": msgs, "chat_closed": closed})
+
+
+@flask_app.route("/chat/send", methods=["POST", "OPTIONS"])
+def chat_send():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        message_id  = data.get('message_id')
+        sender_type = data.get('sender_type', 'employee')  # 'admin' or 'employee'
+        sender_id   = data.get('sender_id')
+        sender_name = (data.get('sender_name') or '').strip() or ('Admin' if sender_type == 'admin' else 'Xodim')
+        text        = (data.get('text') or '').strip()
+
+        if not message_id or not text:
+            return jsonify({"ok": False, "error": "message_id va text kerak"}), 400
+
+        # Check if chat is closed
+        _, closed = get_chat_messages.__wrapped__(message_id) if hasattr(get_chat_messages, '__wrapped__') else (None, None)
+        # Direct check
+        try:
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("SELECT chat_closed FROM messages WHERE id = %s", (message_id,))
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+            if row and row[0]:
+                return jsonify({"ok": False, "error": "Chat yopilgan"}), 403
+        except Exception:
+            pass
+
+        # Admin permission check
+        if sender_type == 'admin' and sender_id and ADMINS.get(int(sender_id)) is None:
+            return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+
+        chat_msg = save_chat_message(message_id, sender_type, sender_id, sender_name, text)
+        if not chat_msg:
+            return jsonify({"ok": False, "error": "Xabar saqlanmadi"}), 500
+
+        # Notify the other side via Telegram
+        owner = get_message_owner(message_id)
+        if sender_type == 'admin':
+            # Notify employee
+            if owner and owner.get('user_id'):
+                try:
+                    notif = (
+                        f"💬 Sizga admin xabar yozdi!\n\n"
+                        f"👮 {sender_name}: {text}\n\n"
+                        f"Javob berish uchun 👇"
+                    )
+                    kb = InlineKeyboardMarkup([[
+                        InlineKeyboardButton("💬 Chatni ochish", web_app=WebAppInfo(url=MINI_APP_URL + "?view=my"))
+                    ]])
+                    future = asyncio.run_coroutine_threadsafe(
+                        ptb_app.bot.send_message(chat_id=owner['user_id'], text=notif, reply_markup=kb),
+                        loop
+                    )
+                    future.result(timeout=10)
+                except Exception as e:
+                    logger.error(f"chat notify employee xatolik: {e}")
+        else:
+            # Notify all admins
+            if owner:
+                type_label = "SHIKOYAT" if owner.get('type') == 'shikoyat' else "TAKLIF"
+                notif = (
+                    f"💬 {sender_name} chat orqali xabar yozdi!\n"
+                    f"({type_label} — {owner.get('filial','')}) \n\n"
+                    f"📝 {text}"
+                )
+                kb = InlineKeyboardMarkup([[
+                    InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))
+                ]])
+                for _aid in ADMIN_IDS:
+                    try:
+                        future = asyncio.run_coroutine_threadsafe(
+                            ptb_app.bot.send_message(chat_id=_aid, text=notif, reply_markup=kb),
+                            loop
+                        )
+                        future.result(timeout=10)
+                    except Exception as e:
+                        logger.error(f"chat notify admin {_aid} xatolik: {e}")
+
+        return jsonify({"ok": True, "chat_message": chat_msg})
+    except Exception as e:
+        logger.error(f"/chat/send xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/chat/close", methods=["POST", "OPTIONS"])
+def chat_close():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        message_id = data.get('message_id')
+        admin_id   = data.get('admin_id')
+        closed     = data.get('closed', True)
+
+        if not message_id:
+            return jsonify({"ok": False, "error": "message_id kerak"}), 400
+        if not admin_id or ADMINS.get(int(admin_id)) is None:
+            return jsonify({"ok": False, "error": "Faqat adminlar chatni yopa oladi"}), 403
+
+        set_chat_closed(message_id, closed)
+
+        # Notify employee
+        owner = get_message_owner(message_id)
+        if owner and owner.get('user_id'):
+            try:
+                if closed:
+                    notif = "🔒 Sizning murojaatingiz bo'yicha chat yopildi.\n\nAdmin bilan muloqot yakunlandi."
+                else:
+                    notif = "🔓 Sizning murojaatingiz bo'yicha chat qayta ochildi."
+                kb = InlineKeyboardMarkup([[
+                    InlineKeyboardButton("📂 Mening murojaatlarim", web_app=WebAppInfo(url=MINI_APP_URL + "?view=my"))
+                ]])
+                future = asyncio.run_coroutine_threadsafe(
+                    ptb_app.bot.send_message(chat_id=owner['user_id'], text=notif, reply_markup=kb),
+                    loop
+                )
+                future.result(timeout=10)
+            except Exception as e:
+                logger.error(f"chat close notify xatolik: {e}")
+
+        action = "yopildi" if closed else "ochildi"
+        logger.info(f"Chat {action}: {message_id} by admin {admin_id}")
+        return jsonify({"ok": True, "chat_closed": closed})
+    except Exception as e:
+        logger.error(f"/chat/close xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/chat/unread/<int:user_id>", methods=["GET"])
+def chat_unread_total(user_id):
+    """Get total unread chat messages for an employee"""
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM chats c
+            JOIN messages m ON c.message_id = m.id
+            WHERE m.user_id = %s AND c.sender_type = 'admin' AND c.is_read = FALSE
+        """, (user_id,))
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return jsonify({"ok": True, "unread": count})
+    except Exception as e:
+        return jsonify({"ok": False, "unread": 0})
 
 
 # ==================== MAIN ====================
