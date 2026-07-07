@@ -90,9 +90,17 @@
   .photo-remove-btn { position:absolute;top:-8px;right:-8px;width:26px;height:26px;border-radius:50%;background:var(--red);color:white;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
 
   /* ===== ADMIN: guest badge / phone / photo ===== */
-  .msg-guest-badge { background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px; }
-  .msg-phone { font-size:12px;color:var(--gray-600);margin-bottom:4px; }
-  .msg-photo-link { display:inline-block;font-size:12px;color:var(--blue);font-weight:600;margin-bottom:6px;text-decoration:none; }
+  .msg-role-row { margin-bottom:8px; }
+  .msg-role-badge { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px; }
+  .msg-role-badge.employee { background:var(--gray-200);color:var(--gray-600); }
+  .msg-role-badge.guest { background:var(--blue-light);color:var(--blue); }
+  .msg-phone { font-size:12px;color:var(--gray-600);margin-bottom:6px; }
+  .msg-photo-thumb-wrap { margin-bottom:8px; }
+  .msg-photo-thumb { max-width:150px;max-height:150px;border-radius:8px;display:block;cursor:pointer;border:1px solid var(--gray-200);object-fit:cover; }
+  .photo-lightbox-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:24px; }
+  .photo-lightbox-overlay.open { display:flex; }
+  .photo-lightbox-overlay img { max-width:100%;max-height:100%;border-radius:10px; }
+  .photo-lightbox-close { position:absolute;top:calc(16px + env(safe-area-inset-top, 0px));right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);color:white;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
 
   /* ===== EMPLOYEE ===== */
   #screen-employee { padding: 0 0 32px; }
@@ -675,6 +683,12 @@
   </div>
 </div>
 
+<!-- PHOTO LIGHTBOX (rasmni mini app ichida ko'rish) -->
+<div class="photo-lightbox-overlay" id="photo-lightbox-overlay" onclick="closePhotoLightbox()">
+  <button class="photo-lightbox-close" onclick="event.stopPropagation();closePhotoLightbox()">✕</button>
+  <img id="photo-lightbox-img" src="" alt="">
+</div>
+
 <script>
 const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
 
@@ -708,6 +722,7 @@ var LANG = {
     photo_add_lbl: "Rasmga olish / tanlash",
     // Admin: guest badge
     guest_badge: "Mehmon",
+    employee_badge: "Xodim",
     view_photo: "Rasmni ko'rish",
     // Employee form
     st_type: "Murojaat turini tanlang",
@@ -834,6 +849,7 @@ var LANG = {
     photo_add_lbl: "Сделать фото / выбрать",
     // Admin: guest badge
     guest_badge: "Гость",
+    employee_badge: "Сотрудник",
     view_photo: "Смотреть фото",
     st_type: "Выберите тип обращения",
     lbl_taklif: "Предложение",
@@ -1409,9 +1425,11 @@ function renderMessages(msgs) {
     }
 
     var typeLabel = m.type === 'taklif' ? t('type_taklif') : t('type_shikoyat');
-    var guestBadgeHtml = (m.user_type === 'guest') ? ' <span class="msg-guest-badge">🙋 '+t('guest_badge')+'</span>' : '';
+    var roleBadgeHtml = '<div class="msg-role-row"><span class="msg-role-badge '+(m.user_type === 'guest' ? 'guest' : 'employee')+'">'+
+      (m.user_type === 'guest' ? '🙋 ' + t('guest_badge') : '👔 ' + t('employee_badge')) +
+      '</span></div>';
     var phoneHtml = m.phone ? '<div class="msg-phone">📞 '+escapeHtml(m.phone)+'</div>' : '';
-    var photoHtml = m.photo_url ? '<a class="msg-photo-link" href="'+escapeHtml(m.photo_url)+'" target="_blank" rel="noopener">🖼 '+t('view_photo')+'</a><br>' : '';
+    var photoHtml = m.photo_file_id ? '<div class="msg-photo-thumb-wrap"><img class="msg-photo-thumb" src="'+SERVER_URL+'/photo/'+encodeURIComponent(m.id)+'" alt="" onclick="openPhotoLightbox(this.src)"></div>' : '';
     var deleteBtnHtml = (s==='done' && canDelete)
       ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="'+t('confirm_delete')+'"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       : '';
@@ -1420,8 +1438,9 @@ function renderMessages(msgs) {
     var chatBtnHtml = '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'admin\')">'+t('btn_chat')+'</button>';
 
     return '<div class="message-card '+slClass(s)+'">'+
+      roleBadgeHtml+
       '<div class="msg-header"><div class="msg-meta">'+
-        '<span class="msg-type-badge '+m.type+'">'+typeLabel+'</span>'+guestBadgeHtml+
+        '<span class="msg-type-badge '+m.type+'">'+typeLabel+'</span>'+
         '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
         replyCountHtml+
       '</div><span class="msg-time">'+escapeHtml(m.time)+'</span></div>'+
@@ -1447,6 +1466,15 @@ function toggleOriginal(id, btn) {
   if (!el) return;
   el.classList.toggle('show');
   btn.textContent = el.classList.contains('show') ? t('hide_original') : t('show_original');
+}
+
+function openPhotoLightbox(src) {
+  document.getElementById('photo-lightbox-img').src = src;
+  document.getElementById('photo-lightbox-overlay').classList.add('open');
+}
+function closePhotoLightbox() {
+  document.getElementById('photo-lightbox-overlay').classList.remove('open');
+  document.getElementById('photo-lightbox-img').src = '';
 }
 
 function refreshView() { renderMessages(getFinalMessages()); }

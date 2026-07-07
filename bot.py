@@ -11,12 +11,13 @@ import asyncio
 import threading
 import time as time_module
 import base64
+import urllib.request
 from io import BytesIO
 import psycopg2
 import psycopg2.extras
 import gspread
 from google.oauth2.service_account import Credentials
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
@@ -665,6 +666,33 @@ def contact_check(user_id):
     phone = get_contact_phone(user_id)
     return jsonify({"ok": True, "phone": phone})
 
+@flask_app.route("/photo/<message_id>", methods=["GET"])
+def get_photo(message_id):
+    """Rasmni Telegramdan olib, to'g'ridan-to'g'ri frontendga uzatadi.
+    Bot tokeni hech qachon brauzerga chiqmaydi — hammasi server ichida bajariladi."""
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT photo_file_id FROM messages WHERE id = %s", (message_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if not row or not row[0]:
+            return jsonify({"ok": False, "error": "Rasm topilmadi"}), 404
+
+        file_id = row[0]
+        file_future = asyncio.run_coroutine_threadsafe(ptb_app.bot.get_file(file_id), loop)
+        tg_file = file_future.result(timeout=15)
+        file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{tg_file.file_path}"
+
+        with urllib.request.urlopen(file_url, timeout=15) as resp:
+            img_bytes = resp.read()
+
+        return Response(img_bytes, mimetype="image/jpeg", headers={"Cache-Control": "private, max-age=3600"})
+    except Exception as e:
+        logger.error(f"/photo xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @flask_app.route(f"/webhook/{BOT_TOKEN}", methods=["POST"])
 def webhook():
     data = request.get_json(force=True)
@@ -764,15 +792,11 @@ def send_message():
 
         SENT_NOTIFICATIONS[msg_id] = sent_ids
 
-        # Rasm uchun to'g'ridan-to'g'ri havola (admin panel/Sheets uchun)
+        # Rasm uchun havola — bot tokenini frontendga chiqarmaslik uchun
+        # o'z serverimizdagi proxy manzilidan foydalanamiz (/photo/<id>)
         photo_url = ''
-        if photo_file_id:
-            try:
-                file_future = asyncio.run_coroutine_threadsafe(ptb_app.bot.get_file(photo_file_id), loop)
-                tg_file = file_future.result(timeout=15)
-                photo_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{tg_file.file_path}"
-            except Exception as e:
-                logger.error(f"get_file xatolik: {e}")
+        if photo_file_id and WEBHOOK_URL:
+            photo_url = f"https://{WEBHOOK_URL}/photo/{msg_id}"
 
         # To'liq ma'lumot — faqat DB ga (Mini App buni o'qiydi)
         msg = {
