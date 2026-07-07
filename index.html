@@ -90,13 +90,15 @@
   .photo-remove-btn { position:absolute;top:-8px;right:-8px;width:26px;height:26px;border-radius:50%;background:var(--red);color:white;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
 
   /* ===== ADMIN: guest badge / phone / photo ===== */
-  .msg-role-row { margin-bottom:8px; }
-  .msg-role-badge { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px; }
+  .msg-role-row { margin-bottom:10px; }
+  .msg-role-badge { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px; }
   .msg-role-badge.employee { background:var(--gray-200);color:var(--gray-600); }
   .msg-role-badge.guest { background:var(--blue-light);color:var(--blue); }
-  .msg-phone { font-size:12px;color:var(--gray-600);margin-bottom:6px; }
-  .msg-photo-thumb-wrap { margin-bottom:8px; }
-  .msg-photo-thumb { max-width:150px;max-height:150px;border-radius:8px;display:block;cursor:pointer;border:1px solid var(--gray-200);object-fit:cover; }
+  .msg-info-chips { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px; }
+  .msg-chip { display:inline-flex;align-items:center;gap:5px;background:#F9FAFB;border:1px solid var(--gray-200);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--gray-600);line-height:1.2; }
+  .msg-chip.filial { color:var(--orange);border-color:#FDE7D2;background:var(--orange-light);font-weight:600; }
+  .msg-photo-thumb-wrap { margin-bottom:10px; }
+  .msg-photo-thumb { max-width:130px;max-height:130px;border-radius:10px;display:block;cursor:pointer;border:1px solid var(--gray-200);object-fit:cover; }
   .photo-lightbox-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:24px; }
   .photo-lightbox-overlay.open { display:flex; }
   .photo-lightbox-overlay img { max-width:100%;max-height:100%;border-radius:10px; }
@@ -268,28 +270,33 @@
   .msg-original-text.show { display: block; }
 
   .messages-list { padding:12px 16px; }
-  .message-card { background:white;border-radius:var(--radius);padding:14px 14px 12px;margin-bottom:10px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200); }
+  .message-card { background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200); }
   .message-card.sl-new { border-left-color:var(--red); }
   .message-card.sl-progress { border-left-color:var(--amber); }
   .message-card.sl-done { border-left-color:var(--green); }
-  .msg-header { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px; }
+  .msg-header { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap; }
   .msg-meta { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
-  .msg-type-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;border:1.5px solid; }
+  .msg-type-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1.5px solid; }
   .msg-type-badge.taklif { border-color:var(--green);color:var(--green);background:var(--green-light); }
   .msg-type-badge.shikoyat { border-color:var(--red);color:var(--red);background:var(--red-light); }
-  .msg-status-badge { display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;border:1.5px solid; }
+  .msg-status-badge { display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:4px 9px;border-radius:20px;border:1.5px solid; }
   .msg-status-badge.s-new { border-color:var(--red);color:var(--red);background:var(--red-light); }
   .msg-status-badge.s-progress { border-color:var(--amber);color:var(--amber);background:var(--amber-light); }
   .msg-status-badge.s-done { border-color:var(--green);color:var(--green);background:var(--green-light); }
-  .msg-time { font-size:11px;color:var(--gray-400);flex-shrink:0; }
+  .msg-time { font-size:11px;color:var(--gray-400);flex-shrink:0;margin-left:auto; }
   .msg-filial { font-size:12px;color:var(--orange);font-weight:500;margin-bottom:6px; }
-  .msg-text { font-size:14px;line-height:1.6;color:var(--gray-800);margin-bottom:10px; }
-  .msg-footer { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px; }
+  .msg-text { font-size:14px;line-height:1.6;color:var(--gray-800);margin-bottom:12px; }
+  .msg-footer { display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--gray-200); }
+  .msg-sender-row { display:flex;align-items:center;justify-content:space-between;gap:8px; }
   .msg-sender { font-size:12px;color:var(--gray-400); }
   .msg-anon { font-size:12px;color:var(--amber);font-weight:500; }
   .msg-footer-right { display:flex;align-items:center;gap:8px; }
-  .status-row { display:flex;gap:5px;flex-wrap:wrap; }
-  .status-btn { padding:5px 11px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all 0.15s; }
+  .msg-footer-right { display:flex;align-items:center;gap:8px; }
+  .msg-actions-row { display:flex;gap:8px; }
+  .msg-actions-row .chat-btn, .msg-actions-row .reply-btn { flex:1;display:flex;align-items:center;justify-content:center; }
+  .status-row { display:flex;gap:6px; }
+  .status-row .status-btn { flex:1;text-align:center; }
+  .status-btn { padding:8px 6px;border-radius:10px;font-family:inherit;font-size:11.5px;font-weight:600;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all 0.15s; }
   .status-btn.cur-new { border-color:var(--red);background:var(--red-light);color:var(--red); }
   .status-btn.cur-progress { border-color:var(--amber);background:var(--amber-light);color:var(--amber); }
   .status-btn.cur-done { border-color:var(--green);background:var(--green-light);color:var(--green); }
@@ -347,13 +354,14 @@
   .reply-text { font-size:13px;color:var(--gray-800);line-height:1.5;white-space:pre-wrap; }
   .no-reply { margin-top:10px;font-size:12px;color:var(--gray-400);font-style:italic; }
   .reply-btn {
-    padding:5px 11px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;
+    padding:9px 10px;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:600;
     border:1.5px solid var(--blue);background:var(--blue-light);color:var(--blue);cursor:pointer;
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    display:flex;align-items:center;justify-content:center;gap:5px;
   }
   .reply-count-badge {
     font-size:10px;color:var(--blue);font-weight:600;background:var(--blue-light);
-    border-radius:6px;padding:2px 7px;margin-left:6px;
+    border-radius:20px;padding:2px 8px;
   }
   #reply-textarea {
     width:100%;padding:12px;border:1.5px solid var(--gray-200);border-radius:8px;
@@ -421,9 +429,10 @@
   }
   .chat-send-btn:disabled { opacity:0.4; }
   .chat-btn {
-    padding:5px 10px; border-radius:6px; font-family:inherit; font-size:11px; font-weight:600;
+    padding:9px 10px; border-radius:10px; font-family:inherit; font-size:12.5px; font-weight:600;
     border:1.5px solid var(--orange); background:var(--orange-light); color:var(--orange);
     cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    display:flex;align-items:center;justify-content:center;gap:5px;
   }
   .chat-unread-badge {
     display:inline-flex; align-items:center; justify-content:center;
@@ -522,8 +531,8 @@
     </div>
     <div class="char-count" id="char-count">0 / 1000</div>
     <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
-    <div class="section-title" id="st-privacy">Maxfiylik</div>
-    <div class="anonymous-row">
+    <div class="section-title employee-only" id="st-privacy">Maxfiylik</div>
+    <div class="anonymous-row employee-only">
       <div class="anonymous-info">
         <div style="font-size:20px">🕵️</div>
         <div class="anon-text"><div class="title" id="anon-title">Anonim yuborish</div><div class="sub" id="anon-sub">Ismingiz ko'rinmaydi</div></div>
@@ -535,7 +544,7 @@
     <div class="phone-row guest-only" id="phone-row" style="display:none;">
       <div class="anonymous-info">
         <div style="font-size:20px">📞</div>
-        <div class="anon-text"><div class="title" id="phone-title">Raqamingizni ulashing</div><div class="sub" id="phone-sub">Siz bilan bog'lanish uchun</div></div>
+        <div class="anon-text"><div class="title" id="phone-title">Raqamingiz avtomatik aniqlanadi</div><div class="sub" id="phone-sub">Siz bilan bog'lanish uchun</div></div>
       </div>
       <button class="phone-btn" id="phone-share-btn">Ulashish</button>
     </div>
@@ -712,7 +721,7 @@ var LANG = {
     role_guest_desc: "Mijozlar uchun",
     // Guest: phone
     st_phone: "Telefon raqam",
-    phone_title: "Raqamingizni ulashing",
+    phone_title: "Raqamingiz avtomatik aniqlanadi",
     phone_sub: "Siz bilan bog'lanish uchun",
     phone_share_btn: "Ulashish",
     phone_shared_lbl: "✅ Ulashildi",
@@ -839,7 +848,7 @@ var LANG = {
     role_guest_desc: "Для клиентов",
     // Guest: phone
     st_phone: "Номер телефона",
-    phone_title: "Поделитесь номером",
+    phone_title: "Ваш номер определяется автоматически",
     phone_sub: "Чтобы мы могли связаться с вами",
     phone_share_btn: "Поделиться",
     phone_shared_lbl: "✅ Отправлено",
@@ -1008,11 +1017,48 @@ function confirmRole() {
   applyGuestUI();
   showScreen('employee');
   loadMyMessages();
+  if (userType === 'guest') initGuestPhoneStatus();
+}
+
+// Mehmon uchun telefon raqamini avtomatik aniqlash:
+// avval bazada allaqachon saqlangan raqam bor-yo'qligini tekshiramiz,
+// bo'lmasa Telegramning o'z native so'rovini avtomatik chaqiramiz.
+async function initGuestPhoneStatus() {
+  function markShared() {
+    phoneShared = true;
+    document.getElementById('phone-row').classList.add('shared');
+    var btn = document.getElementById('phone-share-btn');
+    btn.textContent = t('phone_shared_lbl');
+    btn.disabled = true;
+  }
+  if (!currentUserId) { requestGuestPhone(); return; }
+  try {
+    var res = await fetch(SERVER_URL + '/contact/' + currentUserId);
+    var data = await res.json();
+    if (data.ok && data.phone) { markShared(); }
+    else { requestGuestPhone(); }
+  } catch (e) { requestGuestPhone(); }
+}
+
+function requestGuestPhone() {
+  if (!tg.requestContact) return;
+  tg.requestContact(function(shared){
+    if (shared) {
+      phoneShared = true;
+      document.getElementById('phone-row').classList.add('shared');
+      var btn = document.getElementById('phone-share-btn');
+      btn.textContent = t('phone_shared_lbl');
+      btn.disabled = true;
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    }
+  });
 }
 
 function applyGuestUI() {
   var isGuest = userType === 'guest';
   document.querySelectorAll('.guest-only').forEach(function(el){ el.style.display = isGuest ? '' : 'none'; });
+  document.querySelectorAll('.employee-only').forEach(function(el){ el.style.display = isGuest ? 'none' : ''; });
+  if (isGuest) { isAnon = false; document.getElementById('anon-toggle').classList.remove('on'); }
 }
 
 function switchLang() {
@@ -1224,16 +1270,11 @@ function resetForm() {
   btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
   ['err-type','err-filial','err-text'].forEach(hideError);
 
-  // Guest fields reset
+  // Guest fields reset (photo only — phone status stays as-is, no need to re-ask)
   photoBase64 = null;
   document.getElementById('photo-input').value = '';
   document.getElementById('photo-preview-wrap').style.display = 'none';
   document.getElementById('photo-add-btn').style.display = 'flex';
-  phoneShared = false;
-  document.getElementById('phone-row').classList.remove('shared');
-  var phoneBtn = document.getElementById('phone-share-btn');
-  phoneBtn.disabled = false;
-  phoneBtn.textContent = t('phone_share_btn');
 
   applyGuestUI();
   showScreen('employee');
@@ -1272,7 +1313,7 @@ async function submitForm() {
         text_uz: textUz,
         text_ru: textRu,
         lang: currentLang,
-        anon: isAnon,
+        anon: (userType === 'guest') ? false : isAnon,
         time: new Date().toLocaleString('uz-UZ',{timeZone:'Asia/Tashkent'}),
         sender_name: senderName,
         username: user && user.username ? user.username : '',
@@ -1428,8 +1469,14 @@ function renderMessages(msgs) {
     var roleBadgeHtml = '<div class="msg-role-row"><span class="msg-role-badge '+(m.user_type === 'guest' ? 'guest' : 'employee')+'">'+
       (m.user_type === 'guest' ? '🙋 ' + t('guest_badge') : '👔 ' + t('employee_badge')) +
       '</span></div>';
-    var phoneHtml = m.phone ? '<div class="msg-phone">📞 '+escapeHtml(m.phone)+'</div>' : '';
-    var photoHtml = m.photo_file_id ? '<div class="msg-photo-thumb-wrap"><img class="msg-photo-thumb" src="'+SERVER_URL+'/photo/'+encodeURIComponent(m.id)+'" alt="" onclick="openPhotoLightbox(this.src)"></div>' : '';
+    var chipsHtml = '';
+    if (m.filial || m.phone) {
+      chipsHtml = '<div class="msg-info-chips">'+
+        (m.filial ? '<span class="msg-chip filial">🏢 '+escapeHtml(m.filial)+'</span>' : '')+
+        (m.phone ? '<span class="msg-chip">📞 '+escapeHtml(m.phone)+'</span>' : '')+
+      '</div>';
+    }
+    var photoHtml = m.photo_file_id ? '<div class="msg-photo-thumb-wrap"><img class="msg-photo-thumb" src="'+SERVER_URL+'/photo/'+encodeURIComponent(m.id)+'" alt="" onclick="openPhotoLightbox(this.src)" onerror="this.closest(\'.msg-photo-thumb-wrap\').style.display=\'none\'"></div>' : '';
     var deleteBtnHtml = (s==='done' && canDelete)
       ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="'+t('confirm_delete')+'"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       : '';
@@ -1444,20 +1491,26 @@ function renderMessages(msgs) {
         '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
         replyCountHtml+
       '</div><span class="msg-time">'+escapeHtml(m.time)+'</span></div>'+
-      (m.filial?'<div class="msg-filial">'+t('filial_lbl')+escapeHtml(m.filial)+'</div>':'')+
-      phoneHtml+photoHtml+
+      chipsHtml+
+      photoHtml+
       translatedBadgeHtml+
       '<div class="msg-text">'+escapeHtml(displayText)+'</div>'+
       originalTextHtml+
-      '<div class="msg-footer"><div>'+
-        ((m.anon||m.isAnon)?'<span class="msg-anon">'+t('anon_lbl')+'</span>':'<span class="msg-sender">'+t('sender_lbl')+escapeHtml(m.sender||'')+'</span>')+
-      '</div><div class="msg-footer-right">'+chatBtnHtml+replyBtnHtml+'<div class="status-row">'+
-        ['new','progress','done'].map(function(st){
-          var cls=(s===st||(s==='in_progress'&&st==='progress'))?statusBtnClass(st):'';
-          var stLbls = {new:t('sbtn_new'),progress:t('sbtn_progress'),done:t('sbtn_done')};
-          return '<button class="status-btn '+cls+'" onclick="changeStatus(\''+escapeHtml(m.id)+'\',\''+st+'\',this)">'+stLbls[st]+'</button>';
-        }).join('')+
-      '</div>'+deleteBtnHtml+'</div></div></div>';
+      '<div class="msg-footer">'+
+        '<div class="msg-sender-row">'+
+          ((m.anon||m.isAnon)?'<span class="msg-anon">'+t('anon_lbl')+'</span>':'<span class="msg-sender">'+t('sender_lbl')+escapeHtml(m.sender||'')+'</span>')+
+          deleteBtnHtml+
+        '</div>'+
+        '<div class="msg-actions-row">'+chatBtnHtml+replyBtnHtml+'</div>'+
+        '<div class="status-row">'+
+          ['new','progress','done'].map(function(st){
+            var cls=(s===st||(s==='in_progress'&&st==='progress'))?statusBtnClass(st):'';
+            var stLbls = {new:t('sbtn_new'),progress:t('sbtn_progress'),done:t('sbtn_done')};
+            return '<button class="status-btn '+cls+'" onclick="changeStatus(\''+escapeHtml(m.id)+'\',\''+st+'\',this)">'+stLbls[st]+'</button>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
@@ -1932,19 +1985,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if(this.value){hideError('err-filial');this.classList.remove('error');}
   });
 
-  // Guest: phone share via Telegram native contact request
+  // Guest: phone share via Telegram native contact request (manual retry fallback)
   document.getElementById('phone-share-btn').addEventListener('click', function(){
     if (!tg.requestContact) { alert(t('phone_not_supported')); return; }
-    var btn = this;
-    tg.requestContact(function(shared){
-      if (shared) {
-        phoneShared = true;
-        document.getElementById('phone-row').classList.add('shared');
-        btn.textContent = t('phone_shared_lbl');
-        btn.disabled = true;
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-      }
-    });
+    requestGuestPhone();
   });
 
   // Guest: photo capture / selection with client-side resize
