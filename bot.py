@@ -20,6 +20,9 @@ import psycopg2
 import psycopg2.extras
 import gspread
 import pandas as pd
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
 from google.oauth2.service_account import Credentials
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
@@ -210,6 +213,8 @@ def init_db():
             ("phone", "TEXT", "''"),
             ("photo_file_id", "TEXT", "''"),
             ("photo_url", "TEXT", "''"),
+            ("real_sender", "TEXT", "''"),
+            ("username", "TEXT", "''"),
         ]:
             try:
                 cur.execute(f"ALTER TABLE messages ADD COLUMN IF NOT EXISTS {col} {col_type} DEFAULT {default}")
@@ -271,14 +276,111 @@ def load_messages():
         logger.error(f"load_messages xatolik: {e}")
         return []
 
+
+# ==================== EXCEL EKSPORT ====================
+
+def load_messages_for_export(date_from=None, date_to=None, msg_type=None):
+    """Admin panel: tanlangan davr (va ixtiyoriy tur) bo'yicha BARCHA murojaatlarni qaytaradi (500 talik limit yo'q)."""
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        query = """
+            SELECT m.*,
+                   COALESCE((SELECT COUNT(*) FROM replies r WHERE r.message_id = m.id), 0) AS reply_count
+            FROM messages m
+            WHERE 1=1
+        """
+        params = []
+        if date_from:
+            query += " AND m.created_at >= %s"
+            params.append(date_from)
+        if date_to:
+            query += " AND m.created_at <= %s"
+            params.append(date_to)
+        if msg_type in ("taklif", "shikoyat"):
+            query += " AND m.type = %s"
+            params.append(msg_type)
+        query += " ORDER BY m.created_at ASC"
+        cur.execute(query, params)
+        rows = [dict(r) for r in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        logger.error(f"load_messages_for_export xatolik: {e}")
+        return []
+
+
+def build_messages_excel(rows):
+    """Murojaatlar ro'yxatidan formatlangan .xlsx fayl (bytes) yasaydi."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Murojaatlar"
+
+    headers = [
+        "ID", "Sana", "Turi", "Holat", "Kimdan", "Filial",
+        "Matn (UZ)", "Matn (RU)", "Anonim",
+        "Ko'rsatilgan ism", "Haqiqiy ism", "Username", "Telefon", "Javoblar soni",
+    ]
+    ws.append(headers)
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="EA580C")
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    type_labels = {"taklif": "Taklif", "shikoyat": "Shikoyat"}
+    status_labels = {"new": "Yangi", "progress": "Jarayonda", "in_progress": "Jarayonda", "done": "Yakunlandi"}
+    kimdan_labels = {"employee": "Xodim", "guest": "Mehmon"}
+
+    for r in rows:
+        created = r.get("created_at")
+        sana = created.strftime("%d.%m.%Y %H:%M") if created else (r.get("time") or "")
+        username = r.get("username") or ""
+        row_vals = [
+            r.get("id", ""),
+            sana,
+            type_labels.get(r.get("type"), r.get("type") or ""),
+            status_labels.get(r.get("status"), r.get("status") or ""),
+            kimdan_labels.get(r.get("user_type"), r.get("user_type") or ""),
+            r.get("filial") or "",
+            r.get("text_uz") or r.get("text") or "",
+            r.get("text_ru") or "",
+            "Ha" if r.get("anon") else "Yo'q",
+            r.get("sender") or "",
+            r.get("real_sender") or (r.get("sender") if not r.get("anon") else "") or "",
+            ("@" + username) if username else "",
+            r.get("phone") or "",
+            r.get("reply_count") or 0,
+        ]
+        ws.append(row_vals)
+
+    widths = [15, 16, 10, 12, 9, 22, 45, 45, 9, 22, 22, 16, 15, 10]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 def save_message(msg):
     try:
         conn = get_conn()
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO messages (id, type, filial, text, text_uz, text_ru, lang, anon, time, sender, status, user_id,
-                                   user_type, phone, photo_file_id, photo_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                   user_type, phone, photo_file_id, photo_url, real_sender, username)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
         """, (
             msg['id'], msg['type'], msg['filial'],
@@ -294,6 +396,8 @@ def save_message(msg):
             msg.get('phone', '') or '',
             msg.get('photo_file_id', '') or '',
             msg.get('photo_url', '') or '',
+            msg.get('real_sender', '') or '',
+            msg.get('username', '') or '',
         ))
         conn.commit()
         cur.close()
@@ -829,6 +933,10 @@ def send_message():
             "phone": phone,
             "photo_file_id": photo_file_id or '',
             "photo_url": photo_url,
+            # Anonim bo'lsa ham haqiqiy ism/username saqlanadi — faqat admin
+            # Excel eksportida ko'rinadi, oddiy interfeys/chatda hech qachon chiqmaydi.
+            "real_sender": sender_name,
+            "username": username,
         }
         save_message(msg)
 
@@ -1320,6 +1428,36 @@ def employees_upload():
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         logger.error(f"/admin/employees/upload xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ==================== EXPORT ROUTE ====================
+
+@flask_app.route("/admin/export", methods=["GET"])
+def export_messages():
+    admin_id = request.args.get("admin_id", type=int)
+    if not admin_id or ADMINS.get(admin_id) is None:
+        return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+
+    date_from_raw = request.args.get("date_from")  # 'YYYY-MM-DD'
+    date_to_raw   = request.args.get("date_to")
+    msg_type      = request.args.get("type")        # 'taklif' | 'shikoyat' | None
+
+    date_from = f"{date_from_raw} 00:00:00" if date_from_raw else None
+    date_to   = f"{date_to_raw} 23:59:59" if date_to_raw else None
+
+    try:
+        rows = load_messages_for_export(date_from, date_to, msg_type)
+        excel_bytes = build_messages_excel(rows)
+        filename = f"murojaatlar_{datetime.now(BIRTHDAY_TZ).strftime('%Y%m%d_%H%M')}.xlsx"
+        logger.info(f"Excel eksport: {len(rows)} ta murojaat (admin {admin_id}, {date_from_raw}—{date_to_raw}, tur={msg_type})")
+        return Response(
+            excel_bytes,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        logger.error(f"/admin/export xatolik: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
 

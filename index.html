@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Taklif & Shikoyat</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   :root {
@@ -22,6 +23,8 @@
     --radius: 12px; --radius-sm: 8px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  .line-icon { display:inline-block; vertical-align:middle; stroke:currentColor; flex-shrink:0; }
+  .icon-inline { display:inline-flex; align-items:center; justify-content:center; gap:4px; }
   body {
     font-family: 'Inter', -apple-system, sans-serif;
     background: #F3F4F6; color: var(--gray-900);
@@ -130,7 +133,7 @@
   .section-title { font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-400);margin:20px 0 8px;padding:0 16px; }
   .type-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px; }
   .type-card { border:2px solid var(--gray-200);border-radius:var(--radius);padding:16px 12px;text-align:center;cursor:pointer;background:white;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
-  .type-card .icon { font-size:28px;margin-bottom:8px; }
+  .type-card .icon { margin-bottom:8px;display:flex;align-items:center;justify-content:center;height:28px; }
   .type-card .label { font-size:13px;font-weight:600;color:var(--gray-800); }
   .type-card .desc { font-size:11px;color:var(--gray-400);margin-top:3px; }
   .type-card.selected-taklif { border-color:var(--green);background:var(--green-light); }
@@ -178,6 +181,8 @@
   .admin-header h1 { font-size:20px;font-weight:700; }
   .admin-badge { background:var(--orange);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px; }
   .admin-badge.mod { background:var(--blue); }
+  .icon-btn-ghost { background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:10px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent; }
+  .icon-btn-ghost:active { background:rgba(255,255,255,0.22); }
 
   /* admin lang switch */
   .admin-lang-pill {
@@ -306,7 +311,7 @@
   .delete-btn:active { opacity:1;background:var(--red-light); }
   .delete-btn svg { display:block;width:16px;height:16px; }
   .empty-state { text-align:center;padding:60px 24px;color:var(--gray-400); }
-  .empty-state .emoji { font-size:40px;margin-bottom:12px; }
+  .empty-state .emoji { margin-bottom:12px;display:flex;align-items:center;justify-content:center; }
   .spinner { width:32px;height:32px;border:3px solid var(--gray-200);border-top-color:var(--orange);border-radius:50%;animation:spin 0.7s linear infinite;margin:40px auto 12px; }
   @keyframes spin { to{transform:rotate(360deg)} }
 
@@ -363,7 +368,7 @@
   }
   .reply-count-badge {
     font-size:10px;color:var(--blue);font-weight:600;background:var(--blue-light);
-    border-radius:20px;padding:2px 8px;
+    border-radius:20px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px;
   }
   #reply-textarea {
     width:100%;padding:12px;border:1.5px solid var(--gray-200);border-radius:8px;
@@ -455,17 +460,17 @@
 
 <!-- LANGUAGE SELECT -->
 <div id="screen-lang" class="screen active">
-  <div class="lang-logo">💬</div>
+  <div class="lang-logo"><i data-feather="message-circle"></i></div>
   <div class="lang-title">Taklif &amp; Shikoyat</div>
   <div class="lang-sub">Tilni tanlang / Выберите язык</div>
   <div class="lang-cards">
     <div class="lang-card" id="lang-uz" onclick="selectLang('uz')">
-      <div class="lang-flag">🇺🇿</div>
+      <div class="lang-flag"><i data-feather="globe"></i></div>
       <div class="lang-name">O'zbek</div>
       <div class="lang-native">O'zbek tili</div>
     </div>
     <div class="lang-card" id="lang-ru" onclick="selectLang('ru')">
-      <div class="lang-flag">🇷🇺</div>
+      <div class="lang-flag"><i data-feather="globe"></i></div>
       <div class="lang-name">Русский</div>
       <div class="lang-native">Русский язык</div>
     </div>
@@ -475,17 +480,17 @@
 
 <!-- ROLE (Filial xodimi / Mehmon) -->
 <div id="screen-role" class="screen">
-  <div class="lang-logo">🙋</div>
+  <div class="lang-logo"><i data-feather="users"></i></div>
   <div class="lang-title" id="role-title">Siz kimsiz?</div>
   <div class="lang-sub" id="role-sub">Davom etish uchun tanlang</div>
   <div class="lang-cards">
     <div class="lang-card" id="role-employee" onclick="selectRole('employee')">
-      <div class="lang-flag">👔</div>
+      <div class="lang-flag"><i data-feather="briefcase"></i></div>
       <div class="lang-name" id="role-employee-name">Filial xodimi</div>
       <div class="lang-native" id="role-employee-desc">Xodimlar uchun</div>
     </div>
     <div class="lang-card" id="role-guest" onclick="selectRole('guest')">
-      <div class="lang-flag">🙋</div>
+      <div class="lang-flag"><i data-feather="user"></i></div>
       <div class="lang-name" id="role-guest-name">Mehmon</div>
       <div class="lang-native" id="role-guest-desc">Mijozlar uchun</div>
     </div>
@@ -496,12 +501,12 @@
 <!-- EMPLOYEE -->
 <div id="screen-employee" class="screen">
   <div class="header">
-    <div class="header-top"><div class="header-icon">💬</div><h1 id="h-title">Taklif & Shikoyat</h1></div>
+    <div class="header-top"><div class="header-icon"><i data-feather="message-circle"></i></div><h1 id="h-title">Taklif & Shikoyat</h1></div>
     <p id="h-sub">Xodimlar uchun muloqot platformasi</p>
     <div class="lang-switch-pill" onclick="switchLang()" id="lang-switch-pill">RU</div>
   </div>
   <div class="my-requests-bar" id="my-requests-bar" onclick="openMyRequests()">
-    <div class="mrb-left">📂 <span id="my-requests-label">Mening murojaatlarim</span></div>
+    <div class="mrb-left"><i data-feather="folder" style="width:16px;height:16px;"></i> <span id="my-requests-label">Mening murojaatlarim</span></div>
     <div class="mrb-right">
       <span class="my-badge" id="my-badge">0</span>
       <span class="chevron">›</span>
@@ -510,8 +515,8 @@
   <div style="padding-bottom:32px;">
     <div class="section-title" id="st-type">Murojaat turini tanlang</div>
     <div class="type-grid">
-      <div class="type-card" id="card-taklif"><div class="icon">💡</div><div class="label" id="lbl-taklif">Taklif</div><div class="desc" id="desc-taklif">Yaxshilash g'oyasi</div></div>
-      <div class="type-card" id="card-shikoyat"><div class="icon">⚠️</div><div class="label" id="lbl-shikoyat">Shikoyat</div><div class="desc" id="desc-shikoyat">Muammo yoki norozilik</div></div>
+      <div class="type-card" id="card-taklif"><div class="icon" id="icon-taklif"></div><div class="label" id="lbl-taklif">Taklif</div><div class="desc" id="desc-taklif">Yaxshilash g'oyasi</div></div>
+      <div class="type-card" id="card-shikoyat"><div class="icon"><i data-feather="alert-triangle" width="26" height="26"></i></div><div class="label" id="lbl-shikoyat">Shikoyat</div><div class="desc" id="desc-shikoyat">Muammo yoki norozilik</div></div>
     </div>
     <div class="field-error" id="err-type">Murojaat turini tanlang</div>
     <div class="section-title" id="st-filial">Filial</div>
@@ -536,7 +541,7 @@
     <div class="section-title employee-only" id="st-privacy">Maxfiylik</div>
     <div class="anonymous-row employee-only">
       <div class="anonymous-info">
-        <div style="font-size:20px">🕵️</div>
+        <div style="width:20px;height:20px;color:var(--gray-600);"><i data-feather="eye-off" style="width:20px;height:20px;"></i></div>
         <div class="anon-text"><div class="title" id="anon-title">Anonim yuborish</div><div class="sub" id="anon-sub">Ismingiz ko'rinmaydi</div></div>
       </div>
       <div class="toggle" id="anon-toggle"></div>
@@ -545,7 +550,7 @@
     <div class="section-title guest-only" id="st-phone" style="display:none;">Telefon raqam</div>
     <div class="phone-row guest-only" id="phone-row" style="display:none;">
       <div class="anonymous-info">
-        <div style="font-size:20px">📞</div>
+        <div style="width:20px;height:20px;color:var(--gray-600);"><i data-feather="phone" style="width:20px;height:20px;"></i></div>
         <div class="anon-text"><div class="title" id="phone-title">Raqamingiz avtomatik aniqlanadi</div><div class="sub" id="phone-sub">Siz bilan bog'lanish uchun</div></div>
       </div>
       <button class="phone-btn" id="phone-share-btn">Ulashish</button>
@@ -553,24 +558,24 @@
 
     <div class="section-title guest-only" id="st-photo" style="display:none;">Rasm (ixtiyoriy)</div>
     <div class="photo-row guest-only" id="photo-row" style="display:none;">
-      <div class="photo-add-btn" id="photo-add-btn"><span>📷</span><span id="photo-add-lbl">Rasmga olish / tanlash</span></div>
+      <div class="photo-add-btn" id="photo-add-btn"><span class="icon-inline"><i data-feather="camera" style="width:18px;height:18px;"></i></span><span id="photo-add-lbl">Rasmga olish / tanlash</span></div>
       <input type="file" accept="image/*" capture="environment" id="photo-input" style="display:none;">
       <div class="photo-preview-wrap" id="photo-preview-wrap" style="display:none;">
         <img class="photo-preview" id="photo-preview" src="" alt="">
-        <button class="photo-remove-btn" id="photo-remove-btn" type="button">✕</button>
+        <button class="photo-remove-btn" id="photo-remove-btn" type="button"><i data-feather="x" style="width:14px;height:14px;"></i></button>
       </div>
     </div>
 
-    <button class="btn-submit" id="submit-btn"><span>📤</span><span id="btn-submit-lbl">Yuborish</span></button>
+    <button class="btn-submit" id="submit-btn"><span class="icon-inline"><i data-feather="send" style="width:18px;height:18px;"></i></span><span id="btn-submit-lbl">Yuborish</span></button>
   </div>
 </div>
 
 <!-- SUCCESS -->
 <div id="screen-success" class="screen">
-  <div class="success-circle">✅</div>
+  <div class="success-circle"><i data-feather="check" style="width:44px;height:44px;"></i></div>
   <div class="success-title" id="succ-title">Yuborildi!</div>
   <div class="success-desc" id="succ-desc">Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!</div>
-  <div class="success-badge">🔒 <span id="succ-badge">Maxfiylik kafolatlangan</span></div>
+  <div class="success-badge"><i data-feather="lock" style="width:14px;height:14px;"></i> <span id="succ-badge">Maxfiylik kafolatlangan</span></div>
   <button class="btn-new" id="btn-new">Yangi murojaat</button>
 </div>
 
@@ -578,7 +583,7 @@
 <div id="screen-my" class="screen">
   <div class="header" style="background:var(--gray-900);">
     <div class="header-top">
-      <button class="back-btn" id="my-back-btn" onclick="showScreen('employee')">←</button>
+      <button class="back-btn" id="my-back-btn" onclick="showScreen('employee')"><i data-feather="arrow-left"></i></button>
       <h1 id="my-title">Mening murojaatlarim</h1>
     </div>
   </div>
@@ -591,7 +596,8 @@
     <div class="admin-header-top">
       <h1 id="admin-title">Admin Panel</h1>
       <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="openBirthdaysScreen()" style="background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:10px;padding:6px 10px;font-size:16px;cursor:pointer;" title="Tug'ilgan kunlar">🎂</button>
+        <button onclick="openExportModal()" class="icon-btn-ghost" title="Excel eksport"><i data-feather="download" style="width:18px;height:18px;"></i></button>
+        <button onclick="openBirthdaysScreen()" class="icon-btn-ghost" title="Tug'ilgan kunlar"><i data-feather="gift" style="width:18px;height:18px;"></i></button>
         <div class="admin-lang-pill" onclick="switchLang()" id="admin-lang-pill">RU</div>
         <div class="admin-badge" id="admin-role-badge">ADMIN</div>
       </div>
@@ -617,7 +623,7 @@
     <div class="date-modal">
       <div class="date-modal-header">
         <span class="date-modal-title" id="dmodal-title">Davrni tanlang</span>
-        <button class="date-modal-close" id="date-modal-close">✕</button>
+        <button class="date-modal-close" id="date-modal-close"><i data-feather="x" style="width:16px;height:16px;"></i></button>
       </div>
       <div class="date-quick-btns">
         <button class="date-quick-btn" data-quick="week" id="dq-week">Oxirgi 7 kun</button>
@@ -641,7 +647,7 @@
     <div class="date-modal">
       <div class="date-modal-header">
         <span class="date-modal-title" id="reply-modal-title">Javob yozish</span>
-        <button class="date-modal-close" id="reply-modal-close">✕</button>
+        <button class="date-modal-close" id="reply-modal-close"><i data-feather="x" style="width:16px;height:16px;"></i></button>
       </div>
       <textarea id="reply-textarea" rows="4" placeholder="Javobingizni yozing..."></textarea>
       <div class="field-error" id="err-reply-empty" style="padding:0;margin-bottom:10px;">Javob matnini kiriting</div>
@@ -649,11 +655,48 @@
     </div>
   </div>
 
+  <!-- EXPORT MODAL -->
+  <div class="date-modal-overlay" id="export-modal-overlay">
+    <div class="date-modal">
+      <div class="date-modal-header">
+        <span class="date-modal-title icon-inline" style="gap:8px;"><i data-feather="download" style="width:17px;height:17px;"></i> Excelga yuklab olish</span>
+        <button class="date-modal-close" id="export-modal-close"><i data-feather="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="date-quick-btns">
+        <button class="date-quick-btn" data-exp-quick="week">Oxirgi 7 kun</button>
+        <button class="date-quick-btn" data-exp-quick="month">Oxirgi 30 kun</button>
+        <button class="date-quick-btn" data-exp-quick="thismonth">Shu oy</button>
+        <button class="date-quick-btn" data-exp-quick="all">Barcha vaqt</button>
+      </div>
+      <div class="date-fields">
+        <div class="date-field"><label>Dan</label><input type="date" id="export-date-from"></div>
+        <div class="date-field"><label>Gacha</label><input type="date" id="export-date-to"></div>
+      </div>
+      <div style="margin:14px 0;">
+        <div style="font-size:12px;color:var(--gray-600);margin-bottom:6px;font-weight:600;">Turi</div>
+        <div class="select-wrapper">
+          <select id="export-type-select">
+            <option value="all">Hammasi (Taklif + Shikoyat)</option>
+            <option value="taklif">Faqat Takliflar</option>
+            <option value="shikoyat">Faqat Shikoyatlar</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--gray-600);margin-bottom:14px;line-height:1.5;">
+        Excel faylga anonim yuborilgan murojaatlarning ham haqiqiy ismi va Telegram username'i qo'shiladi (faqat admin uchun).
+      </div>
+      <div class="date-modal-actions">
+        <button class="date-reset-btn" id="export-cancel-btn">Bekor qilish</button>
+        <button class="date-apply-btn icon-inline" style="gap:6px;" id="export-download-btn"><i data-feather="download" style="width:16px;height:16px;"></i> Yuklab olish</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN TABS -->
   <div class="main-tabs">
     <button class="main-tab active" data-tab="all" id="mtab-all">Hammasi<span class="tab-count" id="tc-all">0</span></button>
-    <button class="main-tab" data-tab="shikoyat" id="mtab-shikoyat">⚠️ Shikoyat<span class="tab-count" id="tc-shikoyat">0</span></button>
-    <button class="main-tab" data-tab="taklif" id="mtab-taklif">💡 Taklif<span class="tab-count" id="tc-taklif">0</span></button>
+    <button class="main-tab icon-inline" style="gap:5px;" data-tab="shikoyat" id="mtab-shikoyat"><i data-feather="alert-triangle" style="width:14px;height:14px;"></i> Shikoyat<span class="tab-count" id="tc-shikoyat">0</span></button>
+    <button class="main-tab icon-inline" style="gap:5px;" data-tab="taklif" id="mtab-taklif"><span id="mtab-taklif-icon"></span> Taklif<span class="tab-count" id="tc-taklif">0</span></button>
   </div>
 
   <!-- SUB TABS -->
@@ -664,13 +707,13 @@
       <button class="sub-tab" data-sub="done" id="stab-done">Yakunlandi<span class="sc" id="sc-done">0</span></button>
     </div>
     <button class="filter-icon-btn" id="filter-icon-btn">
-      ⚙️<span class="filter-dot"></span>
+      <i data-feather="sliders" style="width:16px;height:16px;"></i><span class="filter-dot"></span>
     </button>
     <div class="filter-dropdown" id="filter-dropdown">
       <div class="filter-dropdown-title" id="fdd-title">Filter</div>
-      <div class="filter-option" data-anon="all"><div class="filter-checkbox checked" id="fc-all">✓</div><span id="ff-all">Hammasi</span></div>
-      <div class="filter-option" data-anon="open"><div class="filter-checkbox" id="fc-open"></div><span id="ff-open">👤 Ochiq</span></div>
-      <div class="filter-option" data-anon="anon"><div class="filter-checkbox" id="fc-anon"></div><span id="ff-anon">🕵️ Anonim</span></div>
+      <div class="filter-option" data-anon="all"><div class="filter-checkbox checked" id="fc-all"><i data-feather="check" style="width:12px;height:12px;"></i></div><span id="ff-all">Hammasi</span></div>
+      <div class="filter-option" data-anon="open"><div class="filter-checkbox" id="fc-open"></div><span id="ff-open" class="icon-inline" style="gap:5px;"><i data-feather="user" style="width:14px;height:14px;"></i> Ochiq</span></div>
+      <div class="filter-option" data-anon="anon"><div class="filter-checkbox" id="fc-anon"></div><span id="ff-anon" class="icon-inline" style="gap:5px;"><i data-feather="eye-off" style="width:14px;height:14px;"></i> Anonim</span></div>
     </div>
   </div>
 
@@ -681,8 +724,8 @@
 <div id="screen-birthdays" class="screen">
   <div class="admin-header">
     <div class="admin-header-top">
-      <button class="back-btn" onclick="showScreen('admin')">←</button>
-      <h1>🎂 Tug'ilgan kunlar</h1>
+      <button class="back-btn" onclick="showScreen('admin')"><i data-feather="arrow-left"></i></button>
+      <h1 class="icon-inline" style="gap:8px;"><i data-feather="gift" style="width:19px;height:19px;"></i> Tug'ilgan kunlar</h1>
       <div></div>
     </div>
   </div>
@@ -697,9 +740,9 @@
         Fayl ustunlari: <b>FIO</b>, <b>Filial</b>, <b>Tug'ilgan_sana</b>. Yangi fayl eski ma'lumotlarni to'liq almashtiradi.
       </div>
       <input type="file" id="bday-file-input" accept=".xlsx,.xls" style="display:none;" onchange="onBirthdayFileSelected()">
-      <button onclick="document.getElementById('bday-file-input').click()" class="date-apply-btn" style="width:100%;margin-bottom:8px;">📎 Faylni tanlash</button>
+      <button onclick="document.getElementById('bday-file-input').click()" class="date-apply-btn icon-inline" style="width:100%;margin-bottom:8px;gap:6px;"><i data-feather="paperclip" style="width:16px;height:16px;"></i> Faylni tanlash</button>
       <div id="bday-file-name" style="font-size:12px;color:var(--gray-600);margin-bottom:10px;"></div>
-      <button id="bday-upload-btn" onclick="uploadBirthdayFile()" class="date-apply-btn" style="width:100%;display:none;">⬆️ Yuklash</button>
+      <button id="bday-upload-btn" onclick="uploadBirthdayFile()" class="date-apply-btn icon-inline" style="width:100%;display:none;gap:6px;"><i data-feather="upload" style="width:16px;height:16px;"></i> Yuklash</button>
       <div id="bday-upload-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
     </div>
   </div>
@@ -708,29 +751,52 @@
 <!-- CHAT SCREEN -->
 <div id="screen-chat" class="screen">
   <div class="chat-header">
-    <button class="back-btn" id="chat-back-btn">←</button>
+    <button class="back-btn" id="chat-back-btn"><i data-feather="arrow-left"></i></button>
     <div class="chat-header-info">
       <div class="chat-header-title" id="chat-header-title">Chat</div>
       <div class="chat-header-sub" id="chat-header-sub"></div>
     </div>
-    <button class="chat-close-btn" id="chat-toggle-close-btn" onclick="toggleChatClosed()" style="display:none">🔒 Yopish</button>
+    <button class="chat-close-btn icon-inline" id="chat-toggle-close-btn" onclick="toggleChatClosed()" style="display:none"><i data-feather="lock" style="width:13px;height:13px;"></i> Yopish</button>
   </div>
   <div class="chat-messages" id="chat-messages-list"></div>
-  <div class="chat-closed-banner" id="chat-closed-banner" style="display:none">🔒 Chat yopilgan — yozish mumkin emas</div>
+  <div class="chat-closed-banner icon-inline" id="chat-closed-banner" style="display:none"><i data-feather="lock" style="width:13px;height:13px;"></i> Chat yopilgan — yozish mumkin emas</div>
   <div class="chat-input-area" id="chat-input-area">
     <textarea id="chat-textarea" rows="1" placeholder="Xabar yozing..."></textarea>
-    <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">➤</button>
+    <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()"><i data-feather="send" style="width:16px;height:16px;"></i></button>
   </div>
 </div>
 
 <!-- PHOTO LIGHTBOX (rasmni mini app ichida ko'rish) -->
 <div class="photo-lightbox-overlay" id="photo-lightbox-overlay" onclick="closePhotoLightbox()">
-  <button class="photo-lightbox-close" onclick="event.stopPropagation();closePhotoLightbox()">✕</button>
+  <button class="photo-lightbox-close" onclick="event.stopPropagation();closePhotoLightbox()"><i data-feather="x" style="width:18px;height:18px;"></i></button>
   <img id="photo-lightbox-img" src="" alt="">
 </div>
 
 <script>
 const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
+
+// ===================================================
+// MINIMAL LINE ICONS (Feather Icons asosida)
+// ===================================================
+// Feather'da yo'q ikonkalar uchun qo'lda chizilgan, bir xil uslubdagi (2px chiziq, dumaloq uchlar) SVG'lar.
+const CUSTOM_ICONS = {
+  'lightbulb': '<path d="M9 18h6M10 22h4M12 2a6 6 0 0 0-4 10.5c.6.55 1 1.36 1 2.25v.25h6v-.25c0-.89.4-1.7 1-2.25A6 6 0 0 0 12 2z"/>',
+  'cake': '<path d="M4 21v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6"/><path d="M2 21h20"/><path d="M7 13V9a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><path d="M12 7V3"/><path d="M9 3.5c0 .8.5 1 .5 1.5S9 6 9 6"/><path d="M15 3.5c0 .8-.5 1-.5 1.5s.5 1 .5 1.5"/>',
+};
+
+function icon(name, opts) {
+  opts = opts || {};
+  var size = opts.size || 18;
+  var sw = opts.strokeWidth || 2;
+  var cls = 'line-icon' + (opts.cls ? ' ' + opts.cls : '');
+  if (CUSTOM_ICONS[name]) {
+    return '<svg class="' + cls + '" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round">' + CUSTOM_ICONS[name] + '</svg>';
+  }
+  if (window.feather && feather.icons[name]) {
+    return feather.icons[name].toSvg({ width: size, height: size, 'stroke-width': sw, class: cls });
+  }
+  return '';
+}
 
 // ===================================================
 // I18N — barcha matnlar
@@ -755,7 +821,7 @@ var LANG = {
     phone_title: "Raqamingiz avtomatik aniqlanadi",
     phone_sub: "Siz bilan bog'lanish uchun",
     phone_share_btn: "Ulashish",
-    phone_shared_lbl: "✅ Ulashildi",
+    phone_shared_lbl: "Ulashildi",
     phone_not_supported: "Bu funksiya qo'llab-quvvatlanmaydi",
     // Guest: photo
     st_photo: "Rasm (ixtiyoriy)",
@@ -815,17 +881,17 @@ var LANG = {
     // Filter dropdown
     fdd_title: "Filter",
     ff_all: "Hammasi",
-    ff_open: "👤 Ochiq",
-    ff_anon: "🕵️ Anonim",
+    ff_open: "Ochiq",
+    ff_anon: "Anonim",
     // Message card
     type_taklif: "TAKLIF",
     type_shikoyat: "SHIKOYAT",
     status_new: "Yangi",
     status_progress: "Ko'rib chiqilmoqda",
     status_done: "Yakunlandi",
-    anon_lbl: "🕵️ Anonim",
-    sender_lbl: "👤 ",
-    filial_lbl: "🏢 ",
+    anon_lbl: "Anonim",
+    sender_lbl: "",
+    filial_lbl: "",
     // Status btns
     sbtn_new: "Yangi",
     sbtn_progress: "Ko'rib chiqilmoqda",
@@ -834,7 +900,7 @@ var LANG = {
     empty_msg: "Murojaatlar yo'q",
     server_err: "Serverga ulanib bo'lmadi",
     // Translated badge
-    translated_badge: "🤖 Tarjima (RU→UZ)",
+    translated_badge: "Tarjima (RU→UZ)",
     show_original: "Asl matnni ko'rish",
     hide_original: "Yashirish",
     translating: "Tarjima qilinmoqda...",
@@ -850,17 +916,17 @@ var LANG = {
     my_empty: "Sizda hali murojaat yo'q",
     no_reply_yet: "Hali javob yo'q",
     // Admin reply
-    btn_reply: "✍️ Javob yozish",
+    btn_reply: "Javob yozish",
     reply_modal_title: "Javob yozish",
     reply_placeholder: "Javobingizni yozing...",
     reply_send: "Yuborish",
     err_reply_empty: "Javob matnini kiriting",
     // Chat
-    btn_chat: "💬 Chat",
+    btn_chat: "Chat",
     chat_title: "Chat",
-    chat_close_btn: "🔒 Chatni yopish",
-    chat_reopen_btn: "🔓 Qayta ochish",
-    chat_closed_banner: "🔒 Chat yopilgan — yozish mumkin emas",
+    chat_close_btn: "Chatni yopish",
+    chat_reopen_btn: "Qayta ochish",
+    chat_closed_banner: "Chat yopilgan — yozish mumkin emas",
     chat_input_ph: "Xabar yozing...",
     chat_empty: "Hali xabar yo'q. Birinchi bo'lib yozing!",
     chat_badge_unread: "yangi xabar",
@@ -882,7 +948,7 @@ var LANG = {
     phone_title: "Ваш номер определяется автоматически",
     phone_sub: "Чтобы мы могли связаться с вами",
     phone_share_btn: "Поделиться",
-    phone_shared_lbl: "✅ Отправлено",
+    phone_shared_lbl: "Отправлено",
     phone_not_supported: "Эта функция не поддерживается",
     // Guest: photo
     st_photo: "Фото (необязательно)",
@@ -935,22 +1001,22 @@ var LANG = {
     stab_done: "Завершено",
     fdd_title: "Фильтр",
     ff_all: "Все",
-    ff_open: "👤 Открытые",
-    ff_anon: "🕵️ Анонимные",
+    ff_open: "Открытые",
+    ff_anon: "Анонимные",
     type_taklif: "ПРЕДЛОЖЕНИЕ",
     type_shikoyat: "ЖАЛОБА",
     status_new: "Новое",
     status_progress: "В обработке",
     status_done: "Завершено",
-    anon_lbl: "🕵️ Анонимно",
-    sender_lbl: "👤 ",
-    filial_lbl: "🏢 ",
+    anon_lbl: "Анонимно",
+    sender_lbl: "",
+    filial_lbl: "",
     sbtn_new: "Новое",
     sbtn_progress: "В обработке",
     sbtn_done: "Завершено",
     empty_msg: "Обращений нет",
     server_err: "Не удалось подключиться к серверу",
-    translated_badge: "🤖 Перевод (UZ→RU)",
+    translated_badge: "Перевод (UZ→RU)",
     show_original: "Показать оригинал",
     hide_original: "Скрыть",
     translating: "Переводим...",
@@ -963,17 +1029,17 @@ var LANG = {
     my_empty: "У вас пока нет обращений",
     no_reply_yet: "Ответов еще нет",
     // Admin reply
-    btn_reply: "✍️ Написать ответ",
+    btn_reply: "Написать ответ",
     reply_modal_title: "Написать ответ",
     reply_placeholder: "Напишите ваш ответ...",
     reply_send: "Отправить",
     err_reply_empty: "Введите текст ответа",
     // Chat
-    btn_chat: "💬 Чат",
+    btn_chat: "Чат",
     chat_title: "Чат",
-    chat_close_btn: "🔒 Закрыть чат",
-    chat_reopen_btn: "🔓 Открыть снова",
-    chat_closed_banner: "🔒 Чат закрыт — отправка недоступна",
+    chat_close_btn: "Закрыть чат",
+    chat_reopen_btn: "Открыть снова",
+    chat_closed_banner: "Чат закрыт — отправка недоступна",
     chat_input_ph: "Напишите сообщение...",
     chat_empty: "Сообщений пока нет. Напишите первым!",
     chat_badge_unread: "новое",
@@ -1059,7 +1125,7 @@ async function initGuestPhoneStatus() {
     phoneShared = true;
     document.getElementById('phone-row').classList.add('shared');
     var btn = document.getElementById('phone-share-btn');
-    btn.textContent = t('phone_shared_lbl');
+    btn.innerHTML = icon('check',{size:14}) + ' ' + t('phone_shared_lbl');
     btn.disabled = true;
   }
   if (!currentUserId) { requestGuestPhone(); return; }
@@ -1078,7 +1144,7 @@ function requestGuestPhone() {
       phoneShared = true;
       document.getElementById('phone-row').classList.add('shared');
       var btn = document.getElementById('phone-share-btn');
-      btn.textContent = t('phone_shared_lbl');
+      btn.innerHTML = icon('check',{size:14}) + ' ' + t('phone_shared_lbl');
       btn.disabled = true;
       if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     }
@@ -1121,7 +1187,7 @@ function applyLangToUI() {
   document.getElementById('st-phone').textContent = T.st_phone;
   document.getElementById('phone-title').textContent = T.phone_title;
   document.getElementById('phone-sub').textContent = T.phone_sub;
-  document.getElementById('phone-share-btn').textContent = phoneShared ? T.phone_shared_lbl : T.phone_share_btn;
+  document.getElementById('phone-share-btn').innerHTML = phoneShared ? (icon('check',{size:14}) + ' ' + T.phone_shared_lbl) : T.phone_share_btn;
   document.getElementById('st-photo').textContent = T.st_photo;
   document.getElementById('photo-add-lbl').textContent = T.photo_add_lbl;
 
@@ -1181,8 +1247,8 @@ function applyLangToUI() {
   document.getElementById('date-apply-btn').textContent = T.date_apply;
   // Main tabs
   document.getElementById('mtab-all').innerHTML = T.mtab_all + ' <span class="tab-count" id="tc-all">'+document.getElementById('tc-all').textContent+'</span>';
-  document.getElementById('mtab-shikoyat').innerHTML = '⚠️ ' + T.mtab_shikoyat + ' <span class="tab-count" id="tc-shikoyat">'+document.getElementById('tc-shikoyat').textContent+'</span>';
-  document.getElementById('mtab-taklif').innerHTML = '💡 ' + T.mtab_taklif + ' <span class="tab-count" id="tc-taklif">'+document.getElementById('tc-taklif').textContent+'</span>';
+  document.getElementById('mtab-shikoyat').innerHTML = icon('alert-triangle',{size:14}) + ' ' + T.mtab_shikoyat + ' <span class="tab-count" id="tc-shikoyat">'+document.getElementById('tc-shikoyat').textContent+'</span>';
+  document.getElementById('mtab-taklif').innerHTML = icon('lightbulb',{size:14}) + ' ' + T.mtab_taklif + ' <span class="tab-count" id="tc-taklif">'+document.getElementById('tc-taklif').textContent+'</span>';
   // Sub tabs
   document.getElementById('stab-new').innerHTML = T.stab_new + ' <span class="sc" id="sc-new">'+document.getElementById('sc-new').textContent+'</span>';
   document.getElementById('stab-progress').innerHTML = T.stab_progress + ' <span class="sc" id="sc-progress">'+document.getElementById('sc-progress').textContent+'</span>';
@@ -1190,8 +1256,8 @@ function applyLangToUI() {
   // Filter dropdown
   document.getElementById('fdd-title').textContent = T.fdd_title;
   document.getElementById('ff-all').textContent = T.ff_all;
-  document.getElementById('ff-open').textContent = T.ff_open;
-  document.getElementById('ff-anon').textContent = T.ff_anon;
+  document.getElementById('ff-open').innerHTML = icon('user',{size:14}) + ' ' + T.ff_open;
+  document.getElementById('ff-anon').innerHTML = icon('eye-off',{size:14}) + ' ' + T.ff_anon;
   // Date filter label
   if (!dateFrom && !dateTo) {
     document.getElementById('date-filter-label').textContent = T.date_all;
@@ -1253,6 +1319,32 @@ function showScreen(name) {
 }
 
 // ===================================================
+// EXCEL EKSPORT (ADMIN)
+// ===================================================
+function openExportModal() {
+  document.getElementById('export-modal-overlay').classList.add('open');
+}
+function closeExportModal() {
+  document.getElementById('export-modal-overlay').classList.remove('open');
+}
+
+function downloadExcelExport() {
+  var from = document.getElementById('export-date-from').value;
+  var to = document.getElementById('export-date-to').value;
+  var type = document.getElementById('export-type-select').value;
+
+  var params = new URLSearchParams();
+  params.set('admin_id', currentUserId);
+  if (from) params.set('date_from', from);
+  if (to) params.set('date_to', to);
+  if (type && type !== 'all') params.set('type', type);
+
+  var url = SERVER_URL + '/admin/export?' + params.toString();
+  window.open(url, '_blank');
+  closeExportModal();
+}
+
+// ===================================================
 // TUG'ILGAN KUNLAR (ADMIN)
 // ===================================================
 var bdaySelectedFile = null;
@@ -1269,10 +1361,10 @@ async function loadBirthdaySummary() {
     var res = await fetch(SERVER_URL + '/admin/employees?admin_id=' + currentUserId);
     var data = await res.json();
     if (!data.ok) { el.textContent = 'Xatolik: ' + (data.error || ''); return; }
-    var html = '📊 Bazada: <b>' + data.count + '</b> ta xodim';
-    if (data.uploaded_at) html += '<br>🕒 Oxirgi yuklangan: ' + data.uploaded_at;
+    var html = icon('bar-chart-2',{size:14,cls:'icon-inline'}) + ' Bazada: <b>' + data.count + '</b> ta xodim';
+    if (data.uploaded_at) html += '<br>' + icon('clock',{size:14,cls:'icon-inline'}) + ' Oxirgi yuklangan: ' + data.uploaded_at;
     if (data.today_birthdays && data.today_birthdays.length) {
-      html += '<br><br>🎉 Bugun tug\'ilgan kun:<br>' + data.today_birthdays.map(function(b){
+      html += '<br><br>' + icon('gift',{size:14,cls:'icon-inline'}) + ' Bugun tug\'ilgan kun:<br>' + data.today_birthdays.map(function(b){
         return '• ' + escapeHtml(b.fio) + (b.filial ? ' (' + escapeHtml(b.filial) + ')' : '');
       }).join('<br>');
     } else {
@@ -1305,7 +1397,7 @@ async function uploadBirthdayFile() {
     var data = await res.json();
     if (data.ok) {
       statusEl.style.color = 'var(--gray-900)';
-      statusEl.textContent = '✅ Muvaffaqiyatli: ' + data.count + ' / ' + data.total + ' ta xodim yuklandi' + (data.skipped > 0 ? ' (' + data.skipped + ' ta qator FIO yoki sana xato bo\'lgani uchun o\'tkazib yuborildi)' : '');
+      statusEl.innerHTML = icon('check-circle',{size:14,cls:'icon-inline'}) + ' Muvaffaqiyatli: ' + data.count + ' / ' + data.total + ' ta xodim yuklandi' + (data.skipped > 0 ? ' (' + data.skipped + ' ta qator FIO yoki sana xato bo\'lgani uchun o\'tkazib yuborildi)' : '');
       bdaySelectedFile = null;
       document.getElementById('bday-file-input').value = '';
       document.getElementById('bday-file-name').textContent = '';
@@ -1313,11 +1405,11 @@ async function uploadBirthdayFile() {
       loadBirthdaySummary();
     } else {
       statusEl.style.color = 'var(--orange)';
-      statusEl.textContent = '❌ ' + (data.error || 'Xatolik yuz berdi');
+      statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' ' + (data.error || 'Xatolik yuz berdi');
     }
   } catch (e) {
     statusEl.style.color = 'var(--orange)';
-    statusEl.textContent = '❌ Server bilan bog\'lanib bo\'lmadi';
+    statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' Server bilan bog\'lanib bo\'lmadi';
   }
 }
 function showError(id) { document.getElementById(id).classList.add('show'); }
@@ -1367,7 +1459,7 @@ function resetForm() {
   document.getElementById('anon-toggle').classList.remove('on');
   var btn = document.getElementById('submit-btn');
   btn.disabled = false;
-  btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
+  btn.innerHTML = '<span class="icon-inline">'+icon('send',{size:18})+'</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
   ['err-type','err-filial','err-text'].forEach(hideError);
 
   // Guest fields reset (photo only — phone status stays as-is, no need to re-ask)
@@ -1431,7 +1523,7 @@ async function submitForm() {
   } catch(err) {
     alert(t('err_send')+err.message);
     btn.disabled = false;
-    btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
+    btn.innerHTML = '<span class="icon-inline">'+icon('send',{size:18})+'</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
   }
 }
 
@@ -1546,7 +1638,7 @@ function getDisplayText(m) {
 function renderMessages(msgs) {
   var list = document.getElementById('messages-list');
   if (!msgs.length) {
-    list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>'+t('empty_msg')+'</p></div>';
+    list.innerHTML='<div class="empty-state"><div class="emoji">'+icon('inbox',{size:40})+'</div><p>'+t('empty_msg')+'</p></div>';
     return;
   }
   list.innerHTML = msgs.map(function(m) {
@@ -1559,7 +1651,7 @@ function renderMessages(msgs) {
     var translatedBadgeHtml = '';
     var originalTextHtml = '';
     if (isTranslated && originalText && originalText !== displayText) {
-      translatedBadgeHtml = '<div class="msg-translated-badge">'+t('translated_badge')+'</div>';
+      translatedBadgeHtml = '<div class="msg-translated-badge icon-inline" style="gap:5px;">'+icon('refresh-cw',{size:12})+t('translated_badge')+'</div>';
       originalTextHtml =
         '<span class="msg-original-toggle" onclick="toggleOriginal(\'orig-'+escapeHtml(m.id)+'\',this)">'+t('show_original')+'</span>'+
         '<div class="msg-original-text" id="orig-'+escapeHtml(m.id)+'">'+escapeHtml(originalText)+'</div>';
@@ -1567,22 +1659,22 @@ function renderMessages(msgs) {
 
     var typeLabel = m.type === 'taklif' ? t('type_taklif') : t('type_shikoyat');
     var roleBadgeHtml = '<div class="msg-role-row"><span class="msg-role-badge '+(m.user_type === 'guest' ? 'guest' : 'employee')+'">'+
-      (m.user_type === 'guest' ? '🙋 ' + t('guest_badge') : '👔 ' + t('employee_badge')) +
+      icon(m.user_type === 'guest' ? 'user' : 'briefcase',{size:12,cls:'icon-inline'}) + (m.user_type === 'guest' ? t('guest_badge') : t('employee_badge')) +
       '</span></div>';
     var chipsHtml = '';
     if (m.filial || m.phone) {
       chipsHtml = '<div class="msg-info-chips">'+
-        (m.filial ? '<span class="msg-chip filial">🏢 '+escapeHtml(m.filial)+'</span>' : '')+
-        (m.phone ? '<span class="msg-chip">📞 '+escapeHtml(m.phone)+'</span>' : '')+
+        (m.filial ? '<span class="msg-chip filial icon-inline">'+icon('map-pin',{size:12})+escapeHtml(m.filial)+'</span>' : '')+
+        (m.phone ? '<span class="msg-chip icon-inline">'+icon('phone',{size:12})+escapeHtml(m.phone)+'</span>' : '')+
       '</div>';
     }
     var photoHtml = m.photo_file_id ? '<div class="msg-photo-thumb-wrap"><img class="msg-photo-thumb" src="'+SERVER_URL+'/photo/'+encodeURIComponent(m.id)+'" alt="" onclick="openPhotoLightbox(this.src)" onerror="this.closest(\'.msg-photo-thumb-wrap\').style.display=\'none\'"></div>' : '';
     var deleteBtnHtml = (s==='done' && canDelete)
       ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="'+t('confirm_delete')+'"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       : '';
-    var replyCountHtml = (m.reply_count > 0) ? '<span class="reply-count-badge">💬 '+m.reply_count+'</span>' : '';
-    var replyBtnHtml = '<button class="reply-btn" onclick="openReplyModal(\''+escapeHtml(m.id)+'\')">'+t('btn_reply')+'</button>';
-    var chatBtnHtml = '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'admin\')">'+t('btn_chat')+'</button>';
+    var replyCountHtml = (m.reply_count > 0) ? '<span class="reply-count-badge icon-inline">'+icon('message-circle',{size:12})+m.reply_count+'</span>' : '';
+    var replyBtnHtml = '<button class="reply-btn icon-inline" style="gap:5px;" onclick="openReplyModal(\''+escapeHtml(m.id)+'\')">'+icon('edit-2',{size:14})+t('btn_reply')+'</button>';
+    var chatBtnHtml = '<button class="chat-btn icon-inline" style="gap:5px;" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'admin\')">'+icon('message-circle',{size:14})+t('btn_chat')+'</button>';
 
     return '<div class="message-card '+slClass(s)+'">'+
       roleBadgeHtml+
@@ -1598,7 +1690,7 @@ function renderMessages(msgs) {
       originalTextHtml+
       '<div class="msg-footer">'+
         '<div class="msg-sender-row">'+
-          ((m.anon||m.isAnon)?'<span class="msg-anon">'+t('anon_lbl')+'</span>':'<span class="msg-sender">'+t('sender_lbl')+escapeHtml(m.sender||'')+'</span>')+
+          ((m.anon||m.isAnon)?'<span class="msg-anon icon-inline" style="gap:4px;">'+icon('eye-off',{size:12})+t('anon_lbl')+'</span>':'<span class="msg-sender icon-inline" style="gap:4px;">'+icon('user',{size:12})+escapeHtml(m.sender||'')+'</span>')+
           deleteBtnHtml+
         '</div>'+
         '<div class="msg-actions-row">'+chatBtnHtml+replyBtnHtml+'</div>'+
@@ -1683,7 +1775,7 @@ async function loadAdminMessages() {
     updateStats(); refreshView();
     document.getElementById('date-filter-label').textContent = t('date_all');
   } catch(err) {
-    document.getElementById('messages-list').innerHTML='<div class="empty-state"><div class="emoji">⚠️</div><p>'+t('server_err')+'</p></div>';
+    document.getElementById('messages-list').innerHTML='<div class="empty-state"><div class="emoji">'+icon('alert-triangle',{size:40})+'</div><p>'+t('server_err')+'</p></div>';
   }
 }
 
@@ -1701,7 +1793,7 @@ async function loadMyMessages(silent) {
     updateMyBadge();
     if (document.getElementById('screen-my').classList.contains('active')) renderMyMessages();
   } catch (err) {
-    if (!silent) document.getElementById('my-messages-list').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div><p>'+t('server_err')+'</p></div>';
+    if (!silent) document.getElementById('my-messages-list').innerHTML = '<div class="empty-state"><div class="emoji">'+icon('alert-triangle',{size:40})+'</div><p>'+t('server_err')+'</p></div>';
   }
 }
 
@@ -1719,7 +1811,7 @@ function openMyRequests() {
 function renderMyMessages() {
   var list = document.getElementById('my-messages-list');
   if (!myMessages.length) {
-    list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>'+t('my_empty')+'</p></div>';
+    list.innerHTML = '<div class="empty-state"><div class="emoji">'+icon('inbox',{size:40})+'</div><p>'+t('my_empty')+'</p></div>';
     return;
   }
   list.innerHTML = myMessages.map(function(m) {
@@ -1730,7 +1822,7 @@ function renderMyMessages() {
     var repliesHtml;
     if (m.replies && m.replies.length) {
       repliesHtml = '<div class="reply-thread">' + m.replies.map(function(r) {
-        return '<div class="reply-bubble"><div class="reply-meta">👮 '+escapeHtml(r.admin_name||'Admin')+'</div><div class="reply-text">'+escapeHtml(r.text)+'</div></div>';
+        return '<div class="reply-bubble"><div class="reply-meta icon-inline">'+icon('shield',{size:12})+escapeHtml(r.admin_name||'Admin')+'</div><div class="reply-text">'+escapeHtml(r.text)+'</div></div>';
       }).join('') + '</div>';
     } else {
       repliesHtml = '<div class="no-reply">'+t('no_reply_yet')+'</div>';
@@ -1740,11 +1832,11 @@ function renderMyMessages() {
         '<span class="msg-type-badge '+m.type+'">'+typeLabel+'</span>'+
         '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
       '</div>'+(unread>0?'<span class="my-unread-dot" onclick="openMyDetail(\''+escapeHtml(m.id)+'\')">'+unread+'</span>':'<span class="msg-time">'+escapeHtml(m.time)+'</span>')+'</div>'+
-      (m.filial?'<div class="msg-filial">'+t('filial_lbl')+escapeHtml(m.filial)+'</div>':'')+
+      (m.filial?'<div class="msg-filial icon-inline" style="gap:4px;">'+icon('map-pin',{size:12})+escapeHtml(m.filial)+'</div>':'')+
       '<div class="msg-text">'+escapeHtml(displayText)+'</div>'+
       repliesHtml+
       '<div class="msg-footer" style="margin-top:10px;"><div></div><div class="msg-footer-right">'+
-        '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'my\')">'+t('btn_chat')+'</button>'+
+        '<button class="chat-btn icon-inline" style="gap:5px;" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'my\')">'+icon('message-circle',{size:14})+t('btn_chat')+'</button>'+
       '</div></div>'+
     '</div>';
   }).join('');
@@ -1816,11 +1908,11 @@ function openChat(msgId, msgInfo, fromScreen) {
   var title = t('chat_title');
   var sub = '';
   if (msgInfo) {
-    var typeLabel = msgInfo.type === 'shikoyat' ? '⚠️ Shikoyat' : '💡 Taklif';
+    var typeLabel = (msgInfo.type === 'shikoyat' ? icon('alert-triangle',{size:13,cls:'icon-inline'}) : icon('lightbulb',{size:13,cls:'icon-inline'})) + (msgInfo.type === 'shikoyat' ? 'Shikoyat' : 'Taklif');
     sub = typeLabel + (msgInfo.filial ? ' — ' + msgInfo.filial : '');
   }
   document.getElementById('chat-header-title').textContent = title;
-  document.getElementById('chat-header-sub').textContent = sub;
+  document.getElementById('chat-header-sub').innerHTML = sub;
 
   // Back button
   document.getElementById('chat-back-btn').onclick = function() {
@@ -1897,7 +1989,7 @@ function updateChatUI() {
   var closeBtn = document.getElementById('chat-toggle-close-btn');
 
   banner.style.display = currentChatClosed ? '' : 'none';
-  banner.textContent = t('chat_closed_banner');
+  banner.innerHTML = icon('lock',{size:13}) + ' ' + t('chat_closed_banner');
 
   var blocked = currentChatClosed && !isAdmin;
   textarea.disabled = blocked;
@@ -1906,8 +1998,8 @@ function updateChatUI() {
   textarea.placeholder = blocked ? (t('chat_closed_banner')) : t('chat_input_ph');
 
   if (isAdmin && closeBtn) {
-    closeBtn.textContent = currentChatClosed ? t('chat_reopen_btn') : t('chat_close_btn');
-    closeBtn.className = 'chat-close-btn' + (currentChatClosed ? ' reopen' : '');
+    closeBtn.innerHTML = currentChatClosed ? (icon('unlock',{size:13}) + ' ' + t('chat_reopen_btn')) : (icon('lock',{size:13}) + ' ' + t('chat_close_btn'));
+    closeBtn.className = 'chat-close-btn icon-inline' + (currentChatClosed ? ' reopen' : '');
   }
 }
 
@@ -1985,8 +2077,8 @@ function setAnonFilter(val) {
   currentAnonFilter = val;
   ['all','open','anon'].forEach(function(k){
     var el=document.getElementById('fc-'+k);
-    if(k===val){el.classList.add('checked');el.textContent='✓';}
-    else{el.classList.remove('checked');el.textContent='';}
+    if(k===val){el.classList.add('checked');el.innerHTML=icon('check',{size:12});}
+    else{el.classList.remove('checked');el.innerHTML='';}
   });
   document.getElementById('filter-icon-btn').classList.toggle('has-filter', val!=='all');
   closeFilterDropdown(); refreshView();
@@ -2055,6 +2147,11 @@ function initApp() {
 // EVENTS
 // ===================================================
 document.addEventListener('DOMContentLoaded', function() {
+
+  // --- Minimal line-icon'larni ishga tushirish ---
+  if (window.feather) feather.replace({ class: 'line-icon', 'stroke-width': 2 });
+  var iconTaklifEl = document.getElementById('icon-taklif');
+  if (iconTaklifEl) iconTaklifEl.innerHTML = icon('lightbulb', { size: 26 });
 
   // --- Check saved lang, skip lang screen if already chosen ---
   var savedLang = localStorage.getItem('app_lang');
@@ -2158,9 +2255,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('date-apply-btn').addEventListener('click', applyDateFilter);
   document.getElementById('date-reset-btn').addEventListener('click', resetDateFilter);
   document.getElementById('date-modal-overlay').addEventListener('click', function(e){if(e.target===this) closeDateModal();});
-  document.querySelectorAll('.date-quick-btn').forEach(function(btn){
+  document.querySelectorAll('.date-quick-btn[data-quick]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      document.querySelectorAll('.date-quick-btn').forEach(function(b){b.classList.remove('selected');});
+      document.querySelectorAll('.date-quick-btn[data-quick]').forEach(function(b){b.classList.remove('selected');});
       this.classList.add('selected');
       var now = new Date(), from = new Date();
       var q = this.getAttribute('data-quick');
@@ -2170,6 +2267,30 @@ document.addEventListener('DOMContentLoaded', function() {
       else if(q==='thismonth') from = new Date(now.getFullYear(),now.getMonth(),1);
       document.getElementById('date-from').value = from.toISOString().slice(0,10);
       document.getElementById('date-to').value = now.toISOString().slice(0,10);
+    });
+  });
+
+  // Excel export modal
+  document.getElementById('export-modal-close').addEventListener('click', closeExportModal);
+  document.getElementById('export-cancel-btn').addEventListener('click', closeExportModal);
+  document.getElementById('export-download-btn').addEventListener('click', downloadExcelExport);
+  document.getElementById('export-modal-overlay').addEventListener('click', function(e){if(e.target===this) closeExportModal();});
+  document.querySelectorAll('.date-quick-btn[data-exp-quick]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.date-quick-btn[data-exp-quick]').forEach(function(b){b.classList.remove('selected');});
+      this.classList.add('selected');
+      var now = new Date(), from = new Date();
+      var q = this.getAttribute('data-exp-quick');
+      if (q === 'all') {
+        document.getElementById('export-date-from').value = '';
+        document.getElementById('export-date-to').value = '';
+        return;
+      }
+      if(q==='week') from.setDate(now.getDate()-7);
+      else if(q==='month') from.setDate(now.getDate()-30);
+      else if(q==='thismonth') from = new Date(now.getFullYear(),now.getMonth(),1);
+      document.getElementById('export-date-from').value = from.toISOString().slice(0,10);
+      document.getElementById('export-date-to').value = now.toISOString().slice(0,10);
     });
   });
 
