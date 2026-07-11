@@ -68,6 +68,14 @@ BIRTHDAY_TZ          = ZoneInfo("Asia/Tashkent")
 BIRTHDAY_PREVIEW_HOUR, BIRTHDAY_PREVIEW_MIN = 9, 30   # adminlarga oldindan xabar
 BIRTHDAY_POST_HOUR,    BIRTHDAY_POST_MIN    = 10, 0   # kanalga avtomatik post
 
+# Supabase/Postgres serverida vaqt har doim UTC bo'yicha saqlanadi (created_at ustunlari),
+# lekin foydalanuvchilarga har doim Toshkent vaqtida ko'rsatilishi kerak. Bazadan qaytgan
+# "naive" (vaqt zonasiz) timestamp'larni ekranga chiqarishdan oldin shu funksiya orqali o'tkazamiz.
+def utc_to_local(dt):
+    if dt is None:
+        return None
+    return dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(BIRTHDAY_TZ)
+
 def _build_google_creds():
     raw_key = os.environ.get("GOOGLE_PRIVATE_KEY", "")
     if "\\n" in raw_key:
@@ -353,7 +361,7 @@ def build_messages_excel(rows):
 
     for r in rows:
         created = r.get("created_at")
-        sana = created.strftime("%d.%m.%Y %H:%M") if created else (r.get("time") or "")
+        sana = utc_to_local(created).strftime("%d.%m.%Y %H:%M") if created else (r.get("time") or "")
         username = r.get("username") or ""
         row_vals = [
             r.get("id", ""),
@@ -598,7 +606,7 @@ def get_chat_messages(message_id):
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute("""
             SELECT id, message_id, sender_type, sender_id, sender_name, text, is_read,
-                   TO_CHAR(created_at, 'DD.MM.YYYY HH24:MI') as created_at
+                   TO_CHAR(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tashkent', 'DD.MM.YYYY HH24:MI') as created_at
             FROM chats WHERE message_id = %s ORDER BY created_at ASC
         """, (message_id,))
         rows = [dict(r) for r in cur.fetchall()]
@@ -1236,7 +1244,7 @@ def get_employees_summary():
         last = cur.fetchone()[0]
         cur.close()
         conn.close()
-        return {"count": count, "uploaded_at": last.strftime("%d.%m.%Y %H:%M") if last else None}
+        return {"count": count, "uploaded_at": utc_to_local(last).strftime("%d.%m.%Y %H:%M") if last else None}
     except Exception as e:
         logger.error(f"get_employees_summary xatolik: {e}")
         return {"count": 0, "uploaded_at": None}
