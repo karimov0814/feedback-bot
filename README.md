@@ -11,13 +11,15 @@ Ikkalasi ham bitta Telegram bot tokenidan foydalanadi va bitta Railway loyihasid
 
 ## 1. Supabase (baza)
 
-1. https://supabase.com — yangi loyiha oching (agar hali yo'q bo'lsa).
-2. **Project Settings → Database → Connection string → URI** dan ulanish satrini nusxalang. Masalan:
+1. https://supabase.com — yangi loyiha oching (agar hali yo'q bo'lsa), kuchli parol o'rnating va uni saqlab qo'ying.
+2. Loyiha dashboardida yuqoridagi **"Connect"** tugmasini bosing.
+3. **Muhim:** "Direct connection" emas, **"Session pooler"** bo'limini tanlang. Sababi: Supabase'ning to'g'ridan-to'g'ri manzili (`db.xxx.supabase.co`) faqat IPv6 orqali ishlaydi, Railway esa IPv6 chiquvchi ulanishlarni qo'llab-quvvatlamaydi — shu sababli Direct connection satridan foydalansangiz, bot Railway'da bazaga ulana olmaydi.
+4. Session pooler satri quyidagicha ko'rinadi:
    ```
-   postgresql://postgres:PAROL@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   postgresql://postgres.abcdxyzproject:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
    ```
-   Bu — `DATABASE_URL` bo'ladi. Botning barcha jadvallari (`messages`, `contacts`, `replies`, `chats`, **`employees`**) shu bazada avtomatik yaratiladi (kod birinchi ishga tushganda `init_db()` chaqiradi).
-3. Boshqa hech narsa qo'lda yaratish shart emas — kod o'zi jadval va ustunlarni tekshirib, yo'q bo'lsa yaratadi.
+   `[YOUR-PASSWORD]` o'rniga haqiqiy parolni yozing (agar parolda `@ # % &` kabi belgilar bo'lsa, ularni URL-encode qiling, masalan `@` → `%40`). Shu to'liq satr — sizning `DATABASE_URL` qiymatingiz.
+5. Boshqa hech narsa qo'lda yaratish shart emas — kod o'zi jadval va ustunlarni (`messages`, `contacts`, `replies`, `chats`, `employees`) birinchi ishga tushganda avtomatik yaratadi (`init_db()`).
 
 ## 2. Railway (deploy)
 
