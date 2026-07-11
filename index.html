@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Taklif & Shikoyat</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    /* ===== MINIMALIST PALETTE: 1 accent (orange) + neutral grayscale ===== */
+    --orange: #EA580C; --orange-light: #FFF7ED;
+    /* Barcha ilgarigi "green / red / amber / blue" endi shu ikki rangga tushirilgan: */
+    --green: #111827; --green-light: #F3F4F6;      /* neytral (taklif, yakunlandi, muvaffaqiyat) */
+    --red: #EA580C; --red-light: #FFF7ED;            /* accent (shikoyat, yangi, xato, o'chirish) */
+    --amber: #4B5563; --amber-light: #F3F4F6;        /* neytral (jarayonda, ogohlantirish) */
+    --blue: #111827; --blue-light: #F3F4F6;          /* neytral (mehmon/moderator belgisi, chat) */
+    --gray-200: #E5E7EB; --gray-400: #9CA3AF;
+    --gray-600: #4B5563; --gray-800: #1F2937; --gray-900: #111827;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 2px 8px rgba(0,0,0,0.10);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #F3F4F6; color: var(--gray-900);
+    min-height: 100vh; padding-bottom: env(safe-area-inset-bottom, 20px);
+    overscroll-behavior: none;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== LANGUAGE SCREEN ===== */
+  #screen-lang {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 32px 24px; text-align: center; background: #F3F4F6;
+  }
+  #screen-lang.active { display: flex; }
+  .lang-logo { font-size: 56px; margin-bottom: 24px; animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+  .lang-title {
+    font-size: 26px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px;
+    animation: fadeUp 0.4s 0.1s ease both;
+  }
+  .lang-sub {
+    font-size: 14px; color: var(--gray-600); margin-bottom: 36px; line-height: 1.6;
+    animation: fadeUp 0.4s 0.18s ease both;
+  }
+  @keyframes fadeUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .lang-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 320px;
+    animation: fadeUp 0.4s 0.26s ease both;
+  }
+  .lang-card {
+    background: white; border: 2px solid var(--gray-200); border-radius: 16px;
+    padding: 24px 16px; cursor: pointer; transition: all 0.18s;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .lang-card:active { transform: scale(0.96); }
+  .lang-card.selected { border-color: var(--orange); background: var(--orange-light); }
+  .lang-flag { font-size: 36px; }
+  .lang-name { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+  .lang-native { font-size: 12px; color: var(--gray-400); }
+  .lang-card.selected .lang-name { color: var(--orange); }
+  .btn-lang-confirm {
+    margin-top: 24px; padding: 15px 40px; background: var(--orange); color: white;
+    font-family: inherit; font-size: 16px; font-weight: 600; border: none;
+    border-radius: var(--radius-sm); cursor: pointer; width: 100%; max-width: 320px;
+    opacity: 0.45; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent;
+    animation: fadeUp 0.4s 0.32s ease both;
+  }
+  .btn-lang-confirm.ready { opacity: 1; }
+
+  /* ===== ROLE SCREEN ===== */
+  #screen-role {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 32px 24px; text-align: center; background: #F3F4F6;
+  }
+  #screen-role.active { display: flex; }
+
+  /* ===== GUEST FIELDS (phone / photo) ===== */
+  .phone-row { display:flex;align-items:center;justify-content:space-between;gap:10px;background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px;margin:0 16px; }
+  .phone-row.shared { border-color: var(--green); background: var(--green-light); }
+  .phone-btn { background:var(--orange);color:white;border:none;border-radius:20px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap; }
+  .phone-btn:disabled { opacity:0.55; }
+  .photo-row { background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px;margin:0 16px; }
+  .photo-add-btn { display:flex;align-items:center;gap:8px;color:var(--orange);font-weight:600;font-size:14px;cursor:pointer;-webkit-tap-highlight-color:transparent; }
+  .photo-preview-wrap { position:relative;margin-top:2px;display:inline-block; }
+  .photo-preview { max-width:100%;max-height:180px;border-radius:8px;display:block; }
+  .photo-remove-btn { position:absolute;top:-8px;right:-8px;width:26px;height:26px;border-radius:50%;background:var(--red);color:white;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+
+  /* ===== ADMIN: guest badge / phone / photo ===== */
+  .msg-role-row { margin-bottom:10px; }
+  .msg-role-badge { display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px; }
+  .msg-role-badge.employee { background:var(--gray-200);color:var(--gray-600); }
+  .msg-role-badge.guest { background:var(--blue-light);color:var(--blue); }
+  .msg-info-chips { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px; }
+  .msg-chip { display:inline-flex;align-items:center;gap:5px;background:#F9FAFB;border:1px solid var(--gray-200);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--gray-600);line-height:1.2; }
+  .msg-chip.filial { color:var(--orange);border-color:#FDE7D2;background:var(--orange-light);font-weight:600; }
+  .msg-photo-thumb-wrap { margin-bottom:10px; }
+  .msg-photo-thumb { max-width:130px;max-height:130px;border-radius:10px;display:block;cursor:pointer;border:1px solid var(--gray-200);object-fit:cover; }
+  .photo-lightbox-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;padding:24px; }
+  .photo-lightbox-overlay.open { display:flex; }
+  .photo-lightbox-overlay img { max-width:100%;max-height:100%;border-radius:10px; }
+  .photo-lightbox-close { position:absolute;top:calc(16px + env(safe-area-inset-top, 0px));right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);color:white;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+
+  /* ===== EMPLOYEE ===== */
+  #screen-employee { padding: 0 0 32px; }
+  .header {
+    background: var(--orange); padding: 20px 16px 16px;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px)); color: white;
+  }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .header-icon { width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px; }
+  .header h1 { font-size:20px;font-weight:700; }
+  .header p { font-size:13px;opacity:0.8;margin-left:52px; }
+
+  /* lang switch pill in header */
+  .lang-switch-pill {
+    position: absolute; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px));
+    background: rgba(255,255,255,0.22); border: 1.5px solid rgba(255,255,255,0.45);
+    border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 700;
+    color: white; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; display: flex; align-items: center; gap: 5px;
+  }
+  .header { position: relative; }
+
+  .section-title { font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-400);margin:20px 0 8px;padding:0 16px; }
+  .type-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px; }
+  .type-card { border:2px solid var(--gray-200);border-radius:var(--radius);padding:16px 12px;text-align:center;cursor:pointer;background:white;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+  .type-card .icon { font-size:28px;margin-bottom:8px; }
+  .type-card .label { font-size:13px;font-weight:600;color:var(--gray-800); }
+  .type-card .desc { font-size:11px;color:var(--gray-400);margin-top:3px; }
+  .type-card.selected-taklif { border-color:var(--green);background:var(--green-light); }
+  .type-card.selected-taklif .label { color:var(--green); }
+  .type-card.selected-shikoyat { border-color:var(--red);background:var(--red-light); }
+  .type-card.selected-shikoyat .label { color:var(--red); }
+  .select-wrapper { position:relative;padding:0 16px; }
+  .select-wrapper::after { content:'▾';position:absolute;right:30px;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none;font-size:14px; }
+  select { width:100%;padding:13px 40px 13px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);background:white;font-family:inherit;font-size:15px;color:var(--gray-800);appearance:none;-webkit-appearance:none;outline:none; }
+  select:focus { border-color:var(--orange); }
+  select.error { border-color:var(--red); }
+  .textarea-wrap { padding:0 16px; }
+  textarea { width:100%;padding:13px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);background:white;font-family:inherit;font-size:15px;color:var(--gray-800);resize:none;outline:none;line-height:1.55; }
+  textarea:focus { border-color:var(--orange); }
+  textarea.error { border-color:var(--red); }
+  .char-count { text-align:right;font-size:11px;color:var(--gray-400);margin-top:5px;padding:0 16px; }
+  .char-count.warn { color:var(--amber); }
+  .anonymous-row { display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px;margin:0 16px; }
+  .anonymous-info { display:flex;align-items:center;gap:10px; }
+  .anon-text .title { font-size:14px;font-weight:600;color:var(--gray-800); }
+  .anon-text .sub { font-size:12px;color:var(--gray-400);margin-top:2px; }
+  .toggle { width:44px;height:24px;background:var(--gray-200);border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent; }
+  .toggle.on { background:var(--orange); }
+  .toggle::after { content:'';position:absolute;width:20px;height:20px;background:white;border-radius:50%;top:2px;left:2px;transition:transform 0.2s;box-shadow:var(--shadow-sm); }
+  .toggle.on::after { transform:translateX(20px); }
+  .field-error { font-size:12px;color:var(--red);margin-top:5px;display:none;padding:0 16px; }
+  .field-error.show { display:block; }
+  .btn-submit { width:calc(100% - 32px);padding:15px;background:var(--orange);color:white;font-family:inherit;font-size:16px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer;margin:24px 16px 0;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent; }
+  .btn-submit:disabled { opacity:0.5; }
+
+  /* ===== SUCCESS ===== */
+  #screen-success { display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:32px 24px;text-align:center; }
+  #screen-success.active { display:flex; }
+  .success-circle { width:90px;height:90px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:24px; }
+  .success-title { font-size:24px;font-weight:700;color:var(--gray-900);margin-bottom:10px; }
+  .success-desc { font-size:15px;color:var(--gray-600);line-height:1.6;max-width:280px; }
+  .success-badge { display:inline-flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green);font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;margin-top:20px; }
+  .btn-new { margin-top:32px;padding:13px 32px;background:var(--orange-light);color:var(--orange);font-family:inherit;font-size:15px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer; }
+
+  /* ===== ADMIN ===== */
+  #screen-admin { display:none;padding:0; }
+  #screen-admin.active { display:block; }
+  .admin-header { background:var(--gray-900);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top, 0px));color:white; }
+  .admin-header-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+  .admin-header h1 { font-size:20px;font-weight:700; }
+  .admin-badge { background:var(--orange);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px; }
+  .admin-badge.mod { background:var(--blue); }
+
+  /* admin lang switch */
+  .admin-lang-pill {
+    background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 20px; padding: 5px 10px; font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.9); cursor: pointer; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+  }
+
+  .date-filter-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+  .date-filter-btn {
+    display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;
+    border:1.5px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.85);font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    transition:all 0.15s;
+  }
+  .date-filter-btn.has-range { background:rgba(255,255,255,0.25);border-color:white;color:white; }
+
+  .date-modal-overlay {
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    z-index:300;align-items:flex-end;justify-content:center;
+  }
+  .date-modal-overlay.open { display:flex; }
+  .date-modal {
+    background:white;border-radius:20px 20px 0 0;
+    width:100%;max-width:480px;padding:20px 20px 32px;
+    animation:slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
+  .date-modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+  .date-modal-title { font-size:16px;font-weight:700;color:var(--gray-900); }
+  .date-modal-close { width:30px;height:30px;border-radius:50%;border:none;background:var(--gray-200);color:var(--gray-600);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center; }
+  .date-quick-btns { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px; }
+  .date-quick-btn { padding:6px 12px;border-radius:16px;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all 0.15s; }
+  .date-quick-btn:active,.date-quick-btn.selected { background:var(--orange-light);border-color:var(--orange);color:var(--orange); }
+  .date-fields { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px; }
+  .date-field label { font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px; }
+  .date-field input[type="date"] { width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:14px;color:var(--gray-800);outline:none;background:white; }
+  .date-field input[type="date"]:focus { border-color:var(--orange); }
+  .date-modal-actions { display:flex;gap:10px; }
+  .date-apply-btn { flex:1;padding:13px;background:var(--orange);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer; }
+  .date-reset-btn { padding:13px 18px;background:var(--gray-200);color:var(--gray-600);border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer; }
+
+  .admin-stats { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
+  .stat-card { background:rgba(255,255,255,0.1);border-radius:var(--radius-sm);padding:12px;text-align:center; }
+  .stat-num { font-size:22px;font-weight:700;color:white; }
+  .stat-lbl { font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px; }
+
+  .main-tabs { display:flex;background:white;border-bottom:2px solid var(--gray-200); }
+  .main-tab { flex:1;padding:12px 8px;text-align:center;font-family:inherit;font-size:13px;font-weight:600;color:var(--gray-400);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;-webkit-tap-highlight-color:transparent; }
+  .main-tab.active { color:var(--orange);border-bottom-color:var(--orange); }
+  .main-tab .tab-count { display:inline-flex;align-items:center;justify-content:center;background:var(--gray-200);color:var(--gray-600);font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 4px;margin-left:4px; }
+  .main-tab.active .tab-count { background:var(--orange);color:white; }
+
+  .sub-tabs-wrapper { background:white;padding:10px 16px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;position:relative; }
+  .sub-tabs { display:flex;gap:6px;flex:1;overflow-x:auto;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain; }
+  .sub-tabs::-webkit-scrollbar { display:none; }
+  .sub-tab { padding:7px 14px;border-radius:20px;flex-shrink:0;font-family:inherit;font-size:12px;font-weight:600;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+  .sub-tab.active-new { border-color:var(--red);background:var(--red-light);color:var(--red); }
+  .sub-tab.active-progress { border-color:var(--amber);background:var(--amber-light);color:var(--amber); }
+  .sub-tab.active-done { border-color:var(--green);background:var(--green-light);color:var(--green); }
+
+  .filter-icon-btn { width:34px;height:34px;border-radius:10px;border:1.5px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;-webkit-tap-highlight-color:transparent;position:relative;touch-action:manipulation; }
+  .filter-icon-btn.has-filter { border-color:var(--orange);background:var(--orange-light); }
+  .filter-icon-btn .filter-dot { position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--orange);border-radius:50%;display:none; }
+  .filter-icon-btn.has-filter .filter-dot { display:block; }
+  .filter-dropdown { display:none;position:absolute;right:16px;top:calc(100% + 4px);background:white;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);z-index:100;min-width:160px;overflow:hidden; }
+  .filter-dropdown.open { display:block; }
+  .filter-dropdown-title { font-size:11px;font-weight:600;color:var(--gray-400);padding:10px 14px 6px;text-transform:uppercase;letter-spacing:0.05em; }
+  .filter-option { display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray-800);-webkit-tap-highlight-color:transparent;touch-action:manipulation; }
+  .filter-checkbox { width:18px;height:18px;border-radius:5px;border:2px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700; }
+  .filter-checkbox.checked { background:var(--orange);border-color:var(--orange);color:white; }
+
+  /* Translation badge on cards */
+  .msg-translated-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; color: var(--blue);
+    background: var(--blue-light); border-radius: 5px; padding: 2px 7px;
+    margin-top: 4px; margin-bottom: 4px;
+  }
+  .msg-original-toggle {
+    font-size: 11px; color: var(--blue); cursor: pointer; text-decoration: underline;
+    display: inline-block; margin-bottom: 6px;
+  }
+  .msg-original-text {
+    font-size: 13px; color: var(--gray-600); line-height: 1.55;
+    background: #F8F9FB; border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 8px; display: none; border-left: 3px solid var(--gray-200);
+    font-style: italic;
+  }
+  .msg-original-text.show { display: block; }
+
+  .messages-list { padding:12px 16px; }
+  .message-card { background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow-sm);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200); }
+  .message-card.sl-new { border-left-color:var(--red); }
+  .message-card.sl-progress { border-left-color:var(--amber); }
+  .message-card.sl-done { border-left-color:var(--green); }
+  .msg-header { display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap; }
+  .msg-meta { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+  .msg-type-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1.5px solid; }
+  .msg-type-badge.taklif { border-color:var(--green);color:var(--green);background:var(--green-light); }
+  .msg-type-badge.shikoyat { border-color:var(--red);color:var(--red);background:var(--red-light); }
+  .msg-status-badge { display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:4px 9px;border-radius:20px;border:1.5px solid; }
+  .msg-status-badge.s-new { border-color:var(--red);color:var(--red);background:var(--red-light); }
+  .msg-status-badge.s-progress { border-color:var(--amber);color:var(--amber);background:var(--amber-light); }
+  .msg-status-badge.s-done { border-color:var(--green);color:var(--green);background:var(--green-light); }
+  .msg-time { font-size:11px;color:var(--gray-400);flex-shrink:0;margin-left:auto; }
+  .msg-filial { font-size:12px;color:var(--orange);font-weight:500;margin-bottom:6px; }
+  .msg-text { font-size:14px;line-height:1.6;color:var(--gray-800);margin-bottom:12px; }
+  .msg-footer { display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--gray-200); }
+  .msg-sender-row { display:flex;align-items:center;justify-content:space-between;gap:8px; }
+  .msg-sender { font-size:12px;color:var(--gray-400); }
+  .msg-anon { font-size:12px;color:var(--amber);font-weight:500; }
+  .msg-footer-right { display:flex;align-items:center;gap:8px; }
+  .msg-footer-right { display:flex;align-items:center;gap:8px; }
+  .msg-actions-row { display:flex;gap:8px; }
+  .msg-actions-row .chat-btn, .msg-actions-row .reply-btn { flex:1;display:flex;align-items:center;justify-content:center; }
+  .status-row { display:flex;gap:6px; }
+  .status-row .status-btn { flex:1;text-align:center; }
+  .status-btn { padding:8px 6px;border-radius:10px;font-family:inherit;font-size:11.5px;font-weight:600;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all 0.15s; }
+  .status-btn.cur-new { border-color:var(--red);background:var(--red-light);color:var(--red); }
+  .status-btn.cur-progress { border-color:var(--amber);background:var(--amber-light);color:var(--amber); }
+  .status-btn.cur-done { border-color:var(--green);background:var(--green-light);color:var(--green); }
+  .delete-btn { background:none;border:none;padding:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:var(--red);opacity:0.55;line-height:1;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:6px; }
+  .delete-btn:active { opacity:1;background:var(--red-light); }
+  .delete-btn svg { display:block;width:16px;height:16px; }
+  .empty-state { text-align:center;padding:60px 24px;color:var(--gray-400); }
+  .empty-state .emoji { font-size:40px;margin-bottom:12px; }
+  .spinner { width:32px;height:32px;border:3px solid var(--gray-200);border-top-color:var(--orange);border-radius:50%;animation:spin 0.7s linear infinite;margin:40px auto 12px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* Translate loading */
+  .translating-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .translating-overlay.show { display: flex; }
+  .translating-box {
+    background: white; border-radius: 16px; padding: 24px 32px;
+    text-align: center; font-size: 15px; font-weight: 600; color: var(--gray-800);
+  }
+  .translating-box .t-spinner {
+    width: 28px; height: 28px; border: 3px solid var(--gray-200);
+    border-top-color: var(--orange); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 12px;
+  }
+
+  /* ===== MENING MUROJAATLARIM ===== */
+  .my-requests-bar {
+    display:flex;align-items:center;justify-content:space-between;background:white;
+    border-radius:var(--radius);padding:14px 16px;margin:16px;box-shadow:var(--shadow-sm);
+    border:1px solid var(--gray-200);cursor:pointer;-webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  .my-requests-bar .mrb-left { display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--gray-800); }
+  .my-requests-bar .mrb-right { display:flex;align-items:center;gap:8px; }
+  .my-badge {
+    background:var(--red);color:white;font-size:11px;font-weight:700;min-width:20px;height:20px;
+    border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 6px;
+  }
+  .chevron { color:var(--gray-400);font-size:18px; }
+  .back-btn {
+    width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);
+    color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;flex-shrink:0;
+  }
+  .my-unread-dot {
+    background:var(--red);color:white;font-size:11px;font-weight:700;min-width:20px;height:20px;
+    border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;
+  }
+  .reply-thread { margin-top:10px;border-top:1px dashed var(--gray-200);padding-top:10px;display:flex;flex-direction:column;gap:8px; }
+  .reply-bubble { background:var(--blue-light);border-radius:10px;padding:8px 12px; }
+  .reply-meta { font-size:11px;font-weight:700;color:var(--blue);margin-bottom:3px; }
+  .reply-text { font-size:13px;color:var(--gray-800);line-height:1.5;white-space:pre-wrap; }
+  .no-reply { margin-top:10px;font-size:12px;color:var(--gray-400);font-style:italic; }
+  .reply-btn {
+    padding:9px 10px;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:600;
+    border:1.5px solid var(--blue);background:var(--blue-light);color:var(--blue);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    display:flex;align-items:center;justify-content:center;gap:5px;
+  }
+  .reply-count-badge {
+    font-size:10px;color:var(--blue);font-weight:600;background:var(--blue-light);
+    border-radius:20px;padding:2px 8px;
+  }
+  #reply-textarea {
+    width:100%;padding:12px;border:1.5px solid var(--gray-200);border-radius:8px;
+    font-family:inherit;font-size:14px;resize:none;outline:none;margin-bottom:8px;
+  }
+  #reply-textarea:focus { border-color:var(--blue); }
+
+  /* ===== CHAT SCREEN ===== */
+  #screen-chat { display:none; flex-direction:column; height:100vh; }
+  #screen-chat.active { display:flex; }
+  .chat-header {
+    background:var(--gray-900); color:white;
+    padding:16px 16px; padding-top:calc(16px + env(safe-area-inset-top,0px));
+    display:flex; align-items:center; gap:12px; flex-shrink:0;
+  }
+  .chat-header-info { flex:1; min-width:0; }
+  .chat-header-title { font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chat-header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
+  .chat-close-btn {
+    padding:7px 12px; background:var(--red); color:white;
+    border:none; border-radius:8px; font-family:inherit; font-size:12px; font-weight:700;
+    cursor:pointer; white-space:nowrap; -webkit-tap-highlight-color:transparent;
+  }
+  .chat-close-btn.reopen { background:var(--green); }
+  .chat-messages {
+    flex:1; overflow-y:auto; padding:12px 16px; display:flex;
+    flex-direction:column; gap:10px; background:#F3F4F6;
+  }
+  .chat-bubble-wrap { display:flex; flex-direction:column; max-width:82%; }
+  .chat-bubble-wrap.me { align-self:flex-end; align-items:flex-end; }
+  .chat-bubble-wrap.other { align-self:flex-start; align-items:flex-start; }
+  .chat-bubble {
+    padding:10px 14px; border-radius:16px; font-size:14px; line-height:1.5;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .chat-bubble-wrap.me .chat-bubble { background:var(--orange); color:white; border-bottom-right-radius:4px; }
+  .chat-bubble-wrap.other .chat-bubble { background:white; color:var(--gray-900); border-bottom-left-radius:4px; box-shadow:var(--shadow-sm); }
+  .chat-bubble-name { font-size:11px; font-weight:700; color:var(--gray-400); margin-bottom:3px; padding:0 4px; }
+  .chat-bubble-time { font-size:10px; color:var(--gray-400); margin-top:3px; padding:0 4px; }
+  .chat-empty { text-align:center; color:var(--gray-400); font-size:13px; margin:auto; padding:32px; }
+  .chat-closed-banner {
+    text-align:center; background:var(--red-light); color:var(--red);
+    font-size:13px; font-weight:600; padding:10px 16px;
+    border-top:1px solid #FDE7D2; flex-shrink:0;
+  }
+  .chat-input-area {
+    display:flex; align-items:flex-end; gap:8px;
+    padding:10px 16px; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));
+    background:white; border-top:1px solid var(--gray-200); flex-shrink:0;
+  }
+  .chat-input-area.disabled { background:#f9fafb; }
+  #chat-textarea {
+    flex:1; padding:10px 14px; border:1.5px solid var(--gray-200);
+    border-radius:20px; font-family:inherit; font-size:14px;
+    resize:none; outline:none; max-height:120px; line-height:1.4;
+    background:white;
+  }
+  #chat-textarea:focus { border-color:var(--orange); }
+  #chat-textarea:disabled { background:#f3f4f6; color:var(--gray-400); }
+  .chat-send-btn {
+    width:40px; height:40px; border-radius:50%; background:var(--orange); color:white;
+    border:none; font-size:18px; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+    transition:opacity 0.15s;
+  }
+  .chat-send-btn:disabled { opacity:0.4; }
+  .chat-btn {
+    padding:9px 10px; border-radius:10px; font-family:inherit; font-size:12.5px; font-weight:600;
+    border:1.5px solid var(--orange); background:var(--orange-light); color:var(--orange);
+    cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+    display:flex;align-items:center;justify-content:center;gap:5px;
+  }
+  .chat-unread-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    background:var(--orange); color:white; font-size:10px; font-weight:700;
+    min-width:16px; height:16px; border-radius:8px; padding:0 4px; margin-left:4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TRANSLATING OVERLAY -->
+<div class="translating-overlay" id="translating-overlay">
+  <div class="translating-box">
+    <div class="t-spinner"></div>
+    <div id="translating-text">Tarjima qilinmoqda...</div>
+  </div>
+</div>
+
+<!-- LANGUAGE SELECT -->
+<div id="screen-lang" class="screen active">
+  <div class="lang-logo">💬</div>
+  <div class="lang-title">Taklif &amp; Shikoyat</div>
+  <div class="lang-sub">Tilni tanlang / Выберите язык</div>
+  <div class="lang-cards">
+    <div class="lang-card" id="lang-uz" onclick="selectLang('uz')">
+      <div class="lang-flag">🇺🇿</div>
+      <div class="lang-name">O'zbek</div>
+      <div class="lang-native">O'zbek tili</div>
+    </div>
+    <div class="lang-card" id="lang-ru" onclick="selectLang('ru')">
+      <div class="lang-flag">🇷🇺</div>
+      <div class="lang-name">Русский</div>
+      <div class="lang-native">Русский язык</div>
+    </div>
+  </div>
+  <button class="btn-lang-confirm" id="btn-lang-confirm" onclick="confirmLang()">Davom etish</button>
+</div>
+
+<!-- ROLE (Filial xodimi / Mehmon) -->
+<div id="screen-role" class="screen">
+  <div class="lang-logo">🙋</div>
+  <div class="lang-title" id="role-title">Siz kimsiz?</div>
+  <div class="lang-sub" id="role-sub">Davom etish uchun tanlang</div>
+  <div class="lang-cards">
+    <div class="lang-card" id="role-employee" onclick="selectRole('employee')">
+      <div class="lang-flag">👔</div>
+      <div class="lang-name" id="role-employee-name">Filial xodimi</div>
+      <div class="lang-native" id="role-employee-desc">Xodimlar uchun</div>
+    </div>
+    <div class="lang-card" id="role-guest" onclick="selectRole('guest')">
+      <div class="lang-flag">🙋</div>
+      <div class="lang-name" id="role-guest-name">Mehmon</div>
+      <div class="lang-native" id="role-guest-desc">Mijozlar uchun</div>
+    </div>
+  </div>
+  <button class="btn-lang-confirm" id="btn-role-confirm" onclick="confirmRole()">Davom etish</button>
+</div>
+
+<!-- EMPLOYEE -->
+<div id="screen-employee" class="screen">
+  <div class="header">
+    <div class="header-top"><div class="header-icon">💬</div><h1 id="h-title">Taklif & Shikoyat</h1></div>
+    <p id="h-sub">Xodimlar uchun muloqot platformasi</p>
+    <div class="lang-switch-pill" onclick="switchLang()" id="lang-switch-pill">RU</div>
+  </div>
+  <div class="my-requests-bar" id="my-requests-bar" onclick="openMyRequests()">
+    <div class="mrb-left">📂 <span id="my-requests-label">Mening murojaatlarim</span></div>
+    <div class="mrb-right">
+      <span class="my-badge" id="my-badge">0</span>
+      <span class="chevron">›</span>
+    </div>
+  </div>
+  <div style="padding-bottom:32px;">
+    <div class="section-title" id="st-type">Murojaat turini tanlang</div>
+    <div class="type-grid">
+      <div class="type-card" id="card-taklif"><div class="icon">💡</div><div class="label" id="lbl-taklif">Taklif</div><div class="desc" id="desc-taklif">Yaxshilash g'oyasi</div></div>
+      <div class="type-card" id="card-shikoyat"><div class="icon">⚠️</div><div class="label" id="lbl-shikoyat">Shikoyat</div><div class="desc" id="desc-shikoyat">Muammo yoki norozilik</div></div>
+    </div>
+    <div class="field-error" id="err-type">Murojaat turini tanlang</div>
+    <div class="section-title" id="st-filial">Filial</div>
+    <div class="select-wrapper">
+      <select id="filial-select">
+        <option value="" id="filial-placeholder">— Filialni tanlang —</option>
+        <option>Novza</option><option>Yunusobod Gallery</option><option>Compass Mall</option>
+        <option>Sergeli</option><option>Anhor</option><option>Scopus Mall</option>
+        <option>Eco</option><option>Andijon Navruz</option><option>Beruniy</option>
+        <option>Glinka</option><option>City Mall</option><option>C1 Wok</option>
+        <option>C1 Street</option><option>Tuzel</option><option>Samarqand Darvoza</option>
+        <option>Alfraganus</option><option>Bosh ofis</option>
+      </select>
+    </div>
+    <div class="field-error" id="err-filial">Filialni tanlang</div>
+    <div class="section-title" id="st-text">Matn</div>
+    <div class="textarea-wrap">
+      <textarea id="msg-text" rows="5" maxlength="1000" placeholder="Fikringizni yozing..."></textarea>
+    </div>
+    <div class="char-count" id="char-count">0 / 1000</div>
+    <div class="field-error" id="err-text">Kamida 10 ta belgi kiriting</div>
+    <div class="section-title employee-only" id="st-privacy">Maxfiylik</div>
+    <div class="anonymous-row employee-only">
+      <div class="anonymous-info">
+        <div style="font-size:20px">🕵️</div>
+        <div class="anon-text"><div class="title" id="anon-title">Anonim yuborish</div><div class="sub" id="anon-sub">Ismingiz ko'rinmaydi</div></div>
+      </div>
+      <div class="toggle" id="anon-toggle"></div>
+    </div>
+
+    <div class="section-title guest-only" id="st-phone" style="display:none;">Telefon raqam</div>
+    <div class="phone-row guest-only" id="phone-row" style="display:none;">
+      <div class="anonymous-info">
+        <div style="font-size:20px">📞</div>
+        <div class="anon-text"><div class="title" id="phone-title">Raqamingiz avtomatik aniqlanadi</div><div class="sub" id="phone-sub">Siz bilan bog'lanish uchun</div></div>
+      </div>
+      <button class="phone-btn" id="phone-share-btn">Ulashish</button>
+    </div>
+
+    <div class="section-title guest-only" id="st-photo" style="display:none;">Rasm (ixtiyoriy)</div>
+    <div class="photo-row guest-only" id="photo-row" style="display:none;">
+      <div class="photo-add-btn" id="photo-add-btn"><span>📷</span><span id="photo-add-lbl">Rasmga olish / tanlash</span></div>
+      <input type="file" accept="image/*" capture="environment" id="photo-input" style="display:none;">
+      <div class="photo-preview-wrap" id="photo-preview-wrap" style="display:none;">
+        <img class="photo-preview" id="photo-preview" src="" alt="">
+        <button class="photo-remove-btn" id="photo-remove-btn" type="button">✕</button>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submit-btn"><span>📤</span><span id="btn-submit-lbl">Yuborish</span></button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="screen-success" class="screen">
+  <div class="success-circle">✅</div>
+  <div class="success-title" id="succ-title">Yuborildi!</div>
+  <div class="success-desc" id="succ-desc">Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!</div>
+  <div class="success-badge">🔒 <span id="succ-badge">Maxfiylik kafolatlangan</span></div>
+  <button class="btn-new" id="btn-new">Yangi murojaat</button>
+</div>
+
+<!-- MENING MUROJAATLARIM -->
+<div id="screen-my" class="screen">
+  <div class="header" style="background:var(--gray-900);">
+    <div class="header-top">
+      <button class="back-btn" id="my-back-btn" onclick="showScreen('employee')">←</button>
+      <h1 id="my-title">Mening murojaatlarim</h1>
+    </div>
+  </div>
+  <div class="messages-list" id="my-messages-list"><div class="spinner"></div></div>
+</div>
+
+<!-- ADMIN -->
+<div id="screen-admin" class="screen">
+  <div class="admin-header">
+    <div class="admin-header-top">
+      <h1 id="admin-title">Admin Panel</h1>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="openBirthdaysScreen()" style="background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:10px;padding:6px 10px;font-size:16px;cursor:pointer;" title="Tug'ilgan kunlar">🎂</button>
+        <div class="admin-lang-pill" onclick="switchLang()" id="admin-lang-pill">RU</div>
+        <div class="admin-badge" id="admin-role-badge">ADMIN</div>
+      </div>
+    </div>
+
+    <div class="date-filter-row">
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);" id="lbl-stat-period">Statistika muddati</div>
+      <button class="date-filter-btn" id="date-filter-btn">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span id="date-filter-label"></span>
+      </button>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-lbl" id="stat-lbl-total">Jami</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-taklif">—</div><div class="stat-lbl" id="stat-lbl-taklif">Takliflar</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-shikoyat">—</div><div class="stat-lbl" id="stat-lbl-shikoyat">Shikoyatlar</div></div>
+    </div>
+  </div>
+
+  <!-- DATE MODAL -->
+  <div class="date-modal-overlay" id="date-modal-overlay">
+    <div class="date-modal">
+      <div class="date-modal-header">
+        <span class="date-modal-title" id="dmodal-title">Davrni tanlang</span>
+        <button class="date-modal-close" id="date-modal-close">✕</button>
+      </div>
+      <div class="date-quick-btns">
+        <button class="date-quick-btn" data-quick="week" id="dq-week">Oxirgi 7 kun</button>
+        <button class="date-quick-btn" data-quick="month" id="dq-month">Oxirgi 30 kun</button>
+        <button class="date-quick-btn" data-quick="year" id="dq-year">Oxirgi 1 yil</button>
+        <button class="date-quick-btn" data-quick="thismonth" id="dq-thismonth">Shu oy</button>
+      </div>
+      <div class="date-fields">
+        <div class="date-field"><label id="dfield-from">Dan</label><input type="date" id="date-from"></div>
+        <div class="date-field"><label id="dfield-to">Gacha</label><input type="date" id="date-to"></div>
+      </div>
+      <div class="date-modal-actions">
+        <button class="date-reset-btn" id="date-reset-btn">Tozalash</button>
+        <button class="date-apply-btn" id="date-apply-btn">Filtrlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPLY MODAL -->
+  <div class="date-modal-overlay" id="reply-modal-overlay">
+    <div class="date-modal">
+      <div class="date-modal-header">
+        <span class="date-modal-title" id="reply-modal-title">Javob yozish</span>
+        <button class="date-modal-close" id="reply-modal-close">✕</button>
+      </div>
+      <textarea id="reply-textarea" rows="4" placeholder="Javobingizni yozing..."></textarea>
+      <div class="field-error" id="err-reply-empty" style="padding:0;margin-bottom:10px;">Javob matnini kiriting</div>
+      <button class="date-apply-btn" id="reply-send-btn" style="width:100%;">Yuborish</button>
+    </div>
+  </div>
+
+  <!-- MAIN TABS -->
+  <div class="main-tabs">
+    <button class="main-tab active" data-tab="all" id="mtab-all">Hammasi<span class="tab-count" id="tc-all">0</span></button>
+    <button class="main-tab" data-tab="shikoyat" id="mtab-shikoyat">⚠️ Shikoyat<span class="tab-count" id="tc-shikoyat">0</span></button>
+    <button class="main-tab" data-tab="taklif" id="mtab-taklif">💡 Taklif<span class="tab-count" id="tc-taklif">0</span></button>
+  </div>
+
+  <!-- SUB TABS -->
+  <div class="sub-tabs-wrapper">
+    <div class="sub-tabs" id="sub-tabs-scroll">
+      <button class="sub-tab active-new" data-sub="new" id="stab-new">Yangi<span class="sc" id="sc-new">0</span></button>
+      <button class="sub-tab" data-sub="progress" id="stab-progress">Jarayonda<span class="sc" id="sc-progress">0</span></button>
+      <button class="sub-tab" data-sub="done" id="stab-done">Yakunlandi<span class="sc" id="sc-done">0</span></button>
+    </div>
+    <button class="filter-icon-btn" id="filter-icon-btn">
+      ⚙️<span class="filter-dot"></span>
+    </button>
+    <div class="filter-dropdown" id="filter-dropdown">
+      <div class="filter-dropdown-title" id="fdd-title">Filter</div>
+      <div class="filter-option" data-anon="all"><div class="filter-checkbox checked" id="fc-all">✓</div><span id="ff-all">Hammasi</span></div>
+      <div class="filter-option" data-anon="open"><div class="filter-checkbox" id="fc-open"></div><span id="ff-open">👤 Ochiq</span></div>
+      <div class="filter-option" data-anon="anon"><div class="filter-checkbox" id="fc-anon"></div><span id="ff-anon">🕵️ Anonim</span></div>
+    </div>
+  </div>
+
+  <div class="messages-list" id="messages-list"><div class="spinner"></div></div>
+</div>
+
+<!-- BIRTHDAYS SCREEN -->
+<div id="screen-birthdays" class="screen">
+  <div class="admin-header">
+    <div class="admin-header-top">
+      <button class="back-btn" onclick="showScreen('admin')">←</button>
+      <h1>🎂 Tug'ilgan kunlar</h1>
+      <div></div>
+    </div>
+  </div>
+  <div style="padding:16px;">
+    <div style="background:white;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow-sm);">
+      <div id="bday-summary" style="font-size:14px;color:var(--gray-900);line-height:1.7;">Yuklanmoqda...</div>
+    </div>
+
+    <div style="background:white;border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--gray-900);">Excel fayl yuklash</div>
+      <div style="font-size:12px;color:var(--gray-600);margin-bottom:12px;line-height:1.5;">
+        Fayl ustunlari: <b>FIO</b>, <b>Filial</b>, <b>Tug'ilgan_sana</b>. Yangi fayl eski ma'lumotlarni to'liq almashtiradi.
+      </div>
+      <input type="file" id="bday-file-input" accept=".xlsx,.xls" style="display:none;" onchange="onBirthdayFileSelected()">
+      <button onclick="document.getElementById('bday-file-input').click()" class="date-apply-btn" style="width:100%;margin-bottom:8px;">📎 Faylni tanlash</button>
+      <div id="bday-file-name" style="font-size:12px;color:var(--gray-600);margin-bottom:10px;"></div>
+      <button id="bday-upload-btn" onclick="uploadBirthdayFile()" class="date-apply-btn" style="width:100%;display:none;">⬆️ Yuklash</button>
+      <div id="bday-upload-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="screen-chat" class="screen">
+  <div class="chat-header">
+    <button class="back-btn" id="chat-back-btn">←</button>
+    <div class="chat-header-info">
+      <div class="chat-header-title" id="chat-header-title">Chat</div>
+      <div class="chat-header-sub" id="chat-header-sub"></div>
+    </div>
+    <button class="chat-close-btn" id="chat-toggle-close-btn" onclick="toggleChatClosed()" style="display:none">🔒 Yopish</button>
+  </div>
+  <div class="chat-messages" id="chat-messages-list"></div>
+  <div class="chat-closed-banner" id="chat-closed-banner" style="display:none">🔒 Chat yopilgan — yozish mumkin emas</div>
+  <div class="chat-input-area" id="chat-input-area">
+    <textarea id="chat-textarea" rows="1" placeholder="Xabar yozing..."></textarea>
+    <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">➤</button>
+  </div>
+</div>
+
+<!-- PHOTO LIGHTBOX (rasmni mini app ichida ko'rish) -->
+<div class="photo-lightbox-overlay" id="photo-lightbox-overlay" onclick="closePhotoLightbox()">
+  <button class="photo-lightbox-close" onclick="event.stopPropagation();closePhotoLightbox()">✕</button>
+  <img id="photo-lightbox-img" src="" alt="">
+</div>
+
+<script>
+const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
+
+// ===================================================
+// I18N — barcha matnlar
+// ===================================================
+var LANG = {
+  uz: {
+    // Lang screen
+    lang_continue: 'Davom etish',
+    // Header
+    app_title: "Taklif & Shikoyat",
+    app_sub: "Xodimlar uchun muloqot platformasi",
+    lang_switch_pill: 'RU',
+    // Role screen
+    role_title: "Siz kimsiz?",
+    role_sub: "Davom etish uchun tanlang",
+    role_employee_name: "Filial xodimi",
+    role_employee_desc: "Xodimlar uchun",
+    role_guest_name: "Mehmon",
+    role_guest_desc: "Mijozlar uchun",
+    // Guest: phone
+    st_phone: "Telefon raqam",
+    phone_title: "Raqamingiz avtomatik aniqlanadi",
+    phone_sub: "Siz bilan bog'lanish uchun",
+    phone_share_btn: "Ulashish",
+    phone_shared_lbl: "✅ Ulashildi",
+    phone_not_supported: "Bu funksiya qo'llab-quvvatlanmaydi",
+    // Guest: photo
+    st_photo: "Rasm (ixtiyoriy)",
+    photo_add_lbl: "Rasmga olish / tanlash",
+    // Admin: guest badge
+    guest_badge: "Mehmon",
+    employee_badge: "Xodim",
+    view_photo: "Rasmni ko'rish",
+    // Employee form
+    st_type: "Murojaat turini tanlang",
+    lbl_taklif: "Taklif",
+    desc_taklif: "Yaxshilash g'oyasi",
+    lbl_shikoyat: "Shikoyat",
+    desc_shikoyat: "Muammo yoki norozilik",
+    err_type: "Murojaat turini tanlang",
+    st_filial: "Filial",
+    filial_placeholder: "— Filialni tanlang —",
+    err_filial: "Filialni tanlang",
+    st_text: "Matn",
+    textarea_ph: "Fikringizni yozing...",
+    err_text: "Kamida 10 ta belgi kiriting",
+    st_privacy: "Maxfiylik",
+    anon_title: "Anonim yuborish",
+    anon_sub: "Ismingiz ko'rinmaydi",
+    btn_submit: "Yuborish",
+    btn_sending: "Yuborilmoqda...",
+    // Success
+    succ_title: "Yuborildi!",
+    succ_desc: "Murojaatingiz mas'ul shaxsga yetkazildi. Rahmat!",
+    succ_badge: "Maxfiylik kafolatlangan",
+    btn_new: "Yangi murojaat",
+    // Admin
+    admin_title: "Admin Panel",
+    lbl_stat_period: "Statistika muddati",
+    date_all: "Barcha vaqt",
+    stat_lbl_total: "Jami",
+    stat_lbl_taklif: "Takliflar",
+    stat_lbl_shikoyat: "Shikoyatlar",
+    // Date modal
+    dmodal_title: "Davrni tanlang",
+    dq_week: "Oxirgi 7 kun",
+    dq_month: "Oxirgi 30 kun",
+    dq_year: "Oxirgi 1 yil",
+    dq_thismonth: "Shu oy",
+    dfield_from: "Dan",
+    dfield_to: "Gacha",
+    date_reset: "Tozalash",
+    date_apply: "Filtrlash",
+    // Main tabs
+    mtab_all: "Hammasi",
+    mtab_shikoyat: "Shikoyat",
+    mtab_taklif: "Taklif",
+    // Sub tabs
+    stab_new: "Yangi",
+    stab_progress: "Jarayonda",
+    stab_done: "Yakunlandi",
+    // Filter dropdown
+    fdd_title: "Filter",
+    ff_all: "Hammasi",
+    ff_open: "👤 Ochiq",
+    ff_anon: "🕵️ Anonim",
+    // Message card
+    type_taklif: "TAKLIF",
+    type_shikoyat: "SHIKOYAT",
+    status_new: "Yangi",
+    status_progress: "Ko'rib chiqilmoqda",
+    status_done: "Yakunlandi",
+    anon_lbl: "🕵️ Anonim",
+    sender_lbl: "👤 ",
+    filial_lbl: "🏢 ",
+    // Status btns
+    sbtn_new: "Yangi",
+    sbtn_progress: "Ko'rib chiqilmoqda",
+    sbtn_done: "Yakunlandi",
+    // Empty
+    empty_msg: "Murojaatlar yo'q",
+    server_err: "Serverga ulanib bo'lmadi",
+    // Translated badge
+    translated_badge: "🤖 Tarjima (RU→UZ)",
+    show_original: "Asl matnni ko'rish",
+    hide_original: "Yashirish",
+    translating: "Tarjima qilinmoqda...",
+    // Admin lang
+    admin_lang_pill: 'RU',
+    // Confirm delete
+    confirm_delete: "Bu murojaatni o'chirib tashlaysizmi?",
+    // Error
+    err_send: "Xatolik: ",
+    // Mening murojaatlarim
+    my_requests_label: "Mening murojaatlarim",
+    my_title: "Mening murojaatlarim",
+    my_empty: "Sizda hali murojaat yo'q",
+    no_reply_yet: "Hali javob yo'q",
+    // Admin reply
+    btn_reply: "✍️ Javob yozish",
+    reply_modal_title: "Javob yozish",
+    reply_placeholder: "Javobingizni yozing...",
+    reply_send: "Yuborish",
+    err_reply_empty: "Javob matnini kiriting",
+    // Chat
+    btn_chat: "💬 Chat",
+    chat_title: "Chat",
+    chat_close_btn: "🔒 Chatni yopish",
+    chat_reopen_btn: "🔓 Qayta ochish",
+    chat_closed_banner: "🔒 Chat yopilgan — yozish mumkin emas",
+    chat_input_ph: "Xabar yozing...",
+    chat_empty: "Hali xabar yo'q. Birinchi bo'lib yozing!",
+    chat_badge_unread: "yangi xabar",
+  },
+  ru: {
+    lang_continue: 'Продолжить',
+    app_title: "Предложения & Жалобы",
+    app_sub: "Платформа общения для сотрудников",
+    lang_switch_pill: 'UZ',
+    // Role screen
+    role_title: "Кто вы?",
+    role_sub: "Выберите, чтобы продолжить",
+    role_employee_name: "Сотрудник филиала",
+    role_employee_desc: "Для сотрудников",
+    role_guest_name: "Гость",
+    role_guest_desc: "Для клиентов",
+    // Guest: phone
+    st_phone: "Номер телефона",
+    phone_title: "Ваш номер определяется автоматически",
+    phone_sub: "Чтобы мы могли связаться с вами",
+    phone_share_btn: "Поделиться",
+    phone_shared_lbl: "✅ Отправлено",
+    phone_not_supported: "Эта функция не поддерживается",
+    // Guest: photo
+    st_photo: "Фото (необязательно)",
+    photo_add_lbl: "Сделать фото / выбрать",
+    // Admin: guest badge
+    guest_badge: "Гость",
+    employee_badge: "Сотрудник",
+    view_photo: "Смотреть фото",
+    st_type: "Выберите тип обращения",
+    lbl_taklif: "Предложение",
+    desc_taklif: "Идея по улучшению",
+    lbl_shikoyat: "Жалоба",
+    desc_shikoyat: "Проблема или недовольство",
+    err_type: "Выберите тип обращения",
+    st_filial: "Филиал",
+    filial_placeholder: "— Выберите филиал —",
+    err_filial: "Выберите филиал",
+    st_text: "Текст",
+    textarea_ph: "Напишите ваше мнение...",
+    err_text: "Введите не менее 10 символов",
+    st_privacy: "Конфиденциальность",
+    anon_title: "Анонимная отправка",
+    anon_sub: "Ваше имя не будет видно",
+    btn_submit: "Отправить",
+    btn_sending: "Отправляется...",
+    succ_title: "Отправлено!",
+    succ_desc: "Ваше обращение передано ответственному лицу. Спасибо!",
+    succ_badge: "Конфиденциальность гарантирована",
+    btn_new: "Новое обращение",
+    admin_title: "Админ панель",
+    lbl_stat_period: "Период статистики",
+    date_all: "Всё время",
+    stat_lbl_total: "Всего",
+    stat_lbl_taklif: "Предложения",
+    stat_lbl_shikoyat: "Жалобы",
+    dmodal_title: "Выберите период",
+    dq_week: "Последние 7 дней",
+    dq_month: "Последние 30 дней",
+    dq_year: "Последний год",
+    dq_thismonth: "Этот месяц",
+    dfield_from: "С",
+    dfield_to: "По",
+    date_reset: "Сбросить",
+    date_apply: "Применить",
+    mtab_all: "Все",
+    mtab_shikoyat: "Жалобы",
+    mtab_taklif: "Предложения",
+    stab_new: "Новые",
+    stab_progress: "В обработке",
+    stab_done: "Завершено",
+    fdd_title: "Фильтр",
+    ff_all: "Все",
+    ff_open: "👤 Открытые",
+    ff_anon: "🕵️ Анонимные",
+    type_taklif: "ПРЕДЛОЖЕНИЕ",
+    type_shikoyat: "ЖАЛОБА",
+    status_new: "Новое",
+    status_progress: "В обработке",
+    status_done: "Завершено",
+    anon_lbl: "🕵️ Анонимно",
+    sender_lbl: "👤 ",
+    filial_lbl: "🏢 ",
+    sbtn_new: "Новое",
+    sbtn_progress: "В обработке",
+    sbtn_done: "Завершено",
+    empty_msg: "Обращений нет",
+    server_err: "Не удалось подключиться к серверу",
+    translated_badge: "🤖 Перевод (UZ→RU)",
+    show_original: "Показать оригинал",
+    hide_original: "Скрыть",
+    translating: "Переводим...",
+    admin_lang_pill: 'UZ',
+    confirm_delete: "Удалить это обращение?",
+    err_send: "Ошибка: ",
+    // Мои обращения
+    my_requests_label: "Мои обращения",
+    my_title: "Мои обращения",
+    my_empty: "У вас пока нет обращений",
+    no_reply_yet: "Ответов еще нет",
+    // Admin reply
+    btn_reply: "✍️ Написать ответ",
+    reply_modal_title: "Написать ответ",
+    reply_placeholder: "Напишите ваш ответ...",
+    reply_send: "Отправить",
+    err_reply_empty: "Введите текст ответа",
+    // Chat
+    btn_chat: "💬 Чат",
+    chat_title: "Чат",
+    chat_close_btn: "🔒 Закрыть чат",
+    chat_reopen_btn: "🔓 Открыть снова",
+    chat_closed_banner: "🔒 Чат закрыт — отправка недоступна",
+    chat_input_ph: "Напишите сообщение...",
+    chat_empty: "Сообщений пока нет. Напишите первым!",
+    chat_badge_unread: "новое",
+  }
+};
+
+// ===================================================
+// STATE
+// ===================================================
+var currentLang = 'uz'; // will be set on lang select
+var selectedLangConfirmed = false;
+var selectedType = '', isAnon = false, allMessages = [];
+var selectedRole = '', userType = ''; // 'employee' or 'guest'
+var phoneShared = false, photoBase64 = null;
+var currentMainTab = 'all', currentSubTab = 'new', currentAnonFilter = 'all';
+var dateFrom = null, dateTo = null;
+var isAdmin = false, canDelete = false, userRole = 'user';
+// Translation cache: { msgId: { uz: '...', ru: '...' } }
+var translationCache = {};
+// Mening murojaatlarim
+var myMessages = [], myUnreadTotal = 0;
+var currentReplyMsgId = null;
+
+// ===== CHAT STATE =====
+var currentChatMsgId = null;
+var currentChatClosed = false;
+var chatPollTimer = null;
+var chatFromScreen = 'admin'; // which screen opened chat
+
+var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : {};
+if (tg.ready) tg.ready();
+if (tg.expand) tg.expand();
+
+var urlParams = new URLSearchParams(window.location.search);
+var urlAdminFlag = urlParams.get('admin') === '1';
+var urlViewMy = urlParams.get('view') === 'my';
+var currentUserId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : 0;
+
+// ===================================================
+// LANGUAGE
+// ===================================================
+function t(key) { return (LANG[currentLang] && LANG[currentLang][key]) || key; }
+
+function selectLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-uz').classList.toggle('selected', lang === 'uz');
+  document.getElementById('lang-ru').classList.toggle('selected', lang === 'ru');
+  var btn = document.getElementById('btn-lang-confirm');
+  btn.textContent = lang === 'uz' ? 'Davom etish' : 'Продолжить';
+  btn.classList.add('ready');
+}
+
+function confirmLang() {
+  if (!currentLang) return;
+  selectedLangConfirmed = true;
+  localStorage.setItem('app_lang', currentLang);
+  applyLangToUI();
+  // Now decide which screen to show
+  initApp();
+}
+
+function selectRole(role) {
+  selectedRole = role;
+  document.getElementById('role-employee').classList.toggle('selected', role === 'employee');
+  document.getElementById('role-guest').classList.toggle('selected', role === 'guest');
+  document.getElementById('btn-role-confirm').classList.add('ready');
+}
+
+function confirmRole() {
+  if (!selectedRole) return;
+  userType = selectedRole;
+  applyGuestUI();
+  showScreen('employee');
+  loadMyMessages();
+  if (userType === 'guest') initGuestPhoneStatus();
+}
+
+// Mehmon uchun telefon raqamini avtomatik aniqlash:
+// avval bazada allaqachon saqlangan raqam bor-yo'qligini tekshiramiz,
+// bo'lmasa Telegramning o'z native so'rovini avtomatik chaqiramiz.
+async function initGuestPhoneStatus() {
+  function markShared() {
+    phoneShared = true;
+    document.getElementById('phone-row').classList.add('shared');
+    var btn = document.getElementById('phone-share-btn');
+    btn.textContent = t('phone_shared_lbl');
+    btn.disabled = true;
+  }
+  if (!currentUserId) { requestGuestPhone(); return; }
+  try {
+    var res = await fetch(SERVER_URL + '/contact/' + currentUserId);
+    var data = await res.json();
+    if (data.ok && data.phone) { markShared(); }
+    else { requestGuestPhone(); }
+  } catch (e) { requestGuestPhone(); }
+}
+
+function requestGuestPhone() {
+  if (!tg.requestContact) return;
+  tg.requestContact(function(shared){
+    if (shared) {
+      phoneShared = true;
+      document.getElementById('phone-row').classList.add('shared');
+      var btn = document.getElementById('phone-share-btn');
+      btn.textContent = t('phone_shared_lbl');
+      btn.disabled = true;
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    }
+  });
+}
+
+function applyGuestUI() {
+  var isGuest = userType === 'guest';
+  document.querySelectorAll('.guest-only').forEach(function(el){ el.style.display = isGuest ? '' : 'none'; });
+  document.querySelectorAll('.employee-only').forEach(function(el){ el.style.display = isGuest ? 'none' : ''; });
+  if (isGuest) { isAnon = false; document.getElementById('anon-toggle').classList.remove('on'); }
+}
+
+function switchLang() {
+  currentLang = currentLang === 'uz' ? 'ru' : 'uz';
+  localStorage.setItem('app_lang', currentLang);
+  applyLangToUI();
+  refreshView();
+  if (myMessages && myMessages.length) renderMyMessages();
+}
+
+function applyLangToUI() {
+  var L = currentLang;
+  var T = LANG[L];
+  document.documentElement.lang = L;
+
+  // Lang screen button
+  document.getElementById('btn-lang-confirm').textContent = T.lang_continue;
+
+  // Role screen
+  document.getElementById('role-title').textContent = T.role_title;
+  document.getElementById('role-sub').textContent = T.role_sub;
+  document.getElementById('role-employee-name').textContent = T.role_employee_name;
+  document.getElementById('role-employee-desc').textContent = T.role_employee_desc;
+  document.getElementById('role-guest-name').textContent = T.role_guest_name;
+  document.getElementById('role-guest-desc').textContent = T.role_guest_desc;
+  document.getElementById('btn-role-confirm').textContent = T.lang_continue;
+
+  // Guest: phone / photo
+  document.getElementById('st-phone').textContent = T.st_phone;
+  document.getElementById('phone-title').textContent = T.phone_title;
+  document.getElementById('phone-sub').textContent = T.phone_sub;
+  document.getElementById('phone-share-btn').textContent = phoneShared ? T.phone_shared_lbl : T.phone_share_btn;
+  document.getElementById('st-photo').textContent = T.st_photo;
+  document.getElementById('photo-add-lbl').textContent = T.photo_add_lbl;
+
+  // Employee
+  document.getElementById('h-title').textContent = T.app_title;
+  document.getElementById('h-sub').textContent = T.app_sub;
+  document.getElementById('lang-switch-pill').textContent = T.lang_switch_pill;
+  document.getElementById('st-type').textContent = T.st_type;
+  document.getElementById('lbl-taklif').textContent = T.lbl_taklif;
+  document.getElementById('desc-taklif').textContent = T.desc_taklif;
+  document.getElementById('lbl-shikoyat').textContent = T.lbl_shikoyat;
+  document.getElementById('desc-shikoyat').textContent = T.desc_shikoyat;
+  document.getElementById('err-type').textContent = T.err_type;
+  document.getElementById('st-filial').textContent = T.st_filial;
+  document.getElementById('filial-placeholder').textContent = T.filial_placeholder;
+  document.getElementById('err-filial').textContent = T.err_filial;
+  document.getElementById('st-text').textContent = T.st_text;
+  document.getElementById('msg-text').placeholder = T.textarea_ph;
+  document.getElementById('err-text').textContent = T.err_text;
+  document.getElementById('st-privacy').textContent = T.st_privacy;
+  document.getElementById('anon-title').textContent = T.anon_title;
+  document.getElementById('anon-sub').textContent = T.anon_sub;
+  document.getElementById('btn-submit-lbl').textContent = T.btn_submit;
+
+  // Success
+  document.getElementById('succ-title').textContent = T.succ_title;
+  document.getElementById('succ-desc').textContent = T.succ_desc;
+  document.getElementById('succ-badge').textContent = T.succ_badge;
+  document.getElementById('btn-new').textContent = T.btn_new;
+
+  // Mening murojaatlarim
+  document.getElementById('my-requests-label').textContent = T.my_requests_label;
+  document.getElementById('my-title').textContent = T.my_title;
+
+  // Reply modal
+  document.getElementById('reply-modal-title').textContent = T.reply_modal_title;
+  document.getElementById('reply-textarea').placeholder = T.reply_placeholder;
+  document.getElementById('reply-send-btn').textContent = T.reply_send;
+  document.getElementById('err-reply-empty').textContent = T.err_reply_empty;
+
+  // Admin header
+  document.getElementById('admin-title').textContent = T.admin_title;
+  document.getElementById('admin-lang-pill').textContent = T.admin_lang_pill;
+  document.getElementById('lbl-stat-period').textContent = T.lbl_stat_period;
+  document.getElementById('stat-lbl-total').textContent = T.stat_lbl_total;
+  document.getElementById('stat-lbl-taklif').textContent = T.stat_lbl_taklif;
+  document.getElementById('stat-lbl-shikoyat').textContent = T.stat_lbl_shikoyat;
+  // Date modal
+  document.getElementById('dmodal-title').textContent = T.dmodal_title;
+  document.getElementById('dq-week').textContent = T.dq_week;
+  document.getElementById('dq-month').textContent = T.dq_month;
+  document.getElementById('dq-year').textContent = T.dq_year;
+  document.getElementById('dq-thismonth').textContent = T.dq_thismonth;
+  document.getElementById('dfield-from').textContent = T.dfield_from;
+  document.getElementById('dfield-to').textContent = T.dfield_to;
+  document.getElementById('date-reset-btn').textContent = T.date_reset;
+  document.getElementById('date-apply-btn').textContent = T.date_apply;
+  // Main tabs
+  document.getElementById('mtab-all').innerHTML = T.mtab_all + ' <span class="tab-count" id="tc-all">'+document.getElementById('tc-all').textContent+'</span>';
+  document.getElementById('mtab-shikoyat').innerHTML = '⚠️ ' + T.mtab_shikoyat + ' <span class="tab-count" id="tc-shikoyat">'+document.getElementById('tc-shikoyat').textContent+'</span>';
+  document.getElementById('mtab-taklif').innerHTML = '💡 ' + T.mtab_taklif + ' <span class="tab-count" id="tc-taklif">'+document.getElementById('tc-taklif').textContent+'</span>';
+  // Sub tabs
+  document.getElementById('stab-new').innerHTML = T.stab_new + ' <span class="sc" id="sc-new">'+document.getElementById('sc-new').textContent+'</span>';
+  document.getElementById('stab-progress').innerHTML = T.stab_progress + ' <span class="sc" id="sc-progress">'+document.getElementById('sc-progress').textContent+'</span>';
+  document.getElementById('stab-done').innerHTML = T.stab_done + ' <span class="sc" id="sc-done">'+document.getElementById('sc-done').textContent+'</span>';
+  // Filter dropdown
+  document.getElementById('fdd-title').textContent = T.fdd_title;
+  document.getElementById('ff-all').textContent = T.ff_all;
+  document.getElementById('ff-open').textContent = T.ff_open;
+  document.getElementById('ff-anon').textContent = T.ff_anon;
+  // Date filter label
+  if (!dateFrom && !dateTo) {
+    document.getElementById('date-filter-label').textContent = T.date_all;
+  }
+  // Translating overlay
+  document.getElementById('translating-text').textContent = T.translating;
+}
+
+// ===================================================
+// TRANSLATE via Anthropic API
+// ===================================================
+async function translateText(text, targetLang) {
+  var cacheKey = text.slice(0, 60) + '_' + targetLang;
+  if (translationCache[cacheKey]) return translationCache[cacheKey];
+
+  var systemPrompt = targetLang === 'ru'
+    ? 'Ты переводчик. Переведи текст с узбекского на русский. Верни ТОЛЬКО перевод, без пояснений, без кавычек.'
+    : "Siz tarjimonisiz. Matnni ruscha tilidan o'zbek tiliga tarjima qiling. FAQAT tarjimani qaytaring, tushuntirishsiz.";
+
+  var res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: text }]
+    })
+  });
+  var data = await res.json();
+  var translated = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text.trim() : text;
+  translationCache[cacheKey] = translated;
+  return translated;
+}
+
+// Detect if text is likely written in the OTHER language than currentLang
+// Simple heuristic: Uzbek uses specific chars, Russian uses Cyrillic
+function detectLang(text) {
+  var cyrillicCount = (text.match(/[а-яёА-ЯЁ]/g) || []).length;
+  var latinCount = (text.match(/[a-zA-Zа-яёА-ЯЁ\u0400-\u04FF]/g) || []).length;
+  var uzSpecific = (text.match(/[oʻgʻ']/g) || []).length;
+  // If mostly Cyrillic Russian
+  if (cyrillicCount > latinCount * 0.5 && cyrillicCount > 4) return 'ru';
+  return 'uz';
+}
+
+function needsTranslation(text) {
+  var detectedLang = detectLang(text);
+  return detectedLang !== currentLang;
+}
+
+// ===================================================
+// SCREEN / FORM UTILS
+// ===================================================
+function showScreen(name) {
+  if (name !== 'chat' && chatPollTimer) stopChatPoll();
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+// ===================================================
+// TUG'ILGAN KUNLAR (ADMIN)
+// ===================================================
+var bdaySelectedFile = null;
+
+function openBirthdaysScreen() {
+  showScreen('birthdays');
+  loadBirthdaySummary();
+}
+
+async function loadBirthdaySummary() {
+  var el = document.getElementById('bday-summary');
+  el.textContent = 'Yuklanmoqda...';
+  try {
+    var res = await fetch(SERVER_URL + '/admin/employees?admin_id=' + currentUserId);
+    var data = await res.json();
+    if (!data.ok) { el.textContent = 'Xatolik: ' + (data.error || ''); return; }
+    var html = '📊 Bazada: <b>' + data.count + '</b> ta xodim';
+    if (data.uploaded_at) html += '<br>🕒 Oxirgi yuklangan: ' + data.uploaded_at;
+    if (data.today_birthdays && data.today_birthdays.length) {
+      html += '<br><br>🎉 Bugun tug\'ilgan kun:<br>' + data.today_birthdays.map(function(b){
+        return '• ' + escapeHtml(b.fio) + (b.filial ? ' (' + escapeHtml(b.filial) + ')' : '');
+      }).join('<br>');
+    } else {
+      html += '<br><br>Bugun tug\'ilgan kun yo\'q.';
+    }
+    el.innerHTML = html;
+  } catch (e) {
+    el.textContent = 'Server bilan bog\'lanib bo\'lmadi';
+  }
+}
+
+function onBirthdayFileSelected() {
+  var input = document.getElementById('bday-file-input');
+  bdaySelectedFile = input.files[0] || null;
+  document.getElementById('bday-file-name').textContent = bdaySelectedFile ? ('Tanlandi: ' + bdaySelectedFile.name) : '';
+  document.getElementById('bday-upload-btn').style.display = bdaySelectedFile ? 'block' : 'none';
+  document.getElementById('bday-upload-status').textContent = '';
+}
+
+async function uploadBirthdayFile() {
+  if (!bdaySelectedFile) return;
+  var statusEl = document.getElementById('bday-upload-status');
+  statusEl.style.color = 'var(--gray-600)';
+  statusEl.textContent = 'Yuklanmoqda...';
+  try {
+    var fd = new FormData();
+    fd.append('file', bdaySelectedFile);
+    fd.append('admin_id', currentUserId);
+    var res = await fetch(SERVER_URL + '/admin/employees/upload', { method: 'POST', body: fd });
+    var data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = 'var(--gray-900)';
+      statusEl.textContent = '✅ Muvaffaqiyatli: ' + data.count + ' ta xodim yuklandi';
+      bdaySelectedFile = null;
+      document.getElementById('bday-file-input').value = '';
+      document.getElementById('bday-file-name').textContent = '';
+      document.getElementById('bday-upload-btn').style.display = 'none';
+      loadBirthdaySummary();
+    } else {
+      statusEl.style.color = 'var(--orange)';
+      statusEl.textContent = '❌ ' + (data.error || 'Xatolik yuz berdi');
+    }
+  } catch (e) {
+    statusEl.style.color = 'var(--orange)';
+    statusEl.textContent = '❌ Server bilan bog\'lanib bo\'lmadi';
+  }
+}
+function showError(id) { document.getElementById(id).classList.add('show'); }
+function hideError(id) { document.getElementById(id).classList.remove('show'); }
+function escapeHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function getStatus(m) { return m.status || 'new'; }
+function statusBadgeClass(s) { return s==='done'?'s-done':s==='progress'||s==='in_progress'?'s-progress':'s-new'; }
+function statusLabel(s) {
+  if (s==='done') return t('status_done');
+  if (s==='progress'||s==='in_progress') return t('status_progress');
+  return t('status_new');
+}
+function slClass(s) { return s==='done'?'sl-done':s==='progress'||s==='in_progress'?'sl-progress':'sl-new'; }
+function statusBtnClass(s) { return s==='done'?'cur-done':s==='progress'||s==='in_progress'?'cur-progress':'cur-new'; }
+
+// ===================================================
+// EMPLOYEE FORM
+// ===================================================
+function selectType(type) {
+  selectedType = type;
+  document.getElementById('card-taklif').className = 'type-card'+(type==='taklif'?' selected-taklif':'');
+  document.getElementById('card-shikoyat').className = 'type-card'+(type==='shikoyat'?' selected-shikoyat':'');
+  hideError('err-type');
+}
+function toggleAnon() {
+  isAnon = !isAnon;
+  document.getElementById('anon-toggle').classList.toggle('on', isAnon);
+}
+function validate() {
+  var ok = true;
+  if (!selectedType) { showError('err-type'); ok = false; }
+  if (!document.getElementById('filial-select').value) { showError('err-filial'); document.getElementById('filial-select').classList.add('error'); ok = false; }
+  if (document.getElementById('msg-text').value.trim().length < 10) { showError('err-text'); document.getElementById('msg-text').classList.add('error'); ok = false; }
+  return ok;
+}
+function resetForm() {
+  selectedType = ''; isAnon = false;
+  document.getElementById('card-taklif').className = 'type-card';
+  document.getElementById('card-shikoyat').className = 'type-card';
+  document.getElementById('filial-select').value = '';
+  document.getElementById('filial-select').classList.remove('error');
+  document.getElementById('msg-text').value = '';
+  document.getElementById('msg-text').classList.remove('error');
+  document.getElementById('char-count').textContent = '0 / 1000';
+  document.getElementById('anon-toggle').classList.remove('on');
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
+  ['err-type','err-filial','err-text'].forEach(hideError);
+
+  // Guest fields reset (photo only — phone status stays as-is, no need to re-ask)
+  photoBase64 = null;
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('photo-add-btn').style.display = 'flex';
+
+  applyGuestUI();
+  showScreen('employee');
+}
+
+async function submitForm() {
+  if (!validate()) return;
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span><span>' + t('btn_sending') + '</span>';
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  var senderName = user ? (user.first_name + (user.last_name ? ' '+user.last_name : '')) : "Noma'lum";
+  var originalText = document.getElementById('msg-text').value.trim();
+
+  // Translate text to the OTHER language for storage
+  var textUz = '', textRu = '';
+  try {
+    if (currentLang === 'uz') {
+      textUz = originalText;
+      textRu = await translateText(originalText, 'ru');
+    } else {
+      textRu = originalText;
+      textUz = await translateText(originalText, 'uz');
+    }
+  } catch(e) {
+    textUz = originalText; textRu = originalText;
+  }
+
+  try {
+    var res = await fetch(SERVER_URL+'/send', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: selectedType,
+        filial: document.getElementById('filial-select').value,
+        text: originalText,
+        text_uz: textUz,
+        text_ru: textRu,
+        lang: currentLang,
+        anon: (userType === 'guest') ? false : isAnon,
+        time: new Date().toLocaleString('uz-UZ',{timeZone:'Asia/Tashkent'}),
+        sender_name: senderName,
+        username: user && user.username ? user.username : '',
+        user_id: currentUserId || null,
+        user_type: userType || 'employee',
+        photo_base64: photoBase64 || null
+      })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      photoBase64 = null;
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      showScreen('success');
+    } else throw new Error(data.error||'Xatolik');
+  } catch(err) {
+    alert(t('err_send')+err.message);
+    btn.disabled = false;
+    btn.innerHTML = '<span>📤</span><span id="btn-submit-lbl">'+t('btn_submit')+'</span>';
+  }
+}
+
+// ===================================================
+// DATE FILTER
+// ===================================================
+function toDisplayDate(d) {
+  return d.toLocaleDateString(currentLang === 'ru' ? 'ru-RU' : 'uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function openDateModal() {
+  if (!document.getElementById('date-to').value) {
+    document.getElementById('date-to').value = new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('date-modal-overlay').classList.add('open');
+}
+function closeDateModal() {
+  document.getElementById('date-modal-overlay').classList.remove('open');
+}
+function applyDateFilter() {
+  var f = document.getElementById('date-from').value;
+  var tv = document.getElementById('date-to').value;
+  dateFrom = f ? new Date(f) : null;
+  dateTo = tv ? new Date(tv+'T23:59:59') : null;
+  var btn = document.getElementById('date-filter-btn');
+  var lbl = document.getElementById('date-filter-label');
+  if (dateFrom || dateTo) {
+    var fromStr = dateFrom ? toDisplayDate(dateFrom) : '...';
+    var toStr = dateTo ? toDisplayDate(dateTo) : '...';
+    lbl.textContent = fromStr+' – '+toStr;
+    btn.classList.add('has-range');
+  } else {
+    lbl.textContent = t('date_all');
+    btn.classList.remove('has-range');
+  }
+  closeDateModal();
+  updateStats(); refreshView();
+}
+function resetDateFilter() {
+  dateFrom = null; dateTo = null;
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  document.getElementById('date-filter-label').textContent = t('date_all');
+  document.getElementById('date-filter-btn').classList.remove('has-range');
+  closeDateModal(); updateStats(); refreshView();
+}
+function parseMessageDate(m) {
+  if (!m.time) return null;
+  var str = String(m.time);
+  var match = str.match(/(\d{1,2})[\.\/](\d{1,2})[\.\/](\d{4})(?:,?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (match) {
+    return new Date(parseInt(match[3]),parseInt(match[2])-1,parseInt(match[1]),match[4]?parseInt(match[4]):0,match[5]?parseInt(match[5]):0,match[6]?parseInt(match[6]):0);
+  }
+  var d = new Date(str); if (!isNaN(d)) return d; return null;
+}
+function filterByDate(msgs) {
+  if (!dateFrom && !dateTo) return msgs;
+  return msgs.filter(function(m) {
+    var d = parseMessageDate(m);
+    if (!d) return true;
+    if (dateFrom && d < dateFrom) return false;
+    if (dateTo && d > dateTo) return false;
+    return true;
+  });
+}
+
+// ===================================================
+// ADMIN STATS & RENDER
+// ===================================================
+function updateStats() {
+  var filtered = filterByDate(allMessages);
+  document.getElementById('stat-total').textContent = filtered.length;
+  document.getElementById('stat-taklif').textContent = filtered.filter(function(m){return m.type==='taklif';}).length;
+  document.getElementById('stat-shikoyat').textContent = filtered.filter(function(m){return m.type==='shikoyat';}).length;
+  document.getElementById('tc-all').textContent = allMessages.length;
+  document.getElementById('tc-shikoyat').textContent = allMessages.filter(function(m){return m.type==='shikoyat';}).length;
+  document.getElementById('tc-taklif').textContent = allMessages.filter(function(m){return m.type==='taklif';}).length;
+}
+function getByMainTab(tab) {
+  if (tab==='taklif') return allMessages.filter(function(m){return m.type==='taklif';});
+  if (tab==='shikoyat') return allMessages.filter(function(m){return m.type==='shikoyat';});
+  return allMessages;
+}
+function applyAnonFilter(msgs) {
+  if (currentAnonFilter==='anon') return msgs.filter(function(m){return m.anon||m.isAnon;});
+  if (currentAnonFilter==='open') return msgs.filter(function(m){return !m.anon&&!m.isAnon;});
+  return msgs;
+}
+function updateSubCounts(base) {
+  document.getElementById('sc-new').textContent = base.filter(function(m){return getStatus(m)==='new';}).length;
+  document.getElementById('sc-progress').textContent = base.filter(function(m){var s=getStatus(m);return s==='progress'||s==='in_progress';}).length;
+  document.getElementById('sc-done').textContent = base.filter(function(m){return getStatus(m)==='done';}).length;
+}
+function getFinalMessages() {
+  var base = getByMainTab(currentMainTab);
+  base = filterByDate(base);
+  if (currentMainTab==='all') base = applyAnonFilter(base);
+  updateSubCounts(base);
+  if (currentSubTab==='progress') return base.filter(function(m){var s=getStatus(m);return s==='progress'||s==='in_progress';});
+  if (currentSubTab==='done') return base.filter(function(m){return getStatus(m)==='done';});
+  return base.filter(function(m){return getStatus(m)==='new';});
+}
+
+// Get the text to display based on current language and message
+function getDisplayText(m) {
+  // If message has stored translation for current lang, use it
+  if (currentLang === 'ru' && m.text_ru) return { text: m.text_ru, isTranslated: (m.lang === 'uz'), original: m.text };
+  if (currentLang === 'uz' && m.text_uz) return { text: m.text_uz, isTranslated: (m.lang === 'ru'), original: m.text };
+  // Fallback: return original text
+  return { text: m.text || m.content || '', isTranslated: false, original: null };
+}
+
+function renderMessages(msgs) {
+  var list = document.getElementById('messages-list');
+  if (!msgs.length) {
+    list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>'+t('empty_msg')+'</p></div>';
+    return;
+  }
+  list.innerHTML = msgs.map(function(m) {
+    var s = getStatus(m);
+    var displayData = getDisplayText(m);
+    var displayText = displayData.text;
+    var isTranslated = displayData.isTranslated;
+    var originalText = displayData.original;
+
+    var translatedBadgeHtml = '';
+    var originalTextHtml = '';
+    if (isTranslated && originalText && originalText !== displayText) {
+      translatedBadgeHtml = '<div class="msg-translated-badge">'+t('translated_badge')+'</div>';
+      originalTextHtml =
+        '<span class="msg-original-toggle" onclick="toggleOriginal(\'orig-'+escapeHtml(m.id)+'\',this)">'+t('show_original')+'</span>'+
+        '<div class="msg-original-text" id="orig-'+escapeHtml(m.id)+'">'+escapeHtml(originalText)+'</div>';
+    }
+
+    var typeLabel = m.type === 'taklif' ? t('type_taklif') : t('type_shikoyat');
+    var roleBadgeHtml = '<div class="msg-role-row"><span class="msg-role-badge '+(m.user_type === 'guest' ? 'guest' : 'employee')+'">'+
+      (m.user_type === 'guest' ? '🙋 ' + t('guest_badge') : '👔 ' + t('employee_badge')) +
+      '</span></div>';
+    var chipsHtml = '';
+    if (m.filial || m.phone) {
+      chipsHtml = '<div class="msg-info-chips">'+
+        (m.filial ? '<span class="msg-chip filial">🏢 '+escapeHtml(m.filial)+'</span>' : '')+
+        (m.phone ? '<span class="msg-chip">📞 '+escapeHtml(m.phone)+'</span>' : '')+
+      '</div>';
+    }
+    var photoHtml = m.photo_file_id ? '<div class="msg-photo-thumb-wrap"><img class="msg-photo-thumb" src="'+SERVER_URL+'/photo/'+encodeURIComponent(m.id)+'" alt="" onclick="openPhotoLightbox(this.src)" onerror="this.closest(\'.msg-photo-thumb-wrap\').style.display=\'none\'"></div>' : '';
+    var deleteBtnHtml = (s==='done' && canDelete)
+      ? '<button class="delete-btn" onclick="deleteMessage(\''+escapeHtml(m.id)+'\',this)" title="'+t('confirm_delete')+'"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M6 4V3h4v1M5 4v8h6V4H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      : '';
+    var replyCountHtml = (m.reply_count > 0) ? '<span class="reply-count-badge">💬 '+m.reply_count+'</span>' : '';
+    var replyBtnHtml = '<button class="reply-btn" onclick="openReplyModal(\''+escapeHtml(m.id)+'\')">'+t('btn_reply')+'</button>';
+    var chatBtnHtml = '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'admin\')">'+t('btn_chat')+'</button>';
+
+    return '<div class="message-card '+slClass(s)+'">'+
+      roleBadgeHtml+
+      '<div class="msg-header"><div class="msg-meta">'+
+        '<span class="msg-type-badge '+m.type+'">'+typeLabel+'</span>'+
+        '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
+        replyCountHtml+
+      '</div><span class="msg-time">'+escapeHtml(m.time)+'</span></div>'+
+      chipsHtml+
+      photoHtml+
+      translatedBadgeHtml+
+      '<div class="msg-text">'+escapeHtml(displayText)+'</div>'+
+      originalTextHtml+
+      '<div class="msg-footer">'+
+        '<div class="msg-sender-row">'+
+          ((m.anon||m.isAnon)?'<span class="msg-anon">'+t('anon_lbl')+'</span>':'<span class="msg-sender">'+t('sender_lbl')+escapeHtml(m.sender||'')+'</span>')+
+          deleteBtnHtml+
+        '</div>'+
+        '<div class="msg-actions-row">'+chatBtnHtml+replyBtnHtml+'</div>'+
+        '<div class="status-row">'+
+          ['new','progress','done'].map(function(st){
+            var cls=(s===st||(s==='in_progress'&&st==='progress'))?statusBtnClass(st):'';
+            var stLbls = {new:t('sbtn_new'),progress:t('sbtn_progress'),done:t('sbtn_done')};
+            return '<button class="status-btn '+cls+'" onclick="changeStatus(\''+escapeHtml(m.id)+'\',\''+st+'\',this)">'+stLbls[st]+'</button>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function toggleOriginal(id, btn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('show');
+  btn.textContent = el.classList.contains('show') ? t('hide_original') : t('show_original');
+}
+
+function openPhotoLightbox(src) {
+  document.getElementById('photo-lightbox-img').src = src;
+  document.getElementById('photo-lightbox-overlay').classList.add('open');
+}
+function closePhotoLightbox() {
+  document.getElementById('photo-lightbox-overlay').classList.remove('open');
+  document.getElementById('photo-lightbox-img').src = '';
+}
+
+function refreshView() { renderMessages(getFinalMessages()); }
+
+// ===================================================
+// STATUS & DELETE
+// ===================================================
+async function changeStatus(msgId, newStatus, clickedBtn) {
+  var card = clickedBtn.closest('.message-card');
+  var btns = card.querySelectorAll('.status-btn');
+  btns.forEach(function(b){b.disabled=true;b.style.opacity='0.5';});
+  try {
+    var res = await fetch(SERVER_URL+'/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:msgId,status:newStatus})});
+    var data = await res.json();
+    if (data.ok) {
+      var msg = allMessages.find(function(m){return m.id===msgId;});
+      if (msg) msg.status = newStatus;
+      updateStats(); refreshView();
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else throw new Error(data.error);
+  } catch(err) {
+    alert(t('err_send')+err.message);
+    btns.forEach(function(b){b.disabled=false;b.style.opacity='1';});
+  }
+}
+async function deleteMessage(msgId, btn) {
+  if (!canDelete) return;
+  if (!confirm(t('confirm_delete'))) return;
+  btn.disabled=true; btn.style.opacity='0.5';
+  try {
+    var res = await fetch(SERVER_URL+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:msgId})});
+    var data = await res.json();
+    if (data.ok) {
+      allMessages = allMessages.filter(function(m){return m.id!==msgId;});
+      updateStats(); refreshView();
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else throw new Error(data.error);
+  } catch(err) {
+    alert(t('err_send')+err.message);
+    btn.disabled=false; btn.style.opacity='1';
+  }
+}
+
+// ===================================================
+// LOAD ADMIN MESSAGES
+// ===================================================
+async function loadAdminMessages() {
+  document.getElementById('messages-list').innerHTML='<div class="spinner"></div>';
+  try {
+    var res = await fetch(SERVER_URL+'/messages');
+    var data = await res.json();
+    allMessages = (data.ok&&data.messages)?data.messages:[];
+    updateStats(); refreshView();
+    document.getElementById('date-filter-label').textContent = t('date_all');
+  } catch(err) {
+    document.getElementById('messages-list').innerHTML='<div class="empty-state"><div class="emoji">⚠️</div><p>'+t('server_err')+'</p></div>';
+  }
+}
+
+// ===================================================
+// MENING MUROJAATLARIM (xodim uchun)
+// ===================================================
+async function loadMyMessages(silent) {
+  if (!currentUserId) return;
+  if (!silent) document.getElementById('my-messages-list').innerHTML = '<div class="spinner"></div>';
+  try {
+    var res = await fetch(SERVER_URL + '/my-messages/' + currentUserId);
+    var data = await res.json();
+    myMessages = (data.ok && data.messages) ? data.messages : [];
+    myUnreadTotal = myMessages.reduce(function(sum, m){ return sum + (m.unread_count || 0); }, 0);
+    updateMyBadge();
+    if (document.getElementById('screen-my').classList.contains('active')) renderMyMessages();
+  } catch (err) {
+    if (!silent) document.getElementById('my-messages-list').innerHTML = '<div class="empty-state"><div class="emoji">⚠️</div><p>'+t('server_err')+'</p></div>';
+  }
+}
+
+function updateMyBadge() {
+  var b = document.getElementById('my-badge');
+  if (myUnreadTotal > 0) { b.style.display = 'inline-flex'; b.textContent = myUnreadTotal; }
+  else { b.style.display = 'none'; }
+}
+
+function openMyRequests() {
+  showScreen('my');
+  loadMyMessages();
+}
+
+function renderMyMessages() {
+  var list = document.getElementById('my-messages-list');
+  if (!myMessages.length) {
+    list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>'+t('my_empty')+'</p></div>';
+    return;
+  }
+  list.innerHTML = myMessages.map(function(m) {
+    var s = getStatus(m);
+    var typeLabel = m.type === 'taklif' ? t('type_taklif') : t('type_shikoyat');
+    var unread = m.unread_count || 0;
+    var displayText = getDisplayText(m).text;
+    var repliesHtml;
+    if (m.replies && m.replies.length) {
+      repliesHtml = '<div class="reply-thread">' + m.replies.map(function(r) {
+        return '<div class="reply-bubble"><div class="reply-meta">👮 '+escapeHtml(r.admin_name||'Admin')+'</div><div class="reply-text">'+escapeHtml(r.text)+'</div></div>';
+      }).join('') + '</div>';
+    } else {
+      repliesHtml = '<div class="no-reply">'+t('no_reply_yet')+'</div>';
+    }
+    return '<div class="message-card '+slClass(s)+'">'+
+      '<div class="msg-header"><div class="msg-meta">'+
+        '<span class="msg-type-badge '+m.type+'">'+typeLabel+'</span>'+
+        '<span class="msg-status-badge '+statusBadgeClass(s)+'">'+statusLabel(s)+'</span>'+
+      '</div>'+(unread>0?'<span class="my-unread-dot" onclick="openMyDetail(\''+escapeHtml(m.id)+'\')">'+unread+'</span>':'<span class="msg-time">'+escapeHtml(m.time)+'</span>')+'</div>'+
+      (m.filial?'<div class="msg-filial">'+t('filial_lbl')+escapeHtml(m.filial)+'</div>':'')+
+      '<div class="msg-text">'+escapeHtml(displayText)+'</div>'+
+      repliesHtml+
+      '<div class="msg-footer" style="margin-top:10px;"><div></div><div class="msg-footer-right">'+
+        '<button class="chat-btn" onclick="openChat(\''+escapeHtml(m.id)+'\','+JSON.stringify({type:m.type,filial:m.filial||''}).replace(/"/g,'&quot;')+',\'my\')">'+t('btn_chat')+'</button>'+
+      '</div></div>'+
+    '</div>';
+  }).join('');
+}
+
+function openMyDetail(id) {
+  var m = myMessages.find(function(x){ return x.id === id; });
+  if (!m || !(m.unread_count > 0)) return;
+  fetch(SERVER_URL+'/reply/read', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message_id:id})})
+    .then(function(){
+      m.unread_count = 0;
+      (m.replies||[]).forEach(function(r){ r.is_read = true; });
+      myUnreadTotal = myMessages.reduce(function(sum,x){ return sum + (x.unread_count||0); }, 0);
+      updateMyBadge();
+      renderMyMessages();
+    })
+    .catch(function(){});
+}
+
+// ===================================================
+// ADMIN JAVOB YOZISH
+// ===================================================
+function openReplyModal(id) {
+  currentReplyMsgId = id;
+  document.getElementById('reply-textarea').value = '';
+  hideError('err-reply-empty');
+  document.getElementById('reply-modal-overlay').classList.add('open');
+}
+function closeReplyModal() {
+  document.getElementById('reply-modal-overlay').classList.remove('open');
+  currentReplyMsgId = null;
+}
+async function sendReply() {
+  var text = document.getElementById('reply-textarea').value.trim();
+  if (!text) { showError('err-reply-empty'); return; }
+  hideError('err-reply-empty');
+  var btn = document.getElementById('reply-send-btn');
+  btn.disabled = true;
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  var adminName = user ? (user.first_name + (user.last_name ? ' '+user.last_name : '')) : 'Admin';
+  try {
+    var res = await fetch(SERVER_URL+'/reply', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message_id: currentReplyMsgId, admin_id: currentUserId, admin_name: adminName, text: text })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      var msg = allMessages.find(function(m){ return m.id === currentReplyMsgId; });
+      if (msg) msg.reply_count = (msg.reply_count||0) + 1;
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      closeReplyModal();
+      refreshView();
+    } else throw new Error(data.error||'Xatolik');
+  } catch (err) {
+    alert(t('err_send')+err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ===================================================
+// CHAT
+// ===================================================
+function openChat(msgId, msgInfo, fromScreen) {
+  currentChatMsgId = msgId;
+  chatFromScreen = fromScreen || 'admin';
+
+  // Set header
+  var title = t('chat_title');
+  var sub = '';
+  if (msgInfo) {
+    var typeLabel = msgInfo.type === 'shikoyat' ? '⚠️ Shikoyat' : '💡 Taklif';
+    sub = typeLabel + (msgInfo.filial ? ' — ' + msgInfo.filial : '');
+  }
+  document.getElementById('chat-header-title').textContent = title;
+  document.getElementById('chat-header-sub').textContent = sub;
+
+  // Back button
+  document.getElementById('chat-back-btn').onclick = function() {
+    stopChatPoll();
+    showScreen(chatFromScreen);
+    if (chatFromScreen === 'admin') refreshView();
+    else renderMyMessages();
+  };
+
+  // Show/hide close button (admin only)
+  var closeBtn = document.getElementById('chat-toggle-close-btn');
+  if (isAdmin) {
+    closeBtn.style.display = '';
+  } else {
+    closeBtn.style.display = 'none';
+  }
+
+  showScreen('chat');
+  loadChatMessages(true);
+  startChatPoll();
+}
+
+function startChatPoll() {
+  stopChatPoll();
+  chatPollTimer = setInterval(function(){ loadChatMessages(false); }, 5000);
+}
+function stopChatPoll() {
+  if (chatPollTimer) { clearInterval(chatPollTimer); chatPollTimer = null; }
+}
+
+async function loadChatMessages(scroll) {
+  if (!currentChatMsgId) return;
+  var reader = isAdmin ? 'admin' : 'employee';
+  try {
+    var res = await fetch(SERVER_URL + '/chat/messages/' + currentChatMsgId + '?reader=' + reader);
+    var data = await res.json();
+    if (!data.ok) return;
+    currentChatClosed = !!data.chat_closed;
+    renderChatMessages(data.messages, scroll);
+    updateChatUI();
+  } catch(e) {}
+}
+
+function renderChatMessages(msgs, scroll) {
+  var el = document.getElementById('chat-messages-list');
+  if (!msgs || msgs.length === 0) {
+    el.innerHTML = '<div class="chat-empty">' + t('chat_empty') + '</div>';
+    return;
+  }
+
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  var myId = user ? user.id : currentUserId;
+
+  el.innerHTML = msgs.map(function(m) {
+    var isMe = isAdmin ? (m.sender_type === 'admin') : (m.sender_type === 'employee');
+    var wrapCls = 'chat-bubble-wrap ' + (isMe ? 'me' : 'other');
+    var name = escapeHtml(m.sender_name || (m.sender_type === 'admin' ? 'Admin' : 'Xodim'));
+    var timeStr = m.created_at || '';
+    return '<div class="' + wrapCls + '">' +
+      (!isMe ? '<div class="chat-bubble-name">' + name + '</div>' : '') +
+      '<div class="chat-bubble">' + escapeHtml(m.text) + '</div>' +
+      '<div class="chat-bubble-time">' + timeStr + '</div>' +
+    '</div>';
+  }).join('');
+
+  if (scroll) el.scrollTop = el.scrollHeight;
+}
+
+function updateChatUI() {
+  var banner = document.getElementById('chat-closed-banner');
+  var inputArea = document.getElementById('chat-input-area');
+  var textarea = document.getElementById('chat-textarea');
+  var sendBtn = document.getElementById('chat-send-btn');
+  var closeBtn = document.getElementById('chat-toggle-close-btn');
+
+  banner.style.display = currentChatClosed ? '' : 'none';
+  banner.textContent = t('chat_closed_banner');
+
+  var blocked = currentChatClosed && !isAdmin;
+  textarea.disabled = blocked;
+  sendBtn.disabled = blocked;
+  inputArea.className = 'chat-input-area' + (blocked ? ' disabled' : '');
+  textarea.placeholder = blocked ? (t('chat_closed_banner')) : t('chat_input_ph');
+
+  if (isAdmin && closeBtn) {
+    closeBtn.textContent = currentChatClosed ? t('chat_reopen_btn') : t('chat_close_btn');
+    closeBtn.className = 'chat-close-btn' + (currentChatClosed ? ' reopen' : '');
+  }
+}
+
+async function sendChatMessage() {
+  var textarea = document.getElementById('chat-textarea');
+  var text = textarea.value.trim();
+  if (!text || !currentChatMsgId) return;
+  if (currentChatClosed && !isAdmin) return;
+
+  var btn = document.getElementById('chat-send-btn');
+  btn.disabled = true;
+
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  var senderName = isAdmin
+    ? (user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Admin')
+    : (user ? (user.first_name + (user.last_name ? ' ' + user.last_name : '')) : 'Xodim');
+  var senderId = user ? user.id : currentUserId;
+  var senderType = isAdmin ? 'admin' : 'employee';
+
+  try {
+    var res = await fetch(SERVER_URL + '/chat/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        message_id: currentChatMsgId,
+        sender_type: senderType,
+        sender_id: senderId,
+        sender_name: senderName,
+        text: text
+      })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      textarea.value = '';
+      textarea.style.height = '';
+      loadChatMessages(true);
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    } else {
+      alert(data.error || 'Xatolik');
+    }
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function toggleChatClosed() {
+  if (!isAdmin || !currentChatMsgId) return;
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+  var adminId = user ? user.id : currentUserId;
+  var newClosed = !currentChatClosed;
+
+  try {
+    var res = await fetch(SERVER_URL + '/chat/close', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message_id: currentChatMsgId, admin_id: adminId, closed: newClosed })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      currentChatClosed = data.chat_closed;
+      updateChatUI();
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(newClosed ? 'warning' : 'success');
+    }
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+  }
+}
+
+// ===================================================
+// ANON FILTER
+// ===================================================
+function setAnonFilter(val) {
+  currentAnonFilter = val;
+  ['all','open','anon'].forEach(function(k){
+    var el=document.getElementById('fc-'+k);
+    if(k===val){el.classList.add('checked');el.textContent='✓';}
+    else{el.classList.remove('checked');el.textContent='';}
+  });
+  document.getElementById('filter-icon-btn').classList.toggle('has-filter', val!=='all');
+  closeFilterDropdown(); refreshView();
+}
+function toggleFilterDropdown(e) { e.stopPropagation(); document.getElementById('filter-dropdown').classList.toggle('open'); }
+function closeFilterDropdown() { document.getElementById('filter-dropdown').classList.remove('open'); }
+
+// ===================================================
+// ROLE CHECK
+// ===================================================
+async function checkRoleAndInit() {
+  if (!currentUserId && !urlAdminFlag) {
+    if (urlViewMy) { userType = 'employee'; showScreen('employee'); loadMyMessages(); openMyRequests(); }
+    else showScreen('role');
+    return;
+  }
+  try {
+    var res = await fetch(SERVER_URL + '/role/' + (currentUserId || 0));
+    var data = await res.json();
+    if (data.ok && data.is_admin) {
+      userRole = data.role;
+      isAdmin = true;
+      canDelete = (userRole === 'superadmin');
+      var badge = document.getElementById('admin-role-badge');
+      if (userRole === 'moderator') { badge.textContent = 'MODERATOR'; badge.classList.add('mod'); }
+      else { badge.textContent = 'ADMIN'; }
+      showScreen('admin');
+      loadAdminMessages();
+    } else if (urlAdminFlag) {
+      isAdmin = true; canDelete = false;
+      showScreen('admin'); loadAdminMessages();
+    } else {
+      if (urlViewMy) {
+        userType = 'employee';
+        showScreen('employee');
+        loadMyMessages();
+        openMyRequests();
+      } else {
+        showScreen('role');
+      }
+    }
+  } catch (err) {
+    if (urlAdminFlag) { isAdmin = true; canDelete = false; showScreen('admin'); loadAdminMessages(); }
+    else {
+      if (urlViewMy) {
+        userType = 'employee';
+        showScreen('employee');
+        loadMyMessages();
+        openMyRequests();
+      } else {
+        showScreen('role');
+      }
+    }
+  }
+}
+
+// ===================================================
+// INIT APP (called after lang confirmed)
+// ===================================================
+function initApp() {
+  applyLangToUI();
+  checkRoleAndInit();
+}
+
+// ===================================================
+// EVENTS
+// ===================================================
+document.addEventListener('DOMContentLoaded', function() {
+
+  // --- Check saved lang, skip lang screen if already chosen ---
+  var savedLang = localStorage.getItem('app_lang');
+  if (savedLang === 'uz' || savedLang === 'ru') {
+    currentLang = savedLang;
+    selectLang(savedLang); // highlight in case they go back
+    selectedLangConfirmed = true;
+    applyLangToUI();
+    checkRoleAndInit();
+  } else {
+    showScreen('lang');
+  }
+
+  // Employee
+  document.getElementById('card-taklif').addEventListener('click', function(){selectType('taklif');});
+  document.getElementById('card-shikoyat').addEventListener('click', function(){selectType('shikoyat');});
+  document.getElementById('anon-toggle').addEventListener('click', toggleAnon);
+  document.getElementById('submit-btn').addEventListener('click', submitForm);
+  document.getElementById('btn-new').addEventListener('click', resetForm);
+  document.getElementById('msg-text').addEventListener('input', function(){
+    var len=this.value.length;
+    var c=document.getElementById('char-count');
+    c.textContent=len+' / 1000';
+    c.className='char-count'+(len>800?' warn':'');
+    if(len>=10) hideError('err-text');
+  });
+  document.getElementById('filial-select').addEventListener('change', function(){
+    if(this.value){hideError('err-filial');this.classList.remove('error');}
+  });
+
+  // Guest: phone share via Telegram native contact request (manual retry fallback)
+  document.getElementById('phone-share-btn').addEventListener('click', function(){
+    if (!tg.requestContact) { alert(t('phone_not_supported')); return; }
+    requestGuestPhone();
+  });
+
+  // Guest: photo capture / selection with client-side resize
+  document.getElementById('photo-add-btn').addEventListener('click', function(){
+    document.getElementById('photo-input').click();
+  });
+  document.getElementById('photo-input').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        var maxDim = 1024;
+        var w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('photo-preview').src = photoBase64;
+        document.getElementById('photo-preview-wrap').style.display = 'inline-block';
+        document.getElementById('photo-add-btn').style.display = 'none';
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('photo-remove-btn').addEventListener('click', function(){
+    photoBase64 = null;
+    document.getElementById('photo-input').value = '';
+    document.getElementById('photo-preview-wrap').style.display = 'none';
+    document.getElementById('photo-add-btn').style.display = 'flex';
+  });
+
+  // Main tabs
+  document.querySelectorAll('.main-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.main-tab').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+      currentMainTab = this.getAttribute('data-tab');
+      currentSubTab = 'new';
+      document.querySelectorAll('.sub-tab').forEach(function(b){b.className='sub-tab';});
+      document.querySelector('[data-sub="new"]').classList.add('active-new');
+      document.getElementById('filter-icon-btn').style.display = currentMainTab==='all'?'flex':'none';
+      refreshView();
+    });
+  });
+
+  // Sub tabs
+  document.querySelectorAll('.sub-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.sub-tab').forEach(function(b){b.className='sub-tab';});
+      currentSubTab = this.getAttribute('data-sub');
+      var cls = currentSubTab==='new'?'active-new':currentSubTab==='progress'?'active-progress':'active-done';
+      this.classList.add(cls);
+      refreshView();
+    });
+  });
+
+  // Date filter
+  document.getElementById('date-filter-btn').addEventListener('click', openDateModal);
+  document.getElementById('date-modal-close').addEventListener('click', closeDateModal);
+  document.getElementById('date-apply-btn').addEventListener('click', applyDateFilter);
+  document.getElementById('date-reset-btn').addEventListener('click', resetDateFilter);
+  document.getElementById('date-modal-overlay').addEventListener('click', function(e){if(e.target===this) closeDateModal();});
+  document.querySelectorAll('.date-quick-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.date-quick-btn').forEach(function(b){b.classList.remove('selected');});
+      this.classList.add('selected');
+      var now = new Date(), from = new Date();
+      var q = this.getAttribute('data-quick');
+      if(q==='week') from.setDate(now.getDate()-7);
+      else if(q==='month') from.setDate(now.getDate()-30);
+      else if(q==='year') from.setFullYear(now.getFullYear()-1);
+      else if(q==='thismonth') from = new Date(now.getFullYear(),now.getMonth(),1);
+      document.getElementById('date-from').value = from.toISOString().slice(0,10);
+      document.getElementById('date-to').value = now.toISOString().slice(0,10);
+    });
+  });
+
+  // Anon filter
+  document.getElementById('filter-icon-btn').addEventListener('click', toggleFilterDropdown);
+  document.querySelectorAll('.filter-option').forEach(function(opt){
+    opt.addEventListener('click', function(e){e.stopPropagation();setAnonFilter(this.getAttribute('data-anon'));});
+  });
+  document.addEventListener('click', closeFilterDropdown);
+
+  // Reply modal (admin)
+  document.getElementById('reply-modal-close').addEventListener('click', closeReplyModal);
+  document.getElementById('reply-send-btn').addEventListener('click', sendReply);
+  document.getElementById('reply-modal-overlay').addEventListener('click', function(e){ if (e.target === this) closeReplyModal(); });
+
+  // Chat textarea auto-resize + enter to send
+  var chatTextarea = document.getElementById('chat-textarea');
+  chatTextarea.addEventListener('input', function() {
+    this.style.height = '';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+  chatTextarea.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  // Periodically refresh "Mening murojaatlarim" unread badge for employees
+  setInterval(function(){
+    if (!currentUserId || isAdmin) return;
+    var empActive = document.getElementById('screen-employee').classList.contains('active');
+    var myActive = document.getElementById('screen-my').classList.contains('active');
+    if (empActive || myActive) loadMyMessages(true);
+  }, 20000);
+});
+</script>
+</body>
+</html>
