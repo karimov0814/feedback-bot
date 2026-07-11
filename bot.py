@@ -35,7 +35,7 @@ ADMINS = {
 }
 ADMIN_IDS     = list(ADMINS.keys())
 ADMIN_CHAT_ID = ADMIN_IDS[0]
-MINI_APP_URL   = "https://karimov0814.github.io/feedback-bot/index.html"
+MINI_APP_URL   = "https://karimov0814.github.io/ST77WOK/index.html"
 PORT           = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL    = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
 DATABASE_URL   = os.environ.get("DATABASE_URL", "")
