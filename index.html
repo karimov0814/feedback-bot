@@ -730,7 +730,7 @@
 </div>
 
 <script>
-const SERVER_URL = 'https://st77wok.up.railway.app';
+const SERVER_URL = 'https://web-production-dd6e7.up.railway.app';
 
 // ===================================================
 // I18N — barcha matnlar
@@ -1305,7 +1305,7 @@ async function uploadBirthdayFile() {
     var data = await res.json();
     if (data.ok) {
       statusEl.style.color = 'var(--gray-900)';
-      statusEl.textContent = '✅ Muvaffaqiyatli: ' + data.count + ' ta xodim yuklandi';
+      statusEl.textContent = '✅ Muvaffaqiyatli: ' + data.count + ' / ' + data.total + ' ta xodim yuklandi' + (data.skipped > 0 ? ' (' + data.skipped + ' ta qator FIO yoki sana xato bo\'lgani uchun o\'tkazib yuborildi)' : '');
       bdaySelectedFile = null;
       document.getElementById('bday-file-input').value = '';
       document.getElementById('bday-file-name').textContent = '';

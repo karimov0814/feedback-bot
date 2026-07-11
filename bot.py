@@ -7,6 +7,7 @@ Ikki tilli: O'zbek / Rus
 import json
 import logging
 import os
+import re
 import asyncio
 import threading
 import time as time_module
@@ -35,7 +36,7 @@ ADMINS = {
 }
 ADMIN_IDS     = list(ADMINS.keys())
 ADMIN_CHAT_ID = ADMIN_IDS[0]
-MINI_APP_URL   = "https://karimov0814.github.io/ST77WOK/index.html"
+MINI_APP_URL   = "https://karimov0814.github.io/feedback-bot/index.html"
 PORT           = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL    = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
 DATABASE_URL   = os.environ.get("DATABASE_URL", "")
@@ -1002,6 +1003,7 @@ def init_employees_table():
 def replace_employees_from_excel(file_bytes):
     """Excel faylni o'qib, employees jadvalini to'liq yangilaydi (eskisini o'chirib, yangisini yozadi)."""
     df = pd.read_excel(BytesIO(file_bytes))
+    total_rows = len(df)
 
     # Ustun nomlarini moslashtirish (bo'sh joy/registrdan mustaqil)
     col_map = {c.strip().lower(): c for c in df.columns}
@@ -1020,11 +1022,19 @@ def replace_employees_from_excel(file_bytes):
     if not fio_col or not date_col:
         raise ValueError("Excel faylda 'FIO' va 'Tug'ilgan_sana' ustunlari topilmadi")
 
-    df["_birth"] = pd.to_datetime(df[date_col], errors="coerce")
-    df = df.dropna(subset=[fio_col, "_birth"])
+    # dayfirst=True — O'zbekistonda sanalar KUN.OY.YIL formatida yoziladi (masalan 05.03.1998).
+    # Buni belgilamasak, pandas ba'zi sanalarni OY.KUN.YIL deb noto'g'ri o'qiydi va
+    # kun 12 dan katta bo'lgan sanalarni (13–31) xato deb tashlab yuboradi.
+    df["_birth"] = pd.to_datetime(df[date_col], errors="coerce", dayfirst=True)
+
+    missing_fio = df[fio_col].isna()
+    missing_birth = df["_birth"].isna()
+    skipped_count = int((missing_fio | missing_birth).sum())
+
+    df_valid = df.dropna(subset=[fio_col, "_birth"])
 
     rows = []
-    for _, r in df.iterrows():
+    for _, r in df_valid.iterrows():
         fio = str(r[fio_col]).strip()
         filial = str(r[filial_col]).strip() if filial_col and pd.notna(r.get(filial_col)) else ""
         birth = r["_birth"].date()
@@ -1033,15 +1043,16 @@ def replace_employees_from_excel(file_bytes):
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("DELETE FROM employees")
-    psycopg2.extras.execute_values(
-        cur,
-        "INSERT INTO employees (fio, filial, birth_date) VALUES %s",
-        rows
-    )
+    if rows:
+        psycopg2.extras.execute_values(
+            cur,
+            "INSERT INTO employees (fio, filial, birth_date) VALUES %s",
+            rows
+        )
     conn.commit()
     cur.close()
     conn.close()
-    return len(rows)
+    return {"total": total_rows, "inserted": len(rows), "skipped": skipped_count}
 
 
 def get_employees_summary():
@@ -1079,22 +1090,134 @@ def get_today_birthdays_db():
         return []
 
 
+# ==================== KIRILL <-> LOTIN TRANSLITERATSIYA ====================
+# Excel'dagi ism va filial ustunlari ba'zan lotin, ba'zan kirill alifbosida
+# yozilishi mumkin. Kanalga post yuborilganda o'zbekcha qism har doim lotin,
+# ruscha qism har doim kirill (yoki original ruscha so'z) bilan chiqishi uchun
+# quyidagi transliteratsiya jadvali ishlatiladi. Bu — SO'ZMA-SO'Z TARJIMA emas,
+# balki ISM kabi tarjima qilib bo'lmaydigan matnlar uchun yozuvni (skript)
+# moslashtirish usuli.
+
+_CYR_TO_LAT_MAP = {
+    'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'Ye','Ё':'Yo','Ж':'J','З':'Z','И':'I',
+    'Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T',
+    'У':'U','Ф':'F','Х':'X','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Sh','Ъ':'','Ы':'I','Ь':'',
+    'Э':'E','Ю':'Yu','Я':'Ya','Ў':"O'",'Қ':'Q','Ғ':"G'",'Ҳ':'H',
+    'а':'a','б':'b','в':'v','г':'g','д':'d','е':'ye','ё':'yo','ж':'j','з':'z','и':'i',
+    'й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t',
+    'у':'u','ф':'f','х':'x','ц':'ts','ч':'ch','ш':'sh','щ':'sh','ъ':'','ы':'i','ь':'',
+    'э':'e','ю':'yu','я':'ya','ў':"o'",'қ':'q','ғ':"g'",'ҳ':'h',
+}
+_LAT_TO_CYR_DIGRAPHS = [
+    ("O'", 'Ў'), ("o'", 'ў'), ("G'", 'Ғ'), ("g'", 'ғ'),
+    ('SH', 'Ш'), ('Sh', 'Ш'), ('sh', 'ш'),
+    ('CH', 'Ч'), ('Ch', 'Ч'), ('ch', 'ч'),
+    ('YO', 'Ё'), ('Yo', 'Ё'), ('yo', 'ё'),
+    ('YU', 'Ю'), ('Yu', 'Ю'), ('yu', 'ю'),
+    ('YA', 'Я'), ('Ya', 'Я'), ('ya', 'я'),
+]
+_LAT_TO_CYR_SINGLE = {
+    'A':'А','B':'Б','D':'Д','E':'Э','F':'Ф','G':'Г','H':'Ҳ','I':'И','J':'Ж','K':'К',
+    'L':'Л','M':'М','N':'Н','O':'О','P':'П','Q':'Қ','R':'Р','S':'С','T':'Т','U':'У',
+    'V':'В','X':'Х','Y':'Й','Z':'З',
+    'a':'а','b':'б','d':'д','e':'э','f':'ф','g':'г','h':'ҳ','i':'и','j':'ж','k':'к',
+    'l':'л','m':'м','n':'н','o':'о','p':'п','q':'қ','r':'р','s':'с','t':'т','u':'у',
+    'v':'в','x':'х','y':'й','z':'з',
+}
+_CYRILLIC_RE = re.compile('[А-Яа-яЁёЎўҚқҒғҲҳ]')
+
+
+def has_cyrillic(text):
+    return bool(_CYRILLIC_RE.search(text or ""))
+
+
+def cyrillic_to_latin(text):
+    if not text:
+        return text
+    return "".join(_CYR_TO_LAT_MAP.get(ch, ch) for ch in text)
+
+
+def latin_to_cyrillic(text):
+    if not text:
+        return text
+    for lat, cyr in _LAT_TO_CYR_DIGRAPHS:
+        text = text.replace(lat, cyr)
+    return "".join(_LAT_TO_CYR_SINGLE.get(ch, ch) for ch in text)
+
+
+def get_fio_bilingual(fio_raw):
+    """Ism — tarjima qilinmaydi, faqat yozuvi (kirill/lotin) moslashtiriladi."""
+    fio_raw = (fio_raw or "").strip()
+    if has_cyrillic(fio_raw):
+        return cyrillic_to_latin(fio_raw), fio_raw
+    return fio_raw, latin_to_cyrillic(fio_raw)
+
+
+# Ma'lum filiallar uchun HAQIQIY tarjima lug'ati (kod -> (o'zbekcha, ruscha)).
+# Filial nomlari orasida haqiqiy ruscha so'zlar ham bor (masalan "Склад",
+# "Руководство"), shuning uchun bularni oddiy transliteratsiya emas, balki
+# to'g'ri tarjima orqali ko'rsatish kerak.
+FILIAL_TRANSLATIONS = {
+    "001": ("Bosh ofis", "Руководство"),
+    "007": ("Xavfsizlik xizmati", "Служба безопасности"),
+    "008": ("Call-Center", "Call-Center"),
+    "010": ("Texnik bo'lim", "Тех отдел"),
+    "011": ("Ombor RMS-1", "Склад РМС-1"),
+    "012": ("Ombor RMS-2", "Склад РМС-2"),
+    "013": ("Beruniy sexi", "Беруний цех"),
+    "101": ("Glinka", "Глинка WOK"),
+    "102": ("C1 Wok", "Ц1 WOK"),
+    "103": ("Samarqand Darvoza", "Сам.дарвоза"),
+    "104": ("C1 Street", "Ц1 Street"),
+    "105": ("Scopus Mall", "Scopus Mall"),
+    "106": ("Yunusobod Gallery", "Юнусабад Gallery"),
+    "107": ("Beruniy", "Беруний"),
+    "108": ("Eco", "Эко"),
+    "109": ("Sergeli", "Сергели"),
+    "110": ("Anhor", "Анхор"),
+    "111": ("Novza", "Новза"),
+    "112": ("Compass Mall", "Compass Mall"),
+    "113": ("City Mall", "City Mall"),
+    "114": ("Tuzel", "TUZEL WOK & STREET 77"),
+    "115": ("Alfraganus", "Альфраганус"),
+    "116": ("Chilonzor 20", "Чиланзар 20"),
+    "601": ("Andijon Navruz", "Андижон_Навруз"),
+}
+_FILIAL_CODE_RE = re.compile(r'^\s*(\d+)\s*[.\-]?\s*')
+
+
+def get_filial_bilingual(filial_raw):
+    """Filial nomi — lug'atda bo'lsa haqiqiy tarjimasi, bo'lmasa yozuv moslashtirilgan holati qaytariladi."""
+    filial_raw = (filial_raw or "").strip()
+    if not filial_raw:
+        return "", ""
+    m = _FILIAL_CODE_RE.match(filial_raw)
+    code = m.group(1).zfill(3) if m else None
+    if code and code in FILIAL_TRANSLATIONS:
+        return FILIAL_TRANSLATIONS[code]
+    # Lug'atda yo'q (yangi filial) — eng yaxshi urinish: yozuvni moslashtiramiz
+    if has_cyrillic(filial_raw):
+        return cyrillic_to_latin(filial_raw), filial_raw
+    return filial_raw, latin_to_cyrillic(filial_raw)
+
+
 def build_birthday_post(birthdays):
-    names_uz = "\n".join(
-        f"{i}) {b['fio']}" + (f" ({b['filial']})" if b.get("filial") else "")
-        for i, b in enumerate(birthdays, start=1)
-    )
-    names_ru = names_uz  # ism va filial nomlari tarjima qilinmaydi, faqat matn tarjima qilinadi
+    uz_lines, ru_lines = [], []
+    for i, b in enumerate(birthdays, start=1):
+        fio_uz, fio_ru = get_fio_bilingual(b.get('fio'))
+        filial_uz, filial_ru = get_filial_bilingual(b.get('filial'))
+        uz_lines.append(f"{i}) {fio_uz}" + (f" ({filial_uz})" if filial_uz else ""))
+        ru_lines.append(f"{i}) {fio_ru}" + (f" ({filial_ru})" if filial_ru else ""))
 
     uz_text = (
         "🎊 Bugun jamoamizda kayfiyat ikki karra ko'tarinki!\n\n"
-        f"{names_uz}\n\n"
-        "🎂 Tug'ilgan kuningiz muborak bo'lsin 🌟"
+        + "\n".join(uz_lines) +
+        "\n\n🎂 Tug'ilgan kuningiz muborak bo'lsin 🌟"
     )
     ru_text = (
         "🎊 Сегодня у нас в коллективе двойной праздник!\n\n"
-        f"{names_ru}\n\n"
-        "🎂 Поздравляем с днём рождения 🌟"
+        + "\n".join(ru_lines) +
+        "\n\n🎂 Поздравляем с днём рождения 🌟"
     )
     return uz_text + "\n\n" + ("・" * 12) + "\n\n" + ru_text
 
@@ -1190,9 +1313,9 @@ def employees_upload():
         if not file.filename.lower().endswith((".xlsx", ".xls")):
             return jsonify({"ok": False, "error": "Faqat .xlsx yoki .xls fayl qabul qilinadi"}), 400
 
-        count = replace_employees_from_excel(file.read())
-        logger.info(f"Employees excel yuklandi: {count} ta xodim (admin {admin_id})")
-        return jsonify({"ok": True, "count": count})
+        stats = replace_employees_from_excel(file.read())
+        logger.info(f"Employees excel yuklandi: {stats} (admin {admin_id})")
+        return jsonify({"ok": True, "count": stats["inserted"], "total": stats["total"], "skipped": stats["skipped"]})
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
