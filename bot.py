@@ -26,7 +26,7 @@ from openpyxl.utils import get_column_letter
 from google.oauth2.service_account import Credentials
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
+from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, MenuButtonWebApp
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -39,11 +39,27 @@ ADMINS = {
 }
 ADMIN_IDS     = list(ADMINS.keys())
 ADMIN_CHAT_ID = ADMIN_IDS[0]
-MINI_APP_URL = "https://karimov0814.github.io/ST77WOK/"
+MINI_APP_URL   = "https://karimov0814.github.io/ST77WOK/"
 PORT           = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL    = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
 DATABASE_URL   = os.environ.get("DATABASE_URL", "")
 SHEET_ID       = "13Dy2zeKPn4dmEHLKsjvtTi5qj4_X8aEefhJYrOpV2wI"
+
+# Har safar bot qayta ishga tushganda (har bir Railway deploy) yangi qiymat oladi.
+# Bu Mini App havolasiga avtomatik qo'shiladi va Telegram WebView'ning eski
+# (keshlangan) index.html'ni ko'rsatib qolish muammosini oldini oladi —
+# xodimlar /start bosmasdan ham har doim ENG YANGI versiyani ko'radi.
+APP_VERSION = str(int(time_module.time()))
+
+
+def mini_app_url(extra_query: str = "") -> str:
+    """Mini App havolasini kesh-busting versiya bilan yasaydi.
+    extra_query masalan 'admin=1' yoki 'view=my' bo'lishi mumkin (boshida '?' yoki '&' kerak emas)."""
+    sep = "&" if "?" in MINI_APP_URL else "?"
+    url = f"{MINI_APP_URL}{sep}v={APP_VERSION}"
+    if extra_query:
+        url += f"&{extra_query}"
+    return url
 
 # ---------- TUG'ILGAN KUN BOT ----------
 BIRTHDAY_CHANNEL_ID  = os.environ.get("BIRTHDAY_CHANNEL_ID", "")   # tug'ilgan kun postlari yuboriladigan kanal
@@ -671,7 +687,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if is_admin:
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))
+            InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=mini_app_url("admin=1")))
         ]])
         await update.message.reply_text(
             "👋 Salom, Admin!\n\nXodimlarning murojaatlari shu yerga keladi.",
@@ -679,7 +695,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
     else:
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton("💬 Taklif yoki Shikoyat yuborish", web_app=WebAppInfo(url=MINI_APP_URL))
+            InlineKeyboardButton("💬 Taklif yoki Shikoyat yuborish", web_app=WebAppInfo(url=mini_app_url()))
         ]])
         await update.message.reply_text(
             f"👋 Salom, {user.first_name}!\n\n"
@@ -708,7 +724,7 @@ async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         notif = f"{emoji} Yangi {type_label_uz} — {filial} filialidan"
 
         admin_panel_kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))
+            InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=mini_app_url("admin=1")))
         ]])
 
         for _aid in ADMIN_IDS:
@@ -877,7 +893,7 @@ def send_message():
         sent_ids = {}
         photo_file_id = None
         for _aid in ADMIN_IDS:
-            buttons = [InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))]
+            buttons = [InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=mini_app_url("admin=1")))]
             if ADMINS.get(_aid) == "superadmin":
                 buttons.append(InlineKeyboardButton("🗑 Hammadan o'chirish", callback_data=f"delall:{msg_id}"))
             kb = InlineKeyboardMarkup([buttons])
@@ -1051,7 +1067,7 @@ def reply_message():
                     f"Ko'rish uchun pastdagi tugmani bosing 👇"
                 )
                 kb = InlineKeyboardMarkup([[
-                    InlineKeyboardButton("📂 Mening murojaatlarim", web_app=WebAppInfo(url=MINI_APP_URL + "?view=my"))
+                    InlineKeyboardButton("📂 Mening murojaatlarim", web_app=WebAppInfo(url=mini_app_url("view=my")))
                 ]])
                 future = asyncio.run_coroutine_threadsafe(
                     ptb_app.bot.send_message(chat_id=owner['user_id'], text=notif, reply_markup=kb),
@@ -1100,12 +1116,59 @@ def init_employees_table():
                 created_at TIMESTAMP DEFAULT NOW()
             )
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        """)
         conn.commit()
         cur.close()
         conn.close()
-        logger.info("✅ Employees jadvali tayyor")
+        logger.info("✅ Employees va Settings jadvallari tayyor")
     except Exception as e:
         logger.error(f"init_employees_table xatolik: {e}")
+
+
+def get_setting(key, default=None):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT value FROM settings WHERE key = %s", (key,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return row[0] if row else default
+    except Exception as e:
+        logger.error(f"get_setting xatolik: {e}")
+        return default
+
+
+def set_setting(key, value):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO settings (key, value) VALUES (%s, %s)
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """, (key, value))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"set_setting xatolik: {e}")
+        return False
+
+
+def get_birthday_post_time():
+    """DB'da saqlangan vaqtni o'qiydi, bo'lmasa standart 10:00 ni qaytaradi. Natija: (soat, daqiqa)."""
+    raw = get_setting("birthday_post_time", f"{BIRTHDAY_POST_HOUR:02d}:{BIRTHDAY_POST_MIN:02d}")
+    try:
+        h, m = raw.split(":")
+        return int(h), int(m)
+    except Exception:
+        return BIRTHDAY_POST_HOUR, BIRTHDAY_POST_MIN
 
 
 def replace_employees_from_excel(file_bytes):
@@ -1383,15 +1446,40 @@ def send_birthday_channel_post():
         logger.error(f"send_birthday_channel_post xatolik: {e}")
 
 
+birthday_scheduler = None
+
 def start_birthday_scheduler():
-    scheduler = BackgroundScheduler(timezone=BIRTHDAY_TZ)
-    scheduler.add_job(send_birthday_admin_preview, "cron",
-                       hour=BIRTHDAY_PREVIEW_HOUR, minute=BIRTHDAY_PREVIEW_MIN, id="birthday_preview")
-    scheduler.add_job(send_birthday_channel_post, "cron",
-                       hour=BIRTHDAY_POST_HOUR, minute=BIRTHDAY_POST_MIN, id="birthday_post")
-    scheduler.start()
-    logger.info("✅ Tug'ilgan kun scheduler ishga tushdi (09:30 preview, 10:00 post, Asia/Tashkent)")
-    return scheduler
+    global birthday_scheduler
+    post_hour, post_min = get_birthday_post_time()
+    prev_hour, prev_min = _minus_30_minutes(post_hour, post_min)
+
+    birthday_scheduler = BackgroundScheduler(timezone=BIRTHDAY_TZ)
+    birthday_scheduler.add_job(send_birthday_admin_preview, "cron",
+                       hour=prev_hour, minute=prev_min, id="birthday_preview")
+    birthday_scheduler.add_job(send_birthday_channel_post, "cron",
+                       hour=post_hour, minute=post_min, id="birthday_post")
+    birthday_scheduler.start()
+    logger.info(f"✅ Tug'ilgan kun scheduler ishga tushdi ({prev_hour:02d}:{prev_min:02d} preview, {post_hour:02d}:{post_min:02d} post, Asia/Tashkent)")
+    return birthday_scheduler
+
+
+def _minus_30_minutes(hour, minute):
+    total = hour * 60 + minute - 30
+    if total < 0:
+        total += 24 * 60
+    return total // 60, total % 60
+
+
+def reschedule_birthday_jobs(post_hour, post_min):
+    """Admin panel orqali vaqt o'zgartirilganda ishlayotgan scheduler'ni qayta sozlaydi (restart shart emas)."""
+    global birthday_scheduler
+    prev_hour, prev_min = _minus_30_minutes(post_hour, post_min)
+    if birthday_scheduler is None:
+        return False
+    birthday_scheduler.reschedule_job("birthday_preview", trigger="cron", hour=prev_hour, minute=prev_min)
+    birthday_scheduler.reschedule_job("birthday_post", trigger="cron", hour=post_hour, minute=post_min)
+    logger.info(f"🔄 Tug'ilgan kun vaqti yangilandi: {prev_hour:02d}:{prev_min:02d} preview, {post_hour:02d}:{post_min:02d} post")
+    return True
 
 
 # ==================== EMPLOYEES ROUTES ====================
@@ -1403,6 +1491,8 @@ def employees_summary():
         return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
     summary = get_employees_summary()
     summary["today_birthdays"] = get_today_birthdays_db()
+    post_hour, post_min = get_birthday_post_time()
+    summary["post_time"] = f"{post_hour:02d}:{post_min:02d}"
     return jsonify({"ok": True, **summary})
 
 
@@ -1428,6 +1518,30 @@ def employees_upload():
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         logger.error(f"/admin/employees/upload xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/admin/birthday-time", methods=["POST", "OPTIONS"])
+def set_birthday_time():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        admin_id = data.get("admin_id")
+        if not admin_id or ADMINS.get(int(admin_id)) is None:
+            return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+
+        time_str = (data.get("time") or "").strip()
+        if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", time_str):
+            return jsonify({"ok": False, "error": "Vaqt formati noto'g'ri (HH:MM bo'lishi kerak)"}), 400
+
+        h, m = map(int, time_str.split(":"))
+        set_setting("birthday_post_time", time_str)
+        reschedule_birthday_jobs(h, m)
+        logger.info(f"Tug'ilgan kun post vaqti o'zgartirildi: {time_str} (admin {admin_id})")
+        return jsonify({"ok": True, "post_time": time_str})
+    except Exception as e:
+        logger.error(f"/admin/birthday-time xatolik: {e}")
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
@@ -1523,7 +1637,7 @@ def chat_send():
                         f"Javob berish uchun 👇"
                     )
                     kb = InlineKeyboardMarkup([[
-                        InlineKeyboardButton("💬 Chatni ochish", web_app=WebAppInfo(url=MINI_APP_URL + "?view=my"))
+                        InlineKeyboardButton("💬 Chatni ochish", web_app=WebAppInfo(url=mini_app_url("view=my")))
                     ]])
                     future = asyncio.run_coroutine_threadsafe(
                         ptb_app.bot.send_message(chat_id=owner['user_id'], text=notif, reply_markup=kb),
@@ -1542,7 +1656,7 @@ def chat_send():
                     f"📝 {text}"
                 )
                 kb = InlineKeyboardMarkup([[
-                    InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=MINI_APP_URL + "?admin=1"))
+                    InlineKeyboardButton("📊 Admin Panel", web_app=WebAppInfo(url=mini_app_url("admin=1")))
                 ]])
                 for _aid in ADMIN_IDS:
                     try:
@@ -1586,7 +1700,7 @@ def chat_close():
                 else:
                     notif = "🔓 Sizning murojaatingiz bo'yicha chat qayta ochildi."
                 kb = InlineKeyboardMarkup([[
-                    InlineKeyboardButton("📂 Mening murojaatlarim", web_app=WebAppInfo(url=MINI_APP_URL + "?view=my"))
+                    InlineKeyboardButton("📂 Mening murojaatlarim", web_app=WebAppInfo(url=mini_app_url("view=my")))
                 ]])
                 future = asyncio.run_coroutine_threadsafe(
                     ptb_app.bot.send_message(chat_id=owner['user_id'], text=notif, reply_markup=kb),
@@ -1629,10 +1743,21 @@ async def setup_webhook():
     domain = WEBHOOK_URL
     if not domain:
         logger.warning("RAILWAY_PUBLIC_DOMAIN env yo'q!")
-        return
-    webhook_address = f"https://{domain}/webhook/{BOT_TOKEN}"
-    await ptb_app.bot.set_webhook(webhook_address)
-    logger.info(f"Webhook o'rnatildi: {webhook_address}")
+    else:
+        webhook_address = f"https://{domain}/webhook/{BOT_TOKEN}"
+        await ptb_app.bot.set_webhook(webhook_address)
+        logger.info(f"Webhook o'rnatildi: {webhook_address}")
+
+    # Doimiy "Murojaatlar" tugmasi — xabar yozish maydoni yonida doim turadi,
+    # foydalanuvchi /start bosishi shart emas. Mini App'ning o'zi (checkRoleAndInit)
+    # kim ekanini (admin/xodim) avtomatik aniqlaydi, shuning uchun hammaga bitta havola yetarli.
+    try:
+        await ptb_app.bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text="Murojaatlar", web_app=WebAppInfo(url=mini_app_url()))
+        )
+        logger.info(f"✅ Doimiy Menu Button o'rnatildi (v={APP_VERSION})")
+    except Exception as e:
+        logger.error(f"Menu Button o'rnatishda xatolik: {e}")
 
 def run():
     global ptb_app, loop

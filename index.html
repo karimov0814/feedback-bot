@@ -734,6 +734,18 @@
       <div id="bday-summary" style="font-size:14px;color:var(--gray-900);line-height:1.7;">Yuklanmoqda...</div>
     </div>
 
+    <div style="background:white;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow-sm);">
+      <div class="icon-inline" style="gap:6px;font-size:14px;font-weight:600;margin-bottom:6px;color:var(--gray-900);"><i data-feather="clock" style="width:15px;height:15px;"></i> Post vaqti</div>
+      <div style="font-size:12px;color:var(--gray-600);margin-bottom:12px;line-height:1.5;">
+        Kanalga tug'ilgan kun posti shu vaqtda yuboriladi. Adminlarga eslatma shundan 30 daqiqa oldin keladi.
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="time" id="bday-time-input" style="flex:1;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:15px;color:var(--gray-800);outline:none;">
+        <button onclick="saveBirthdayTime()" class="date-apply-btn" style="width:auto;padding:11px 18px;">Saqlash</button>
+      </div>
+      <div id="bday-time-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
+    </div>
+
     <div style="background:white;border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);">
       <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--gray-900);">Excel fayl yuklash</div>
       <div style="font-size:12px;color:var(--gray-600);margin-bottom:12px;line-height:1.5;">
@@ -1371,8 +1383,39 @@ async function loadBirthdaySummary() {
       html += '<br><br>Bugun tug\'ilgan kun yo\'q.';
     }
     el.innerHTML = html;
+    if (data.post_time) document.getElementById('bday-time-input').value = data.post_time;
   } catch (e) {
     el.textContent = 'Server bilan bog\'lanib bo\'lmadi';
+  }
+}
+
+async function saveBirthdayTime() {
+  var timeVal = document.getElementById('bday-time-input').value;
+  var statusEl = document.getElementById('bday-time-status');
+  if (!timeVal) {
+    statusEl.style.color = 'var(--orange)';
+    statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' Vaqtni tanlang';
+    return;
+  }
+  statusEl.style.color = 'var(--gray-600)';
+  statusEl.textContent = 'Saqlanmoqda...';
+  try {
+    var res = await fetch(SERVER_URL + '/admin/birthday-time', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ admin_id: currentUserId, time: timeVal })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = 'var(--gray-900)';
+      statusEl.innerHTML = icon('check-circle',{size:14,cls:'icon-inline'}) + ' Saqlandi: kanalga ' + data.post_time + ' da post yuboriladi';
+    } else {
+      statusEl.style.color = 'var(--orange)';
+      statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' ' + (data.error || 'Xatolik yuz berdi');
+    }
+  } catch (e) {
+    statusEl.style.color = 'var(--orange)';
+    statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' Server bilan bog\'lanib bo\'lmadi';
   }
 }
 

@@ -65,12 +65,22 @@ Har kuni:
 - **09:30** (Toshkent) — barcha adminlarga bugungi tug'ilgan kunlar ro'yxati Telegram xabar sifatida yuboriladi (agar bo'lmasa — "bugun yo'q" deb xabar beradi).
 - **10:00** (Toshkent) — agar bugun tug'ilgan kun bo'lsa, kanalga `birthday.jpg` rasmi bilan avtomatik post yuboriladi.
 
-## 4. Doimiy ishlashi haqida
+## 4. Doimiy "Murojaatlar" tugmasi va avtomatik yangilanish
+
+Endi botda ikkita muammo hal qilindi:
+
+1. **`/start` bosish shart emas** — bot ishga tushganda (`set_chat_menu_button`) barcha foydalanuvchilar uchun xabar yozish maydoni yonida doimiy **"Murojaatlar"** tugmasi o'rnatiladi. Bu tugma Telegram'ning "Menu Button" xususiyati — u har doim mavjud, xabarlar tarixida "yo'qolib" qolmaydi. Mini App'ning o'zi foydalanuvchi admin yoki oddiy xodim ekanini avtomatik aniqlaydi (`/role/<id>` orqali), shuning uchun bitta tugma hammaga yetarli.
+
+2. **Eski (keshlangan) versiya ko'rinishi muammosi** — Telegram WebView ba'zan `index.html`ning eski nusxasini keshlab qo'yadi, shuning uchun yangilanishdan keyin xato yoki eski interfeys ko'rinishi mumkin edi. Endi bot har safar ishga tushganda (`APP_VERSION`) avtomatik yangi versiya raqami yaratadi va uni Mini App havolasiga (`?v=...`) qo'shadi. Har safar Railway'da qayta deploy qilinganda bu raqam o'zgaradi, shuning uchun Telegram uni "yangi sahifa" deb hisoblab, keshni chetlab o'tadi — foydalanuvchilar hech narsa qilmasdan eng so'nggi versiyani ko'radi.
+
+**Diqqat:** bu faqat `bot.py`dagi tugmalarga (menu button, /start, admin panel va h.k.) tegishli. Agar biror joyda o'zingiz qo'lda link ulashsangiz (masalan guruhga), shu havolaga ham `?v=...` qo'shishni unutmang, aks holda eski versiya ko'rsatilishi mumkin.
+
+## 5. Doimiy ishlashi haqida
 
 - Railway hobby/starter rejasida ilova **24/7 doimiy** ishlaydi (uxlab qolmaydi), agar loyiha "sleep" siyosati yoqilmagan bo'lsa — buni Railway dashboard'dan tekshiring.
 - Scheduler (`APScheduler`) ilova jarayoni ichida ishlaydi, shuning uchun ilova qayta ishga tushsa (deploy, restart) ham keyingi kunlik vaqtga avtomatik moslashadi — qo'shimcha cron sozlash shart emas.
 - Baza Supabase'da bo'lgani uchun Railway qayta deploy qilinganda yoki konteyner qayta tiklanganda ham barcha ma'lumotlar (murojaatlar, xodimlar ro'yxati) saqlanib qoladi.
 
-## 5. Diqqat qilinadigan narsa
+## 6. Diqqat qilinadigan narsa
 
 `index.html` ichida "Taraqqiyot" (auto-tarjima) funksiyasi to'g'ridan-to'g'ri `api.anthropic.com` ga so'rov yuboradi va API kalitisiz ishlaydi — bu faqat Claude Artifacts muhitida ishlaydi. Mustaqil hostingda (GitHub Pages va h.k.) bu funksiya ishlamaydi; agar tarjima kerak bo'lsa, buni serverga (`bot.py`) ko'chirib, Anthropic API kalitini Railway environment variable sifatida saqlash tavsiya etiladi.
