@@ -1448,6 +1448,23 @@ def send_birthday_channel_post():
 
 birthday_scheduler = None
 
+def refresh_menu_button():
+    """Menu Button havolasidagi versiya raqamini yangilaydi — index.html GitHub'da
+    yangilangan bo'lsa ham, botni qayta ishga tushirmasdan Telegram keshini avtomatik chetlab o'tadi."""
+    global APP_VERSION
+    APP_VERSION = str(int(time_module.time()))
+    try:
+        async def _set():
+            await ptb_app.bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(text="Murojaatlar", web_app=WebAppInfo(url=mini_app_url()))
+            )
+        future = asyncio.run_coroutine_threadsafe(_set(), loop)
+        future.result(timeout=15)
+        logger.info(f"🔄 Menu Button versiyasi yangilandi (v={APP_VERSION})")
+    except Exception as e:
+        logger.error(f"refresh_menu_button xatolik: {e}")
+
+
 def start_birthday_scheduler():
     global birthday_scheduler
     post_hour, post_min = get_birthday_post_time()
@@ -1458,6 +1475,10 @@ def start_birthday_scheduler():
                        hour=prev_hour, minute=prev_min, id="birthday_preview")
     birthday_scheduler.add_job(send_birthday_channel_post, "cron",
                        hour=post_hour, minute=post_min, id="birthday_post")
+    # Har 15 daqiqada Mini App havolasini "yangi" qilib qo'yadi — shuning uchun
+    # index.html'ni GitHub'da yangilaganingizda botni qayta ishga tushirish shart emas,
+    # eng ko'pi bilan 15 daqiqadan keyin foydalanuvchilar yangi versiyani ko'radi.
+    birthday_scheduler.add_job(refresh_menu_button, "interval", minutes=15, id="menu_button_refresh")
     birthday_scheduler.start()
     logger.info(f"✅ Tug'ilgan kun scheduler ishga tushdi ({prev_hour:02d}:{prev_min:02d} preview, {post_hour:02d}:{post_min:02d} post, Asia/Tashkent)")
     return birthday_scheduler

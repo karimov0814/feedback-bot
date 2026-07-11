@@ -71,7 +71,11 @@ Endi botda ikkita muammo hal qilindi:
 
 1. **`/start` bosish shart emas** — bot ishga tushganda (`set_chat_menu_button`) barcha foydalanuvchilar uchun xabar yozish maydoni yonida doimiy **"Murojaatlar"** tugmasi o'rnatiladi. Bu tugma Telegram'ning "Menu Button" xususiyati — u har doim mavjud, xabarlar tarixida "yo'qolib" qolmaydi. Mini App'ning o'zi foydalanuvchi admin yoki oddiy xodim ekanini avtomatik aniqlaydi (`/role/<id>` orqali), shuning uchun bitta tugma hammaga yetarli.
 
-2. **Eski (keshlangan) versiya ko'rinishi muammosi** — Telegram WebView ba'zan `index.html`ning eski nusxasini keshlab qo'yadi, shuning uchun yangilanishdan keyin xato yoki eski interfeys ko'rinishi mumkin edi. Endi bot har safar ishga tushganda (`APP_VERSION`) avtomatik yangi versiya raqami yaratadi va uni Mini App havolasiga (`?v=...`) qo'shadi. Har safar Railway'da qayta deploy qilinganda bu raqam o'zgaradi, shuning uchun Telegram uni "yangi sahifa" deb hisoblab, keshni chetlab o'tadi — foydalanuvchilar hech narsa qilmasdan eng so'nggi versiyani ko'radi.
+2. **Eski (keshlangan) versiya ko'rinishi muammosi** — Telegram WebView ba'zan `index.html`ning eski nusxasini keshlab qo'yadi, shuning uchun yangilanishdan keyin xato yoki eski interfeys ko'rinishi mumkin edi. Bot ishga tushganda (`APP_VERSION`) avtomatik yangi versiya raqami yaratadi va uni Mini App havolasiga (`?v=...`) qo'shadi.
+
+   **Muhim:** bu versiya raqami faqat **bot qayta ishga tushganda** (Railway deploy/restart) yangilanadi — agar siz faqat `index.html`ni GitHub Pages'ga yuklab, botni qayta ishga tushirmasangiz, versiya o'zgarmagani uchun eski kesh davom etishi mumkin. Shuning uchun bot ichida qo'shimcha himoya bor: **har 15 daqiqada** bot o'zi avtomatik versiya raqamini yangilab, Menu Button'ni qayta o'rnatadi (`refresh_menu_button` — APScheduler orqali). Demak:
+   - Agar botni ham qayta ishga tushirsangiz — o'zgarish **darhol** ko'rinadi.
+   - Agar faqat `index.html`ni yangilab, botga tegmasangiz — o'zgarish **eng ko'pi bilan 15 daqiqada** avtomatik ko'rinadi, hech narsa qilish shart emas.
 
 **Diqqat:** bu faqat `bot.py`dagi tugmalarga (menu button, /start, admin panel va h.k.) tegishli. Agar biror joyda o'zingiz qo'lda link ulashsangiz (masalan guruhga), shu havolaga ham `?v=...` qo'shishni unutmang, aks holda eski versiya ko'rsatilishi mumkin.
 
