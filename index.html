@@ -176,6 +176,8 @@
   /* ===== ADMIN ===== */
   #screen-admin { display:none;padding:0; }
   #screen-admin.active { display:block; }
+  #screen-admins { display:none;padding:0; }
+  #screen-admins.active { display:block; }
   .admin-header { background:var(--gray-900);padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top, 0px));color:white; }
   .admin-header-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
   .admin-header h1 { font-size:20px;font-weight:700; }
@@ -183,6 +185,22 @@
   .admin-badge.mod { background:var(--blue); }
   .icon-btn-ghost { background:rgba(255,255,255,0.12);border:none;color:#fff;border-radius:10px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent; }
   .icon-btn-ghost:active { background:rgba(255,255,255,0.22); }
+
+  /* SUPERADMIN: adminlarni boshqarish */
+  .admin-perm-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+  .admin-perm-opt { display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-800);background:#F9FAFB;border:1.5px solid var(--gray-200);border-radius:10px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent; }
+  .admin-perm-opt input { width:16px;height:16px;accent-color:var(--orange);flex-shrink:0; }
+  .admin-card { background:white;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-sm); }
+  .admin-card-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+  .admin-card-id { font-size:14px;font-weight:700;color:var(--gray-900); }
+  .admin-card-name { font-size:12px;color:var(--gray-600);margin-top:2px; }
+  .admin-card-role-tag { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 9px;border-radius:20px;background:var(--gray-200);color:var(--gray-600); }
+  .admin-card-role-tag.superadmin { background:var(--orange);color:white; }
+  .admin-card-actions { display:flex;gap:8px;margin-top:12px; }
+  .admin-card-actions button { flex:1;padding:9px;border-radius:10px;border:none;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer; }
+  .admin-card-save { background:var(--gray-900);color:white; }
+  .admin-card-delete { background:#FEE2E2;color:#DC2626; }
+  .empty-admins { text-align:center;color:var(--gray-400);font-size:13px;padding:20px; }
 
   /* admin lang switch */
   .admin-lang-pill {
@@ -596,8 +614,9 @@
     <div class="admin-header-top">
       <h1 id="admin-title">Admin Panel</h1>
       <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="openExportModal()" class="icon-btn-ghost" title="Excel eksport"><i data-feather="download" style="width:18px;height:18px;"></i></button>
-        <button onclick="openBirthdaysScreen()" class="icon-btn-ghost" title="Tug'ilgan kunlar"><i data-feather="gift" style="width:18px;height:18px;"></i></button>
+        <button onclick="openExportModal()" class="icon-btn-ghost" title="Excel eksport" id="btn-export-excel"><i data-feather="download" style="width:18px;height:18px;"></i></button>
+        <button onclick="openBirthdaysScreen()" class="icon-btn-ghost" title="Tug'ilgan kunlar" id="btn-birthdays"><i data-feather="gift" style="width:18px;height:18px;"></i></button>
+        <button onclick="openAdminsScreen()" class="icon-btn-ghost" title="Adminlar" id="btn-manage-admins" style="display:none;"><i data-feather="users" style="width:18px;height:18px;"></i></button>
         <div class="admin-lang-pill" onclick="switchLang()" id="admin-lang-pill">RU</div>
         <div class="admin-badge" id="admin-role-badge">ADMIN</div>
       </div>
@@ -746,6 +765,22 @@
       <div id="bday-time-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
     </div>
 
+    <div style="background:white;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow-sm);">
+      <div class="icon-inline" style="gap:6px;font-size:14px;font-weight:600;margin-bottom:6px;color:var(--gray-900);"><i data-feather="image" style="width:15px;height:15px;"></i> Tug'ilgan kun rasmi</div>
+      <div style="font-size:12px;color:var(--gray-600);margin-bottom:12px;line-height:1.5;">
+        Kanalga yuboriladigan tug'ilgan kun postidagi rasm. Yangi rasm eskisini to'liq almashtiradi.
+      </div>
+      <img id="bday-photo-preview" src="" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;border:1.5px solid var(--gray-200);margin-bottom:12px;display:none;">
+      <input type="file" id="bday-photo-input" accept=".jpg,.jpeg,.png" style="display:none;" onchange="onBirthdayPhotoSelected()">
+      <button onclick="document.getElementById('bday-photo-input').click()" class="date-apply-btn icon-inline" style="width:100%;margin-bottom:8px;gap:6px;"><i data-feather="image" style="width:16px;height:16px;"></i> Rasm tanlash</button>
+      <div id="bday-photo-file-name" style="font-size:12px;color:var(--gray-600);margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button id="bday-photo-upload-btn" onclick="uploadBirthdayPhoto()" class="date-apply-btn icon-inline" style="flex:1;display:none;gap:6px;"><i data-feather="upload" style="width:16px;height:16px;"></i> Yuklash</button>
+        <button onclick="resetBirthdayPhoto()" class="date-reset-btn" style="flex:1;">Standartga qaytarish</button>
+      </div>
+      <div id="bday-photo-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
+    </div>
+
     <div style="background:white;border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);">
       <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--gray-900);">Excel fayl yuklash</div>
       <div style="font-size:12px;color:var(--gray-600);margin-bottom:12px;line-height:1.5;">
@@ -756,6 +791,37 @@
       <div id="bday-file-name" style="font-size:12px;color:var(--gray-600);margin-bottom:10px;"></div>
       <button id="bday-upload-btn" onclick="uploadBirthdayFile()" class="date-apply-btn icon-inline" style="width:100%;display:none;gap:6px;"><i data-feather="upload" style="width:16px;height:16px;"></i> Yuklash</button>
       <div id="bday-upload-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPERADMIN: ADMINLARNI BOSHQARISH SCREEN -->
+<div id="screen-admins" class="screen">
+  <div class="admin-header">
+    <div class="admin-header-top">
+      <button class="back-btn" onclick="showScreen('admin')"><i data-feather="arrow-left"></i></button>
+      <h1 class="icon-inline" style="gap:8px;"><i data-feather="users" style="width:19px;height:19px;"></i> Adminlar</h1>
+      <div></div>
+    </div>
+  </div>
+  <div style="padding:16px;">
+    <div style="background:white;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow-sm);">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--gray-900);">Yangi admin qo'shish</div>
+      <input type="text" id="new-admin-id" inputmode="numeric" placeholder="Telegram ID" style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:15px;margin-bottom:8px;outline:none;">
+      <input type="text" id="new-admin-name" placeholder="Ism (ixtiyoriy)" style="width:100%;padding:11px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:inherit;font-size:15px;margin-bottom:10px;outline:none;">
+      <div class="admin-perm-grid" id="new-admin-perms">
+        <label class="admin-perm-opt"><input type="checkbox" data-perm="taklif" checked> Taklif</label>
+        <label class="admin-perm-opt"><input type="checkbox" data-perm="shikoyat" checked> Shikoyat</label>
+        <label class="admin-perm-opt"><input type="checkbox" data-perm="birthday" checked> Tug'ilgan kun</label>
+        <label class="admin-perm-opt"><input type="checkbox" data-perm="excel" checked> Excel eksport</label>
+      </div>
+      <button onclick="addAdminSubmit()" class="date-apply-btn icon-inline" style="width:100%;margin-top:12px;gap:6px;"><i data-feather="user-plus" style="width:16px;height:16px;"></i> Qo'shish</button>
+      <div id="add-admin-status" style="font-size:13px;margin-top:10px;font-weight:600;"></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-400);margin-bottom:10px;">Mavjud adminlar</div>
+    <div id="admins-list" style="display:flex;flex-direction:column;gap:12px;">
+      <div class="spinner"></div>
     </div>
   </div>
 </div>
@@ -1069,6 +1135,7 @@ var phoneShared = false, photoBase64 = null;
 var currentMainTab = 'all', currentSubTab = 'new', currentAnonFilter = 'all';
 var dateFrom = null, dateTo = null;
 var isAdmin = false, canDelete = false, userRole = 'user';
+var userPermissions = { taklif: true, shikoyat: true, birthday: true, excel: true };
 // Translation cache: { msgId: { uz: '...', ru: '...' } }
 var translationCache = {};
 // Mening murojaatlarim
@@ -1331,6 +1398,204 @@ function showScreen(name) {
 }
 
 // ===================================================
+// ADMIN PERMISSIONS UI (checkbox bilan berilgan ruxsatlar)
+// ===================================================
+function applyAdminPermissionsUI() {
+  var p = userPermissions || {};
+  var mtabShikoyat = document.getElementById('mtab-shikoyat');
+  var mtabTaklif = document.getElementById('mtab-taklif');
+  if (mtabShikoyat) mtabShikoyat.style.display = p.shikoyat ? '' : 'none';
+  if (mtabTaklif) mtabTaklif.style.display = p.taklif ? '' : 'none';
+
+  // Agar joriy tanlangan tab ruxsat berilmagan bo'lsa, "Hammasi" ga qaytaramiz
+  if ((currentMainTab === 'shikoyat' && !p.shikoyat) || (currentMainTab === 'taklif' && !p.taklif)) {
+    var allTabBtn = document.getElementById('mtab-all');
+    if (allTabBtn) allTabBtn.click();
+  }
+
+  var btnExport = document.getElementById('btn-export-excel');
+  if (btnExport) btnExport.style.display = p.excel ? '' : 'none';
+  var btnBday = document.getElementById('btn-birthdays');
+  if (btnBday) btnBday.style.display = p.birthday ? '' : 'none';
+
+  var btnManageAdmins = document.getElementById('btn-manage-admins');
+  if (btnManageAdmins) btnManageAdmins.style.display = (userRole === 'superadmin') ? '' : 'none';
+
+  var optTaklif = document.querySelector('#export-type-select option[value="taklif"]');
+  var optShikoyat = document.querySelector('#export-type-select option[value="shikoyat"]');
+  if (optTaklif) optTaklif.disabled = !p.taklif;
+  if (optShikoyat) optShikoyat.disabled = !p.shikoyat;
+}
+
+// ===================================================
+// SUPERADMIN: ADMINLARNI BOSHQARISH
+// ===================================================
+function openAdminsScreen() {
+  if (userRole !== 'superadmin') { alert("Bu bo'lim faqat superadmin uchun"); return; }
+  showScreen('admins');
+  loadAdminsList();
+}
+
+async function loadAdminsList() {
+  var listEl = document.getElementById('admins-list');
+  listEl.innerHTML = '<div class="spinner"></div>';
+  try {
+    var res = await fetch(SERVER_URL + '/admin/admins?admin_id=' + currentUserId);
+    var data = await res.json();
+    if (!data.ok) { listEl.innerHTML = '<div class="empty-admins">' + (data.error || 'Xatolik') + '</div>'; return; }
+    renderAdminsList(data.admins || []);
+  } catch (err) {
+    listEl.innerHTML = '<div class="empty-admins">Server bilan bog\'lanib bo\'lmadi</div>';
+  }
+}
+
+function renderAdminsList(admins) {
+  var listEl = document.getElementById('admins-list');
+  if (!admins.length) { listEl.innerHTML = '<div class="empty-admins">Qo\'shimcha adminlar yo\'q</div>'; return; }
+  listEl.innerHTML = '';
+  admins.forEach(function(a) {
+    var isSuper = a.role === 'superadmin';
+    var card = document.createElement('div');
+    card.className = 'admin-card';
+    card.innerHTML =
+      '<div class="admin-card-top">' +
+        '<div>' +
+          '<div class="admin-card-id">' + a.telegram_id + '</div>' +
+          '<div class="admin-card-name">' + (a.name || 'Ism kiritilmagan') + '</div>' +
+        '</div>' +
+        '<div class="admin-card-role-tag' + (isSuper ? ' superadmin' : '') + '">' + (isSuper ? 'SUPERADMIN' : 'MODERATOR') + '</div>' +
+      '</div>' +
+      (isSuper ? '' :
+        '<input type="text" class="admin-edit-name" value="' + (a.name || '').replace(/"/g,'&quot;') + '" placeholder="Ism" style="width:100%;padding:9px 11px;border:1.5px solid var(--gray-200);border-radius:10px;font-family:inherit;font-size:13.5px;margin-bottom:10px;outline:none;">' +
+        '<div class="admin-perm-grid">' +
+          '<label class="admin-perm-opt"><input type="checkbox" data-perm="taklif" ' + (a.can_view_taklif ? 'checked' : '') + '> Taklif</label>' +
+          '<label class="admin-perm-opt"><input type="checkbox" data-perm="shikoyat" ' + (a.can_view_shikoyat ? 'checked' : '') + '> Shikoyat</label>' +
+          '<label class="admin-perm-opt"><input type="checkbox" data-perm="birthday" ' + (a.can_view_birthday ? 'checked' : '') + '> Tug\'ilgan kun</label>' +
+          '<label class="admin-perm-opt"><input type="checkbox" data-perm="excel" ' + (a.can_export_excel ? 'checked' : '') + '> Excel eksport</label>' +
+        '</div>' +
+        '<div class="admin-card-actions">' +
+          '<button class="admin-card-save">Saqlash</button>' +
+          '<button class="admin-card-delete">O\'chirish</button>' +
+        '</div>' +
+        '<div class="admin-card-status" style="font-size:12px;margin-top:8px;font-weight:600;"></div>'
+      );
+    if (!isSuper) {
+      card.querySelector('.admin-card-save').addEventListener('click', function(){ saveAdminPerms(a.telegram_id, card); });
+      card.querySelector('.admin-card-delete').addEventListener('click', function(){ deleteAdminConfirm(a.telegram_id, card); });
+    }
+    listEl.appendChild(card);
+  });
+}
+
+function readPermsFromContainer(container) {
+  var perms = {};
+  container.querySelectorAll('[data-perm]').forEach(function(cb){ perms[cb.getAttribute('data-perm')] = cb.checked; });
+  return perms;
+}
+
+async function addAdminSubmit() {
+  var idInput = document.getElementById('new-admin-id');
+  var nameInput = document.getElementById('new-admin-name');
+  var statusEl = document.getElementById('add-admin-status');
+  var telegramId = (idInput.value || '').trim();
+  if (!/^\d+$/.test(telegramId)) {
+    statusEl.style.color = '#DC2626';
+    statusEl.textContent = "Telegram ID faqat raqamlardan iborat bo'lishi kerak";
+    return;
+  }
+  var perms = readPermsFromContainer(document.getElementById('new-admin-perms'));
+  statusEl.style.color = 'var(--gray-600)';
+  statusEl.textContent = 'Yuklanmoqda...';
+  try {
+    var res = await fetch(SERVER_URL + '/admin/admins/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        admin_id: currentUserId,
+        telegram_id: telegramId,
+        name: nameInput.value,
+        can_view_taklif: perms.taklif,
+        can_view_shikoyat: perms.shikoyat,
+        can_view_birthday: perms.birthday,
+        can_export_excel: perms.excel
+      })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = '#16A34A';
+      statusEl.textContent = "Admin qo'shildi ✅";
+      idInput.value = ''; nameInput.value = '';
+      loadAdminsList();
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      statusEl.style.color = '#DC2626';
+      statusEl.textContent = data.error || 'Xatolik yuz berdi';
+    }
+  } catch (err) {
+    statusEl.style.color = '#DC2626';
+    statusEl.textContent = "Server bilan bog'lanib bo'lmadi";
+  }
+}
+
+async function saveAdminPerms(telegramId, card) {
+  var perms = readPermsFromContainer(card);
+  var name = card.querySelector('.admin-edit-name').value;
+  var statusEl = card.querySelector('.admin-card-status');
+  statusEl.style.color = 'var(--gray-600)';
+  statusEl.textContent = 'Saqlanmoqda...';
+  try {
+    var res = await fetch(SERVER_URL + '/admin/admins/update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        admin_id: currentUserId,
+        telegram_id: telegramId,
+        name: name,
+        can_view_taklif: perms.taklif,
+        can_view_shikoyat: perms.shikoyat,
+        can_view_birthday: perms.birthday,
+        can_export_excel: perms.excel
+      })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = '#16A34A';
+      statusEl.textContent = 'Saqlandi ✅';
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      statusEl.style.color = '#DC2626';
+      statusEl.textContent = data.error || 'Xatolik yuz berdi';
+    }
+  } catch (err) {
+    statusEl.style.color = '#DC2626';
+    statusEl.textContent = "Server bilan bog'lanib bo'lmadi";
+  }
+}
+
+async function deleteAdminConfirm(telegramId, card) {
+  if (!confirm("Ushbu adminni o'chirmoqchimisiz?")) return;
+  var statusEl = card.querySelector('.admin-card-status');
+  try {
+    var res = await fetch(SERVER_URL + '/admin/admins/delete', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ admin_id: currentUserId, telegram_id: telegramId })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      loadAdminsList();
+    } else {
+      statusEl.style.color = '#DC2626';
+      statusEl.textContent = data.error || 'Xatolik yuz berdi';
+    }
+  } catch (err) {
+    statusEl.style.color = '#DC2626';
+    statusEl.textContent = "Server bilan bog'lanib bo'lmadi";
+  }
+}
+
+// ===================================================
 // EXCEL EKSPORT (ADMIN)
 // ===================================================
 function openExportModal() {
@@ -1364,6 +1629,7 @@ var bdaySelectedFile = null;
 function openBirthdaysScreen() {
   showScreen('birthdays');
   loadBirthdaySummary();
+  loadBirthdayPhotoPreview();
 }
 
 async function loadBirthdaySummary() {
@@ -1455,6 +1721,84 @@ async function uploadBirthdayFile() {
     statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' Server bilan bog\'lanib bo\'lmadi';
   }
 }
+
+// ===================================================
+// TUG'ILGAN KUN RASMI (ADMIN)
+// ===================================================
+var bdaySelectedPhoto = null;
+
+function loadBirthdayPhotoPreview() {
+  var img = document.getElementById('bday-photo-preview');
+  img.onload = function(){ img.style.display = 'block'; };
+  img.onerror = function(){ img.style.display = 'none'; };
+  img.src = SERVER_URL + '/admin/birthday-photo?t=' + Date.now();
+}
+
+function onBirthdayPhotoSelected() {
+  var input = document.getElementById('bday-photo-input');
+  bdaySelectedPhoto = input.files[0] || null;
+  document.getElementById('bday-photo-file-name').textContent = bdaySelectedPhoto ? ('Tanlandi: ' + bdaySelectedPhoto.name) : '';
+  document.getElementById('bday-photo-upload-btn').style.display = bdaySelectedPhoto ? 'flex' : 'none';
+  document.getElementById('bday-photo-status').textContent = '';
+}
+
+async function uploadBirthdayPhoto() {
+  if (!bdaySelectedPhoto) return;
+  var statusEl = document.getElementById('bday-photo-status');
+  statusEl.style.color = 'var(--gray-600)';
+  statusEl.textContent = 'Yuklanmoqda...';
+  try {
+    var fd = new FormData();
+    fd.append('file', bdaySelectedPhoto);
+    fd.append('admin_id', currentUserId);
+    var res = await fetch(SERVER_URL + '/admin/birthday-photo/upload', { method: 'POST', body: fd });
+    var data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = 'var(--gray-900)';
+      statusEl.innerHTML = icon('check-circle',{size:14,cls:'icon-inline'}) + ' Rasm muvaffaqiyatli yangilandi';
+      bdaySelectedPhoto = null;
+      document.getElementById('bday-photo-input').value = '';
+      document.getElementById('bday-photo-file-name').textContent = '';
+      document.getElementById('bday-photo-upload-btn').style.display = 'none';
+      loadBirthdayPhotoPreview();
+      if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      statusEl.style.color = 'var(--orange)';
+      statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' ' + (data.error || 'Xatolik yuz berdi');
+    }
+  } catch (e) {
+    statusEl.style.color = 'var(--orange)';
+    statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' Server bilan bog\'lanib bo\'lmadi';
+  }
+}
+
+async function resetBirthdayPhoto() {
+  if (!confirm("Rasmni standart holatiga qaytarmoqchimisiz?")) return;
+  var statusEl = document.getElementById('bday-photo-status');
+  statusEl.style.color = 'var(--gray-600)';
+  statusEl.textContent = 'Bajarilmoqda...';
+  try {
+    var res = await fetch(SERVER_URL + '/admin/birthday-photo/reset', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ admin_id: currentUserId })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      statusEl.style.color = 'var(--gray-900)';
+      statusEl.innerHTML = icon('check-circle',{size:14,cls:'icon-inline'}) + ' Standart rasmga qaytarildi';
+      loadBirthdayPhotoPreview();
+    } else {
+      statusEl.style.color = 'var(--orange)';
+      statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' ' + (data.error || 'Xatolik yuz berdi');
+    }
+  } catch (e) {
+    statusEl.style.color = 'var(--orange)';
+    statusEl.innerHTML = icon('x-circle',{size:14,cls:'icon-inline'}) + ' Server bilan bog\'lanib bo\'lmadi';
+  }
+}
+
+
 function showError(id) { document.getElementById(id).classList.add('show'); }
 function hideError(id) { document.getElementById(id).classList.remove('show'); }
 function escapeHtml(str) {
@@ -1705,9 +2049,9 @@ function renderMessages(msgs) {
       icon(m.user_type === 'guest' ? 'user' : 'briefcase',{size:12,cls:'icon-inline'}) + (m.user_type === 'guest' ? t('guest_badge') : t('employee_badge')) +
       '</span></div>';
     var chipsHtml = '';
-    if (m.filial || m.phone) {
+    if ((m.filial && m.type !== 'shikoyat') || m.phone) {
       chipsHtml = '<div class="msg-info-chips">'+
-        (m.filial ? '<span class="msg-chip filial icon-inline">'+icon('map-pin',{size:12})+escapeHtml(m.filial)+'</span>' : '')+
+        (m.filial && m.type !== 'shikoyat' ? '<span class="msg-chip filial icon-inline">'+icon('map-pin',{size:12})+escapeHtml(m.filial)+'</span>' : '')+
         (m.phone ? '<span class="msg-chip icon-inline">'+icon('phone',{size:12})+escapeHtml(m.phone)+'</span>' : '')+
       '</div>';
     }
@@ -1812,7 +2156,8 @@ async function deleteMessage(msgId, btn) {
 async function loadAdminMessages() {
   document.getElementById('messages-list').innerHTML='<div class="spinner"></div>';
   try {
-    var res = await fetch(SERVER_URL+'/messages');
+    var qs = currentUserId ? ('?admin_id=' + currentUserId) : '';
+    var res = await fetch(SERVER_URL+'/messages'+qs);
     var data = await res.json();
     allMessages = (data.ok&&data.messages)?data.messages:[];
     updateStats(); refreshView();
@@ -1952,7 +2297,8 @@ function openChat(msgId, msgInfo, fromScreen) {
   var sub = '';
   if (msgInfo) {
     var typeLabel = (msgInfo.type === 'shikoyat' ? icon('alert-triangle',{size:13,cls:'icon-inline'}) : icon('lightbulb',{size:13,cls:'icon-inline'})) + (msgInfo.type === 'shikoyat' ? 'Shikoyat' : 'Taklif');
-    sub = typeLabel + (msgInfo.filial ? ' — ' + msgInfo.filial : '');
+    var showFilial = msgInfo.filial && !(fromScreen === 'admin' && msgInfo.type === 'shikoyat');
+    sub = typeLabel + (showFilial ? ' — ' + msgInfo.filial : '');
   }
   document.getElementById('chat-header-title').textContent = title;
   document.getElementById('chat-header-sub').innerHTML = sub;
@@ -2145,13 +2491,16 @@ async function checkRoleAndInit() {
       userRole = data.role;
       isAdmin = true;
       canDelete = (userRole === 'superadmin');
+      userPermissions = data.permissions || userPermissions;
       var badge = document.getElementById('admin-role-badge');
       if (userRole === 'moderator') { badge.textContent = 'MODERATOR'; badge.classList.add('mod'); }
       else { badge.textContent = 'ADMIN'; }
+      applyAdminPermissionsUI();
       showScreen('admin');
       loadAdminMessages();
     } else if (urlAdminFlag) {
       isAdmin = true; canDelete = false;
+      applyAdminPermissionsUI();
       showScreen('admin'); loadAdminMessages();
     } else {
       if (urlViewMy) {
@@ -2164,7 +2513,7 @@ async function checkRoleAndInit() {
       }
     }
   } catch (err) {
-    if (urlAdminFlag) { isAdmin = true; canDelete = false; showScreen('admin'); loadAdminMessages(); }
+    if (urlAdminFlag) { isAdmin = true; canDelete = false; applyAdminPermissionsUI(); showScreen('admin'); loadAdminMessages(); }
     else {
       if (urlViewMy) {
         userType = 'employee';

@@ -32,13 +32,26 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 # =====================================================
 BOT_TOKEN      = os.environ.get("BOT_TOKEN", "")
-ADMINS = {
+
+# Bot birinchi marta ishga tushganda "admins" jadvaliga yoziladigan boshlang'ich
+# superadmin/moderator ro'yxati. Shu joydan keyin barcha adminlar boshqaruvi
+# Superadmin panel orqali (Telegram ID bilan qo'shish/o'chirish/tahrirlash)
+# ma'lumotlar bazasi ustida amalga oshiriladi — pastdagi ADMINS/ADMIN_IDS/
+# ADMIN_PERMS o'zgaruvchilari shu bazadan to'ldiriladi (refresh_admins_cache()).
+INITIAL_ADMINS = {
     7780854728: "superadmin",
     1488298476: "superadmin",
     555648201:  "moderator",
 }
-ADMIN_IDS     = list(ADMINS.keys())
-ADMIN_CHAT_ID = ADMIN_IDS[0]
+
+# Runtime keshi — refresh_admins_cache() tomonidan to'ldiriladi/yangilanadi.
+# Boshqa joylarda shu obyektlarning o'ziga ishora qilinadi (clear()+update()),
+# shuning uchun bazadagi o'zgarish darhol butun kod bo'ylab ko'rinadi.
+ADMINS       = {}   # telegram_id -> "superadmin" | "moderator"
+ADMIN_IDS    = []   # telegram_id lar ro'yxati
+ADMIN_NAMES  = {}   # telegram_id -> ism (ixtiyoriy, panelda ko'rsatish uchun)
+ADMIN_PERMS  = {}   # telegram_id -> {"taklif":bool,"shikoyat":bool,"birthday":bool,"excel":bool}
+ADMIN_CHAT_ID = list(INITIAL_ADMINS.keys())[0]
 MINI_APP_URL   = "https://karimov0814.github.io/ST77WOK/"
 PORT           = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL    = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
@@ -273,14 +286,155 @@ def init_db():
         """)
         cur.execute("CREATE INDEX IF NOT EXISTS idx_replies_message_id ON replies(message_id)")
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS admins (
+                telegram_id BIGINT PRIMARY KEY,
+                name TEXT DEFAULT '',
+                role TEXT NOT NULL DEFAULT 'moderator',
+                can_view_taklif BOOLEAN DEFAULT TRUE,
+                can_view_shikoyat BOOLEAN DEFAULT TRUE,
+                can_view_birthday BOOLEAN DEFAULT TRUE,
+                can_export_excel BOOLEAN DEFAULT TRUE,
+                added_by BIGINT,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+
+        # Boshlang'ich (kodda qattiq yozilgan) adminlarni faqat birinchi marta,
+        # jadval bo'sh bo'lsa, bazaga ko'chiramiz — shu yerdan keyin barcha
+        # o'zgarishlar Superadmin panel orqali bazada saqlanadi.
+        cur.execute("SELECT COUNT(*) FROM admins")
+        if cur.fetchone()[0] == 0:
+            for _tid, _role in INITIAL_ADMINS.items():
+                cur.execute("""
+                    INSERT INTO admins (telegram_id, name, role, can_view_taklif, can_view_shikoyat, can_view_birthday, can_export_excel)
+                    VALUES (%s, '', %s, TRUE, TRUE, TRUE, TRUE)
+                    ON CONFLICT (telegram_id) DO NOTHING
+                """, (_tid, _role))
+
         conn.commit()
         cur.close()
         conn.close()
         logger.info("✅ Database tayyor (ikki tilli, javoblar bilan)")
         init_chat_table()
         init_employees_table()
+        refresh_admins_cache()
     except Exception as e:
         logger.error(f"init_db xatolik: {e}")
+
+
+# ==================== ADMINLARNI BOSHQARISH ====================
+
+def refresh_admins_cache():
+    """Bazadagi 'admins' jadvalini o'qib, runtime keshini (ADMINS/ADMIN_IDS/
+    ADMIN_NAMES/ADMIN_PERMS) yangilaydi. Har qanday admin CRUD amalidan keyin
+    chaqiriladi, shunda o'zgarish darhol butun botga ta'sir qiladi."""
+    global ADMIN_CHAT_ID
+    try:
+        conn = get_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM admins ORDER BY created_at ASC")
+        rows = [dict(r) for r in cur.fetchall()]
+        cur.close()
+        conn.close()
+
+        ADMINS.clear()
+        ADMIN_NAMES.clear()
+        ADMIN_PERMS.clear()
+        for r in rows:
+            tid = r["telegram_id"]
+            ADMINS[tid] = r["role"]
+            ADMIN_NAMES[tid] = r.get("name") or ""
+            ADMIN_PERMS[tid] = {
+                "taklif":   bool(r.get("can_view_taklif", True)),
+                "shikoyat": bool(r.get("can_view_shikoyat", True)),
+                "birthday": bool(r.get("can_view_birthday", True)),
+                "excel":    bool(r.get("can_export_excel", True)),
+            }
+        ADMIN_IDS.clear()
+        ADMIN_IDS.extend(ADMINS.keys())
+        if ADMIN_IDS:
+            ADMIN_CHAT_ID = ADMIN_IDS[0]
+    except Exception as e:
+        logger.error(f"refresh_admins_cache xatolik: {e}")
+
+
+def get_admin_perm(telegram_id, perm):
+    """Berilgan admin muayyan bo'limni (taklif/shikoyat/birthday/excel) ko'ra
+    olishini tekshiradi. Superadmin uchun har doim True."""
+    if ADMINS.get(telegram_id) == "superadmin":
+        return True
+    perms = ADMIN_PERMS.get(telegram_id) or {}
+    return bool(perms.get(perm, False))
+
+
+def admin_permissions_payload(telegram_id):
+    role = ADMINS.get(telegram_id)
+    if role == "superadmin":
+        return {"taklif": True, "shikoyat": True, "birthday": True, "excel": True}
+    return dict(ADMIN_PERMS.get(telegram_id) or {
+        "taklif": False, "shikoyat": False, "birthday": False, "excel": False
+    })
+
+
+def list_admins_db():
+    conn = get_conn()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT * FROM admins ORDER BY created_at ASC")
+    rows = [dict(r) for r in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return rows
+
+
+def add_admin_db(telegram_id, name, perms, added_by):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO admins (telegram_id, name, role, can_view_taklif, can_view_shikoyat, can_view_birthday, can_export_excel, added_by)
+        VALUES (%s, %s, 'moderator', %s, %s, %s, %s, %s)
+        ON CONFLICT (telegram_id) DO UPDATE SET
+            name = EXCLUDED.name,
+            can_view_taklif = EXCLUDED.can_view_taklif,
+            can_view_shikoyat = EXCLUDED.can_view_shikoyat,
+            can_view_birthday = EXCLUDED.can_view_birthday,
+            can_export_excel = EXCLUDED.can_export_excel
+    """, (telegram_id, name, perms.get("taklif", True), perms.get("shikoyat", True),
+          perms.get("birthday", True), perms.get("excel", True), added_by))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def update_admin_db(telegram_id, name, perms):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE admins SET
+            name = %s,
+            can_view_taklif = %s,
+            can_view_shikoyat = %s,
+            can_view_birthday = %s,
+            can_export_excel = %s
+        WHERE telegram_id = %s AND role != 'superadmin'
+    """, (name, perms.get("taklif", True), perms.get("shikoyat", True),
+          perms.get("birthday", True), perms.get("excel", True), telegram_id))
+    affected = cur.rowcount
+    conn.commit()
+    cur.close()
+    conn.close()
+    return affected > 0
+
+
+def delete_admin_db(telegram_id):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM admins WHERE telegram_id = %s AND role != 'superadmin'", (telegram_id,))
+    affected = cur.rowcount
+    conn.commit()
+    cur.close()
+    conn.close()
+    return affected > 0
 
 def load_messages():
     try:
@@ -799,8 +953,134 @@ def index():
 def get_role(telegram_id):
     role = ADMINS.get(telegram_id)
     if role:
-        return jsonify({"ok": True, "role": role, "is_admin": True})
+        return jsonify({
+            "ok": True,
+            "role": role,
+            "is_admin": True,
+            "permissions": admin_permissions_payload(telegram_id),
+        })
     return jsonify({"ok": True, "role": "user", "is_admin": False})
+
+
+# ==================== SUPERADMIN: ADMINLARNI BOSHQARISH ====================
+
+@flask_app.route("/admin/admins", methods=["GET"])
+def admins_list():
+    """Barcha qo'shimcha adminlar ro'yxati (faqat superadmin ko'ra oladi)."""
+    admin_id = request.args.get("admin_id", type=int)
+    if not admin_id or ADMINS.get(admin_id) != "superadmin":
+        return jsonify({"ok": False, "error": "Faqat superadmin"}), 403
+    try:
+        rows = list_admins_db()
+        result = [{
+            "telegram_id": r["telegram_id"],
+            "name": r.get("name") or "",
+            "role": r["role"],
+            "can_view_taklif": bool(r.get("can_view_taklif", True)),
+            "can_view_shikoyat": bool(r.get("can_view_shikoyat", True)),
+            "can_view_birthday": bool(r.get("can_view_birthday", True)),
+            "can_export_excel": bool(r.get("can_export_excel", True)),
+        } for r in rows]
+        return jsonify({"ok": True, "admins": result})
+    except Exception as e:
+        logger.error(f"/admin/admins xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/admin/admins/add", methods=["POST", "OPTIONS"])
+def admins_add():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        admin_id = data.get("admin_id")
+        if not admin_id or ADMINS.get(int(admin_id)) != "superadmin":
+            return jsonify({"ok": False, "error": "Faqat superadmin qo'sha oladi"}), 403
+
+        try:
+            new_id = int(str(data.get("telegram_id")).strip())
+        except (TypeError, ValueError):
+            return jsonify({"ok": False, "error": "Telegram ID noto'g'ri"}), 400
+
+        if ADMINS.get(new_id) == "superadmin":
+            return jsonify({"ok": False, "error": "Bu foydalanuvchi allaqachon superadmin"}), 400
+
+        name = (data.get("name") or "").strip()
+        perms = {
+            "taklif":   bool(data.get("can_view_taklif", True)),
+            "shikoyat": bool(data.get("can_view_shikoyat", True)),
+            "birthday": bool(data.get("can_view_birthday", True)),
+            "excel":    bool(data.get("can_export_excel", True)),
+        }
+        add_admin_db(new_id, name, perms, int(admin_id))
+        refresh_admins_cache()
+        logger.info(f"Yangi admin qo'shildi: {new_id} (superadmin {admin_id} tomonidan)")
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/admin/admins/add xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/admin/admins/update", methods=["POST", "OPTIONS"])
+def admins_update():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        admin_id = data.get("admin_id")
+        if not admin_id or ADMINS.get(int(admin_id)) != "superadmin":
+            return jsonify({"ok": False, "error": "Faqat superadmin o'zgartira oladi"}), 403
+
+        try:
+            target_id = int(str(data.get("telegram_id")).strip())
+        except (TypeError, ValueError):
+            return jsonify({"ok": False, "error": "Telegram ID noto'g'ri"}), 400
+
+        name = (data.get("name") or "").strip()
+        perms = {
+            "taklif":   bool(data.get("can_view_taklif", True)),
+            "shikoyat": bool(data.get("can_view_shikoyat", True)),
+            "birthday": bool(data.get("can_view_birthday", True)),
+            "excel":    bool(data.get("can_export_excel", True)),
+        }
+        ok = update_admin_db(target_id, name, perms)
+        if not ok:
+            return jsonify({"ok": False, "error": "Admin topilmadi yoki u superadmin (o'zgartirib bo'lmaydi)"}), 404
+        refresh_admins_cache()
+        logger.info(f"Admin yangilandi: {target_id} (superadmin {admin_id} tomonidan)")
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/admin/admins/update xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/admin/admins/delete", methods=["POST", "OPTIONS"])
+def admins_delete():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        admin_id = data.get("admin_id")
+        if not admin_id or ADMINS.get(int(admin_id)) != "superadmin":
+            return jsonify({"ok": False, "error": "Faqat superadmin o'chira oladi"}), 403
+
+        try:
+            target_id = int(str(data.get("telegram_id")).strip())
+        except (TypeError, ValueError):
+            return jsonify({"ok": False, "error": "Telegram ID noto'g'ri"}), 400
+
+        if target_id == int(admin_id):
+            return jsonify({"ok": False, "error": "O'zingizni o'chira olmaysiz"}), 400
+
+        ok = delete_admin_db(target_id)
+        if not ok:
+            return jsonify({"ok": False, "error": "Admin topilmadi yoki u superadmin (o'chirib bo'lmaydi)"}), 404
+        refresh_admins_cache()
+        logger.info(f"Admin o'chirildi: {target_id} (superadmin {admin_id} tomonidan)")
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/admin/admins/delete xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 @flask_app.route("/contact/<int:user_id>", methods=["GET"])
 def contact_check(user_id):
@@ -994,7 +1274,14 @@ def send_message():
 def get_messages():
     if request.method == "OPTIONS":
         return jsonify({"ok": True}), 200
-    return jsonify({"ok": True, "messages": load_messages()})
+    admin_id = request.args.get("admin_id", type=int)
+    msgs = load_messages()
+    if admin_id and ADMINS.get(admin_id) and ADMINS.get(admin_id) != "superadmin":
+        can_taklif   = get_admin_perm(admin_id, "taklif")
+        can_shikoyat = get_admin_perm(admin_id, "shikoyat")
+        msgs = [m for m in msgs if (m.get("type") == "taklif" and can_taklif)
+                                 or (m.get("type") == "shikoyat" and can_shikoyat)]
+    return jsonify({"ok": True, "messages": msgs})
 
 @flask_app.route("/delete", methods=["POST", "OPTIONS"])
 def delete_message():
@@ -1177,6 +1464,57 @@ def get_birthday_post_time():
         return int(h), int(m)
     except Exception:
         return BIRTHDAY_POST_HOUR, BIRTHDAY_POST_MIN
+
+
+def delete_setting(key):
+    try:
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM settings WHERE key = %s", (key,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"delete_setting xatolik: {e}")
+        return False
+
+
+# ---------- TUG'ILGAN KUN RASMI (Superadmin panel orqali yangilanadi) ----------
+# Rasm ma'lumotlar bazasida (settings jadvalida, base64 ko'rinishda) saqlanadi,
+# shu sababli Railway qayta deploy qilinganda ham (fayl tizimi tiklansa ham)
+# yuklangan rasm yo'qolmaydi. Agar bazada hech narsa bo'lmasa, loyihaga
+# biriktirilgan standart birthday.jpg ishlatiladi.
+
+def get_birthday_photo_bytes():
+    """Joriy tug'ilgan kun rasmini baytlar ko'rinishida qaytaradi."""
+    b64 = get_setting("birthday_photo_base64")
+    if b64:
+        try:
+            return base64.b64decode(b64)
+        except Exception as e:
+            logger.error(f"birthday photo base64 decode xatolik: {e}")
+    try:
+        with open(BIRTHDAY_PHOTO_PATH, "rb") as f:
+            return f.read()
+    except Exception as e:
+        logger.error(f"birthday.jpg o'qishda xatolik: {e}")
+        return None
+
+
+def get_birthday_photo_mime():
+    return get_setting("birthday_photo_mime", "image/jpeg")
+
+
+def set_birthday_photo(file_bytes, mime_type):
+    b64 = base64.b64encode(file_bytes).decode("ascii")
+    set_setting("birthday_photo_base64", b64)
+    set_setting("birthday_photo_mime", mime_type or "image/jpeg")
+
+
+def reset_birthday_photo():
+    delete_setting("birthday_photo_base64")
+    delete_setting("birthday_photo_mime")
 
 
 def replace_employees_from_excel(file_bytes):
@@ -1435,16 +1773,18 @@ def send_birthday_channel_post():
             return
 
         caption = build_birthday_post(birthdays)
+        photo_bytes = get_birthday_photo_bytes()
+        if not photo_bytes:
+            logger.warning("Tug'ilgan kun rasmi topilmadi, post yuborilmadi")
+            return
 
         async def _send():
             # Telegram caption limiti — 1024 belgi. Ro'yxat uzun bo'lsa,
             # rasmni captionsiz yuborib, matnni alohida xabar sifatida qo'shamiz.
             if len(caption) <= 1024:
-                with open(BIRTHDAY_PHOTO_PATH, "rb") as photo:
-                    await ptb_app.bot.send_photo(chat_id=BIRTHDAY_CHANNEL_ID, photo=photo, caption=caption)
+                await ptb_app.bot.send_photo(chat_id=BIRTHDAY_CHANNEL_ID, photo=BytesIO(photo_bytes), caption=caption)
             else:
-                with open(BIRTHDAY_PHOTO_PATH, "rb") as photo:
-                    await ptb_app.bot.send_photo(chat_id=BIRTHDAY_CHANNEL_ID, photo=photo)
+                await ptb_app.bot.send_photo(chat_id=BIRTHDAY_CHANNEL_ID, photo=BytesIO(photo_bytes))
                 await ptb_app.bot.send_message(chat_id=BIRTHDAY_CHANNEL_ID, text=caption)
 
         future = asyncio.run_coroutine_threadsafe(_send(), loop)
@@ -1518,6 +1858,8 @@ def employees_summary():
     admin_id = request.args.get("admin_id", type=int)
     if not admin_id or ADMINS.get(admin_id) is None:
         return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+    if not get_admin_perm(admin_id, "birthday"):
+        return jsonify({"ok": False, "error": "Bu bo'limga ruxsatingiz yo'q"}), 403
     summary = get_employees_summary()
     summary["today_birthdays"] = get_today_birthdays_db()
     post_hour, post_min = get_birthday_post_time()
@@ -1533,6 +1875,8 @@ def employees_upload():
         admin_id = request.form.get("admin_id", type=int)
         if not admin_id or ADMINS.get(admin_id) is None:
             return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+        if not get_admin_perm(admin_id, "birthday"):
+            return jsonify({"ok": False, "error": "Bu bo'limga ruxsatingiz yo'q"}), 403
 
         file = request.files.get("file")
         if not file or file.filename == "":
@@ -1559,6 +1903,8 @@ def set_birthday_time():
         admin_id = data.get("admin_id")
         if not admin_id or ADMINS.get(int(admin_id)) is None:
             return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+        if not get_admin_perm(int(admin_id), "birthday"):
+            return jsonify({"ok": False, "error": "Bu bo'limga ruxsatingiz yo'q"}), 403
 
         time_str = (data.get("time") or "").strip()
         if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", time_str):
@@ -1574,6 +1920,65 @@ def set_birthday_time():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@flask_app.route("/admin/birthday-photo", methods=["GET"])
+def birthday_photo_view():
+    """Joriy tug'ilgan kun rasmini qaytaradi (admin panelida oldindan ko'rish uchun)."""
+    photo_bytes = get_birthday_photo_bytes()
+    if not photo_bytes:
+        return jsonify({"ok": False, "error": "Rasm topilmadi"}), 404
+    return Response(photo_bytes, mimetype=get_birthday_photo_mime())
+
+
+@flask_app.route("/admin/birthday-photo/upload", methods=["POST", "OPTIONS"])
+def birthday_photo_upload():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        admin_id = request.form.get("admin_id", type=int)
+        if not admin_id or ADMINS.get(admin_id) is None:
+            return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+        if not get_admin_perm(admin_id, "birthday"):
+            return jsonify({"ok": False, "error": "Bu bo'limga ruxsatingiz yo'q"}), 403
+
+        file = request.files.get("file")
+        if not file or file.filename == "":
+            return jsonify({"ok": False, "error": "Rasm fayli biriktirilmagan"}), 400
+        if not file.filename.lower().endswith((".jpg", ".jpeg", ".png")):
+            return jsonify({"ok": False, "error": "Faqat .jpg, .jpeg yoki .png fayl qabul qilinadi"}), 400
+
+        file_bytes = file.read()
+        if len(file_bytes) > 5 * 1024 * 1024:
+            return jsonify({"ok": False, "error": "Rasm hajmi 5MB dan oshmasligi kerak"}), 400
+
+        mime_type = file.mimetype or ("image/png" if file.filename.lower().endswith(".png") else "image/jpeg")
+        set_birthday_photo(file_bytes, mime_type)
+        logger.info(f"Tug'ilgan kun rasmi yangilandi (admin {admin_id})")
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/admin/birthday-photo/upload xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@flask_app.route("/admin/birthday-photo/reset", methods=["POST", "OPTIONS"])
+def birthday_photo_reset():
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+    try:
+        data = request.get_json(force=True)
+        admin_id = data.get("admin_id")
+        if not admin_id or ADMINS.get(int(admin_id)) is None:
+            return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+        if not get_admin_perm(int(admin_id), "birthday"):
+            return jsonify({"ok": False, "error": "Bu bo'limga ruxsatingiz yo'q"}), 403
+
+        reset_birthday_photo()
+        logger.info(f"Tug'ilgan kun rasmi standartga qaytarildi (admin {admin_id})")
+        return jsonify({"ok": True})
+    except Exception as e:
+        logger.error(f"/admin/birthday-photo/reset xatolik: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 # ==================== EXPORT ROUTE ====================
 
 @flask_app.route("/admin/export", methods=["GET"])
@@ -1581,16 +1986,26 @@ def export_messages():
     admin_id = request.args.get("admin_id", type=int)
     if not admin_id or ADMINS.get(admin_id) is None:
         return jsonify({"ok": False, "error": "Ruxsat yo'q"}), 403
+    if not get_admin_perm(admin_id, "excel"):
+        return jsonify({"ok": False, "error": "Excelga yuklab olish ruxsatingiz yo'q"}), 403
 
     date_from_raw = request.args.get("date_from")  # 'YYYY-MM-DD'
     date_to_raw   = request.args.get("date_to")
     msg_type      = request.args.get("type")        # 'taklif' | 'shikoyat' | None
+
+    if msg_type in ("taklif", "shikoyat") and not get_admin_perm(admin_id, msg_type):
+        return jsonify({"ok": False, "error": "Bu turdagi murojaatlarni ko'rish ruxsatingiz yo'q"}), 403
 
     date_from = f"{date_from_raw} 00:00:00" if date_from_raw else None
     date_to   = f"{date_to_raw} 23:59:59" if date_to_raw else None
 
     try:
         rows = load_messages_for_export(date_from, date_to, msg_type)
+        if not msg_type and ADMINS.get(admin_id) != "superadmin":
+            can_taklif   = get_admin_perm(admin_id, "taklif")
+            can_shikoyat = get_admin_perm(admin_id, "shikoyat")
+            rows = [r for r in rows if (r.get("type") == "taklif" and can_taklif)
+                                     or (r.get("type") == "shikoyat" and can_shikoyat)]
         excel_bytes = build_messages_excel(rows)
         filename = f"murojaatlar_{datetime.now(BIRTHDAY_TZ).strftime('%Y%m%d_%H%M')}.xlsx"
         logger.info(f"Excel eksport: {len(rows)} ta murojaat (admin {admin_id}, {date_from_raw}—{date_to_raw}, tur={msg_type})")
