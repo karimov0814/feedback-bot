@@ -34,13 +34,18 @@ from apscheduler.schedulers.background import BackgroundScheduler
 BOT_TOKEN      = os.environ.get("BOT_TOKEN", "")
 
 # Bot birinchi marta ishga tushganda "admins" jadvaliga yoziladigan boshlang'ich
-# superadmin/moderator ro'yxati. Shu joydan keyin barcha adminlar boshqaruvi
-# Superadmin panel orqali (Telegram ID bilan qo'shish/o'chirish/tahrirlash)
-# ma'lumotlar bazasi ustida amalga oshiriladi — pastdagi ADMINS/ADMIN_IDS/
-# ADMIN_PERMS o'zgaruvchilari shu bazadan to'ldiriladi (refresh_admins_cache()).
+# ro'yxat. Faqat BITTA superadmin bo'ladi — qolganlari oddiy admin (moderator)
+# sifatida qo'shiladi va superadmin ularni panel orqali (Telegram ID bilan
+# qo'shish/tahrirlash/o'chirish) to'liq boshqara oladi. Shu joydan keyin barcha
+# adminlar boshqaruvi ma'lumotlar bazasi ustida amalga oshiriladi — pastdagi
+# ADMINS/ADMIN_IDS/ADMIN_PERMS o'zgaruvchilari shu bazadan to'ldiriladi
+# (refresh_admins_cache()). init_db() shuningdek, agar bazada allaqachon
+# birdan ortiq superadmin bo'lsa, ularni avtomatik ravishda bitta superadmin
+# qolguncha oddiy adminga aylantiradi (enforce_single_superadmin()).
+SUPERADMIN_ID = 7780854728
 INITIAL_ADMINS = {
     7780854728: "superadmin",
-    1488298476: "superadmin",
+    1488298476: "moderator",
     555648201:  "moderator",
 }
 
@@ -51,7 +56,7 @@ ADMINS       = {}   # telegram_id -> "superadmin" | "moderator"
 ADMIN_IDS    = []   # telegram_id lar ro'yxati
 ADMIN_NAMES  = {}   # telegram_id -> ism (ixtiyoriy, panelda ko'rsatish uchun)
 ADMIN_PERMS  = {}   # telegram_id -> {"taklif":bool,"shikoyat":bool,"birthday":bool,"excel":bool}
-ADMIN_CHAT_ID = list(INITIAL_ADMINS.keys())[0]
+ADMIN_CHAT_ID = SUPERADMIN_ID
 MINI_APP_URL   = "https://karimov0814.github.io/ST77WOK/"
 PORT           = int(os.environ.get("PORT", 5000))
 WEBHOOK_URL    = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
@@ -311,6 +316,29 @@ def init_db():
                     VALUES (%s, '', %s, TRUE, TRUE, TRUE, TRUE)
                     ON CONFLICT (telegram_id) DO NOTHING
                 """, (_tid, _role))
+
+        # Faqat BITTA superadmin bo'lishini kafolatlaymiz. Agar oldingi
+        # versiyadan (bir nechta superadmin bilan) yangilanayotgan bo'lsa,
+        # SUPERADMIN_ID (yoki topilmasa — eng birinchi qo'shilgan superadmin)
+        # yagona superadmin sifatida qoladi, qolganlari oddiy adminga
+        # (moderator) aylantiriladi — ularni superadmin keyin panel orqali
+        # boshqarishi (tahrirlash/o'chirish) mumkin bo'ladi.
+        cur.execute("SELECT telegram_id FROM admins WHERE role = 'superadmin' ORDER BY created_at ASC")
+        superadmin_ids = [row[0] for row in cur.fetchall()]
+        if len(superadmin_ids) > 1:
+            keep_id = SUPERADMIN_ID if SUPERADMIN_ID in superadmin_ids else superadmin_ids[0]
+            cur.execute(
+                "UPDATE admins SET role = 'moderator' WHERE role = 'superadmin' AND telegram_id != %s",
+                (keep_id,)
+            )
+        elif len(superadmin_ids) == 0:
+            # Superadmin umuman yo'q bo'lib qolsa (masalan, qo'lda o'chirilgan),
+            # eng birinchi qo'shilgan adminni superadmin qilamiz — panel
+            # boshqaruvsiz qolib ketmasligi uchun.
+            cur.execute("SELECT telegram_id FROM admins ORDER BY created_at ASC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                cur.execute("UPDATE admins SET role = 'superadmin' WHERE telegram_id = %s", (row[0],))
 
         conn.commit()
         cur.close()
